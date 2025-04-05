@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:nyantv/utils/logger.dart';
@@ -6,7 +5,7 @@ import 'package:nyantv/utils/logger.dart';
 class SubtitleTranslator {
   static final Map<String, String> _cache = {};
 
-  static const _instances = [
+  static const instances = [
     'https://lingva.ml',
     'https://translate.plausibility.cloud',
     'https://translate.tiekoetter.com',
@@ -15,31 +14,51 @@ class SubtitleTranslator {
     'https://lingva.pussthecat.org',
   ];
 
-  static Future<String> translate(String text, String targetLang) async {
-    if (text.isEmpty || targetLang == 'none') return text;
+  static const _maxCacheSize = 2000;
 
-    final cacheKey = '$targetLang:$text';
-    if (_cache.containsKey(cacheKey)) return _cache[cacheKey]!;
+  static String? getCached(String targetLang, String text) =>
+      _cache['$targetLang:$text'];
 
-    for (final instance in _instances) {
-      try {
-        final url = Uri.parse(
-            '$instance/api/v1/auto/$targetLang/${Uri.encodeComponent(text)}');
-        final response =
-            await http.get(url).timeout(const Duration(seconds: 5));
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final translated = data['translation'] as String;
-          _cache[cacheKey] = translated;
-          return translated;
-        }
-      } catch (e) {
-        Logger.e('[SubtitleTranslator] Instance $instance failed: $e');
-        continue;
+  static void _addToCache(String key, String value) {
+    if (_cache.length >= _maxCacheSize) {
+      final toRemove = _cache.keys.take(500).toList();
+      for (final k in toRemove) {
+        _cache.remove(k);
       }
     }
+    _cache[key] = value;
+  }
 
+  static Future<String?> translateWithInstance(
+      String text, String targetLang, String instance) async {
+    if (text.isEmpty) return text;
+    try {
+      final response = await http
+          .get(Uri.parse(
+              '$instance/api/v1/auto/$targetLang/${Uri.encodeComponent(text)}'))
+          .timeout(const Duration(seconds: 6));
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final translated = body['translation'] as String?;
+        if (translated == null || translated.isEmpty) return null;
+        _addToCache('$targetLang:$text', translated);
+        return translated;
+      }
+      return null;
+    } catch (e) {
+      Logger.e('[SubtitleTranslator] $instance failed: $e');
+      return null;
+    }
+  }
+
+  static Future<String> translate(String text, String targetLang) async {
+    if (text.isEmpty || targetLang == 'none') return text;
+    final cacheKey = '$targetLang:$text';
+    if (_cache.containsKey(cacheKey)) return _cache[cacheKey]!;
+    for (final instance in instances) {
+      final result = await translateWithInstance(text, targetLang, instance);
+      if (result != null) return result;
+    }
     return text;
   }
 

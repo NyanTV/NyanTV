@@ -68,7 +68,6 @@ class LibmpvWatchPage extends StatefulWidget {
   State<LibmpvWatchPage> createState() => _LibmpvWatchPageState();
 }
 
-// Uses ActiveSkip from shared_player_widgets.dart
 final Rx<ActiveSkip?> activeSkip = Rx<ActiveSkip?>(null);
 
 class _LibmpvWatchPageState extends State<LibmpvWatchPage>
@@ -782,7 +781,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
 
     await _performInitialSeek(startTimeMilliseconds);
 
-    _initSubs();
+    await _initSubs();
     player.setRate(prevRate.value);
     isOPSkippedOnce.value = false;
     isEDSkippedOnce.value = false;
@@ -934,6 +933,12 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
         _lastUIUpdate = now;
         currentPosition.value = e;
         formattedTime.value = formatDuration(e);
+        if (settings.subtitleTranslationLang != 'none') {
+          final newSubs = _subtitleManager.getSubtitleAt(e);
+          if (newSubs.join() != subtitleText.join()) {
+            subtitleText.value = newSubs;
+          }
+        }
       }
 
       if (e.inSeconds >= episodeDuration.value.inSeconds - 1) {
@@ -1039,7 +1044,9 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
     });
 
     player.stream.subtitle.listen((e) {
-      subtitleText.value = e;
+      if (settings.subtitleTranslationLang == 'none') {
+        subtitleText.value = e;
+      }
     });
   }
 
@@ -1118,36 +1125,18 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
     currentEpisode.value.videoTracks = episodeTracks;
   }
 
-  void _initSubs() async {
-    subtitles.clear();
-    selectedSubIndex.value = 0;
-    player.setSubtitleTrack(SubtitleTrack.no());
-    final List<String> labels = [];
-
-    for (var e in episodeTracks) {
-      final subs = e.subtitles;
-      if (subs != null) {
-        for (var s in subs) {
-          if (!labels.contains(s.label)) {
-            subtitles.add(s);
-            labels.add(s.label ?? '');
-          }
-        }
-      }
-    }
-    for (var i in subtitles.value) {
-      if ((i?.label?.toLowerCase().contains('english') ??
-              i?.label?.toLowerCase().contains('eng') ??
-              false) &&
-          i?.file != null) {
-        final index = subtitles.indexOf(i);
-        selectedSubIndex.value = index;
-        final subUrl = await _subtitleManager.normalizeVtt(i!.file!);
-        await player.setSubtitleTrack(SubtitleTrack.uri(subUrl));
-        break;
-      }
-    }
-  }
+  Future<void> _initSubs() => _subtitleManager.initSubs(
+        subtitles: subtitles,
+        episodeTracks: episodeTracks,
+        selectedSubIndex: selectedSubIndex,
+        getCurrentPosition: () => currentPosition.value,
+        isCancelled: () => !mounted,
+        isMounted: () => mounted,
+        setPlayerSubTrack: (url) => url == 'none'
+            ? player.setSubtitleTrack(SubtitleTrack.no())
+            : player.setSubtitleTrack(SubtitleTrack.uri(url)),
+        setSubtitleText: (lines) => subtitleText.value = lines,
+      );
 
   void _initHiveVariables() {
     playerSettings = settings.playerSettings.value;
@@ -2642,7 +2631,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
         borderRadius: borderRadius,
         backgroundColor: Colors.transparent,
         onTap: () => _doSkip(invert),
-        // Use shared SkipButtonContent instead of local duplicate
         child: SkipButtonContent(
           invert: invert,
           skipDuration: settings.skipDuration,
@@ -2882,7 +2870,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
     );
   }
 
-  // Uses shared SkipOpEdButton widget
   Widget _buildSkipOpEdButton() {
     return Obx(() => SkipOpEdButton(
           skip: activeSkip.value,

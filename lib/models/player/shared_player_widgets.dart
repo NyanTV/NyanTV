@@ -1,16 +1,15 @@
 // lib/screens/anime/watch/widgets/shared_player_widgets.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:http/http.dart' as http;
 import 'package:nyantv/controllers/settings/methods.dart';
 import 'package:nyantv/models/Offline/Hive/video.dart' as model;
 import 'package:nyantv/screens/anime/widgets/video_slider.dart';
 import 'package:nyantv/utils/skip_times.dart';
-import 'package:nyantv/utils/subtitle_server.dart';
-import 'package:nyantv/utils/vtt_translator.dart';
+import 'package:nyantv/utils/smart_subtitle_manager.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_button.dart';
@@ -584,38 +583,91 @@ model.Video fetchPreferredStream(
 }
 
 class SubtitleManager {
-  final _server = SubtitleServer();
-  String? _activeUrl;
-  bool _disposed = false;
+  final _inner = SmartSubtitleManager();
+  final _settings = Get.find<Settings>();
+  Timer? _refreshTimer;
 
-  Future<void> start() => _server.start();
+  Future<void> start() => _inner.start();
 
-  Future<String> normalizeVtt(String url) async {
-    _disposed = false;
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode != 200 || _disposed) return url;
-      String content = response.body;
-      content = content.replaceAllMapped(
-        RegExp(r'(\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}\.\d{3})'),
-        (m) => '00:${m[1]} --> 00:${m[2]}',
-      );
-      final lang = Get.find<Settings>().subtitleTranslationLang;
-      if (lang != 'none' && !_disposed) {
-        content = await VttTranslator.translate(content, lang, () => _disposed);
-      }
-      if (_disposed) return url;
-      if (_activeUrl != null) _server.remove(_activeUrl!);
-      _activeUrl = _server.serve(content);
-      return _activeUrl!;
-    } catch (e) {
-      return url;
-    }
-  }
+  Future<String> normalizeVtt(String url) => _inner.serveRaw(url);
+
+  List<String> getSubtitleAt(Duration position) =>
+      _inner.getSubtitleAt(position);
 
   void dispose() {
-    _disposed = true;
-    _server.dispose();
-    _activeUrl = null;
+    _refreshTimer?.cancel();
+    _inner.dispose();
+  }
+
+  Future<void> loadAndTranslate({
+    required String url,
+    required String targetLang,
+    required Duration Function() getCurrentPosition,
+    required bool Function() isCancelled,
+    required void Function() onCueReady,
+  }) =>
+      _inner.loadAndTranslate(
+        url: url,
+        targetLang: targetLang,
+        getCurrentPosition: getCurrentPosition,
+        isCancelled: isCancelled,
+        onCueReady: onCueReady,
+      );
+
+  Future<void> initSubs({
+    required List<model.Track?> subtitles,
+    required RxList<model.Video> episodeTracks,
+    required RxInt selectedSubIndex,
+    required Duration Function() getCurrentPosition,
+    required bool Function() isCancelled,
+    required bool Function() isMounted,
+    required void Function(String) setPlayerSubTrack,
+    required void Function(List<String>) setSubtitleText,
+  }) async {
+    _refreshTimer?.cancel();
+    subtitles.clear();
+    selectedSubIndex.value = 0;
+    setPlayerSubTrack('none');
+    final List<String> labels = [];
+    for (var e in episodeTracks) {
+      for (var s in e.subtitles ?? []) {
+        if (!labels.contains(s.label)) {
+          subtitles.add(s);
+          labels.add(s.label ?? '');
+        }
+      }
+    }
+    for (var i in subtitles) {
+      final isEnglish = i?.label?.toLowerCase().contains('english') == true ||
+          i?.label?.toLowerCase().contains('eng') == true;
+      if (!isEnglish || i?.file == null) continue;
+      selectedSubIndex.value = subtitles.indexOf(i);
+      final lang = _settings.subtitleTranslationLang;
+      if (lang == 'none') {
+        final subUrl = await normalizeVtt(i!.file!);
+        setPlayerSubTrack(subUrl);
+      } else {
+        _refreshTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+          if (isMounted()) {
+            final subs = getSubtitleAt(getCurrentPosition());
+            setSubtitleText(subs);
+          } else {
+            _refreshTimer?.cancel();
+          }
+        });
+        unawaited(loadAndTranslate(
+          url: i!.file!,
+          targetLang: lang,
+          getCurrentPosition: getCurrentPosition,
+          isCancelled: isCancelled,
+          onCueReady: () {
+            if (isMounted()) {
+              setSubtitleText(getSubtitleAt(getCurrentPosition()));
+            }
+          },
+        ));
+      }
+      break;
+    }
   }
 }

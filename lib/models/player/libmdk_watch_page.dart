@@ -523,6 +523,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
       _attachLibmdkListeners();
 
       await _waitForPlayerReady();
+      await _waitForPositionSync(startMs);
       if (mounted) setState(() => _isPlayerInitialized = true);
 
       isSwitchingEpisode = false;
@@ -535,6 +536,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
       });
     } else {
       await _waitForPlayerReady();
+      await _waitForPositionSync(startMs);
       if (mounted) setState(() {});
     }
 
@@ -543,6 +545,16 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
     isOPSkippedOnce.value = false;
     isEDSkippedOnce.value = false;
     _fetchSkipTimes();
+  }
+
+  Future<void> _waitForPositionSync(int expectedMs) async {
+    if (expectedMs <= 0) return;
+    int attempts = 0;
+    while (attempts < 30) {
+      if (currentPosition.value.inMilliseconds >= expectedMs - 3000) return;
+      await Future.delayed(const Duration(milliseconds: 100));
+      attempts++;
+    }
   }
 
   void _attachLibmdkListeners() {
@@ -570,6 +582,12 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
         _lastUIUpdate = now;
         currentPosition.value = e;
         formattedTime.value = formatDuration(e);
+        if (settings.subtitleTranslationLang != 'none') {
+          final newSubs = _subtitleManager.getSubtitleAt(e);
+          if (newSubs.join() != subtitleText.join()) {
+            subtitleText.value = newSubs;
+          }
+        }
       }
       if (e.inSeconds >= episodeDuration.value.inSeconds - 1 &&
           episodeDuration.value.inMinutes >= 1) {
@@ -636,7 +654,9 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
       playbackSpeed.value = e;
     });
     _subtitleSub = _betterPlayer.subtitleStream.listen((lines) {
-      subtitleText.value = lines;
+      if (settings.subtitleTranslationLang == 'none') {
+        subtitleText.value = lines;
+      }
     });
     _completedSub = _betterPlayer.completedStream.listen((completed) {
       if (completed &&
@@ -811,37 +831,19 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
     prevRate.value = playerSettings.speed;
   }
 
-  Future<void> _initSubs() async {
-    subtitles.clear();
-    selectedSubIndex.value = 0;
-    _betterPlayer.setSubtitleTrack(base_player.SubtitleTrack.no());
-    final List<String> labels = [];
-    for (var e in episodeTracks) {
-      final subs = e.subtitles;
-      if (subs != null) {
-        for (var s in subs) {
-          if (!labels.contains(s.label)) {
-            subtitles.add(s);
-            labels.add(s.label ?? '');
-          }
-        }
-      }
-    }
-    for (var i in subtitles.value) {
-      if ((i?.label?.toLowerCase().contains('english') ??
-              i?.label?.toLowerCase().contains('eng') ??
-              false) &&
-          i?.file != null) {
-        final index = subtitles.indexOf(i);
-        selectedSubIndex.value = index;
-        final subUrl = await _subtitleManager.normalizeVtt(i!.file!);
-        await _betterPlayer.setSubtitleTrack(
-          base_player.SubtitleTrack(id: subUrl, url: subUrl, title: i.label),
-        );
-        break;
-      }
-    }
-  }
+  Future<void> _initSubs() => _subtitleManager.initSubs(
+        subtitles: subtitles,
+        episodeTracks: episodeTracks,
+        selectedSubIndex: selectedSubIndex,
+        getCurrentPosition: () => currentPosition.value,
+        isCancelled: () => !mounted,
+        isMounted: () => mounted,
+        setPlayerSubTrack: (url) => url == 'none'
+            ? _betterPlayer.setSubtitleTrack(base_player.SubtitleTrack.no())
+            : _betterPlayer.setSubtitleTrack(
+                base_player.SubtitleTrack(id: url, url: url, title: null)),
+        setSubtitleText: (lines) => subtitleText.value = lines,
+      );
 
   void _fetchSkipTimes() {
     skipTimes.value = null;
