@@ -1,4 +1,5 @@
 // ignore_for_file: invalid_use_of_protected_member
+// lib/screens/local_source/player/offline_player_old.dart 
 import 'dart:async';
 import 'package:anymex/screens/local_source/player/offline_player.dart';
 import 'package:anymex/utils/logger.dart';
@@ -11,6 +12,7 @@ import 'package:anymex/models/player/player_adaptor.dart';
 import 'package:anymex/controllers/settings/methods.dart';
 import 'package:anymex/controllers/settings/settings.dart';
 import 'package:anymex/controllers/source/source_controller.dart';
+import 'package:anymex/screens/anime/watch/controls/widgets/tv_seek_indicator.dart';
 import 'package:anymex/screens/anime/widgets/media_indicator_old.dart';
 import 'package:anymex/screens/anime/widgets/video_slider.dart';
 import 'package:anymex/screens/settings/sub_settings/settings_player.dart';
@@ -108,6 +110,12 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
   final currentVisualProfile = 'natural'.obs;
   RxMap<String, int> customSettings = <String, int>{}.obs;
 
+  // TV Remote spezifische Variablen
+  Timer? _tvSeekTimer;
+  final RxString _tvSeekDirection = ''.obs; // Für TV Seek Indicator
+  final RxInt _tvSeekAmount = 0.obs; // Für TV Seek Indicator
+  Timer? _tvControlsHideTimer;
+
   void applySavedProfile() => ColorProfileManager()
       .applyColorProfile(currentVisualProfile.value, player);
 
@@ -144,11 +152,25 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
       canRequestFocus: !settings.isTV.value,
       skipTraversal: settings.isTV.value,
     );
+    
+    // TV Remote Initialisierung
+    if (settings.isTV.value) {
+      _initializeTVRemote();
+    }
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_keyboardListenerFocusNode.hasFocus) {
         _keyboardListenerFocusNode.requestFocus();
       }
     });
+  }
+
+  void _initializeTVRemote() {
+    // Initialisiere TV Remote spezifische Timer und Handler
+    _tvControlsHideTimer?.cancel();
+    if (isPlaying.value) {
+      _startHideControlsTimer();
+    }
   }
 
   Future<void> trackEpisode(Duration position, Duration duration) async {
@@ -447,6 +469,8 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
 
     if (showControls.value && isPlaying.value) {
       _startHideControlsTimer();
+    } else {
+      _tvControlsHideTimer?.cancel();
     }
   }
 
@@ -471,6 +495,8 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
     _hideControlsTimer?.cancel();
     doubleTapTimeout?.cancel();
     _positionSubscription?.cancel();
+    _tvSeekTimer?.cancel();
+    _tvControlsHideTimer?.cancel();
 
     trackEpisode(currentPosition.value, episodeDuration.value);
 
@@ -505,11 +531,16 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
     }
   }
 
-  Future<void> handlePlayerKeyEvent(
-    KeyEvent e,
-  ) async {
-    if (e is! KeyDownEvent || settings.isTV.value) return;
+  void handlePlayerKeyEvent(KeyEvent e) async {
+    if (e is! KeyDownEvent) return;
 
+    // TV Remote handling wenn TV-Modus aktiv ist
+    if (settings.isTV.value) {
+      _handleTVRemoteEvent(e);
+      return;
+    }
+
+    // Normale Tastatursteuerung (für Desktop/Web)
     final key = e.logicalKey;
 
     if (key == LogicalKeyboardKey.space) {
@@ -534,12 +565,140 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
     }
   }
 
+  void _handleTVRemoteEvent(KeyEvent e) {
+    if (e is! KeyDownEvent) return;
+    
+    final key = e.logicalKey;
+    
+    // Zeige Controls bei jeder TV-Fernbedienungsaktion
+    if (!showControls.value) {
+      toggleControls(val: true);
+    }
+    
+    // Reset den Hide-Timer
+    if (isPlaying.value) {
+      _tvControlsHideTimer?.cancel();
+      _tvControlsHideTimer = Timer(const Duration(seconds: 5), () {
+        if (isPlaying.value) {
+          showControls.value = false;
+        }
+      });
+    }
+    
+    switch (key) {
+      case LogicalKeyboardKey.select:
+      case LogicalKeyboardKey.enter:
+        player.playOrPause();
+        break;
+        
+      case LogicalKeyboardKey.arrowLeft:
+        _handleTVSeek(true); // Zurückspulen
+        break;
+        
+      case LogicalKeyboardKey.arrowRight:
+        _handleTVSeek(false); // Vorspulen
+        break;
+        
+      case LogicalKeyboardKey.arrowUp:
+        // Lautstärke erhöhen
+        if (isMobile) {
+          final newVolume = (_volumeValue.value + 0.1).clamp(0.0, 1.0);
+          setVolume(newVolume);
+        }
+        break;
+        
+      case LogicalKeyboardKey.arrowDown:
+        // Lautstärke verringern
+        if (isMobile) {
+          final newVolume = (_volumeValue.value - 0.1).clamp(0.0, 1.0);
+          setVolume(newVolume);
+        }
+        break;
+        
+      case LogicalKeyboardKey.keyP:
+        player.playOrPause();
+        break;
+        
+      case LogicalKeyboardKey.keyF:
+        // Vollbild umschalten
+        if (!Platform.isAndroid && !Platform.isIOS) {
+          isFullscreen.value = !isFullscreen.value;
+          AnymexTitleBar.setFullScreen(isFullscreen.value);
+        }
+        break;
+        
+      case LogicalKeyboardKey.keyS:
+        // Untertitel umschalten
+        showSubtitleSelector();
+        break;
+        
+      case LogicalKeyboardKey.keyM:
+        // Stummschalten
+        if (isMobile) {
+          final isMuted = _volumeValue.value == 0.0;
+          setVolume(isMuted ? 0.5 : 0.0);
+        }
+        break;
+        
+      case LogicalKeyboardKey.keyC:
+        // Controls umschalten
+        toggleControls();
+        break;
+        
+      case LogicalKeyboardKey.escape:
+        // Zurück
+        if (showControls.value) {
+          Get.back();
+        } else {
+          toggleControls(val: true);
+        }
+        break;
+        
+      case LogicalKeyboardKey.keyI:
+        // Info/Controls anzeigen
+        toggleControls();
+        break;
+    }
+  }
+
+  void _handleTVSeek(bool isLeft) {
+    // TV Seek Indicator anzeigen
+    _tvSeekDirection.value = isLeft ? 'left' : 'right';
+    _tvSeekAmount.value += settings.seekDuration;
+    
+    // Seek durchführen
+    final currentSeconds = currentPosition.value.inSeconds;
+    final maxSeconds = episodeDuration.value.inSeconds;
+    final seekAmount = _tvSeekAmount.value;
+    
+    final newSeekPosition = isLeft
+        ? (currentSeconds - seekAmount).clamp(0, maxSeconds)
+        : (currentSeconds + seekAmount).clamp(0, maxSeconds);
+    
+    player.seek(Duration(seconds: newSeekPosition));
+    currentPosition.value = Duration(seconds: newSeekPosition);
+    formattedTime.value = formatDuration(Duration(seconds: newSeekPosition));
+    
+    // Timer zurücksetzen
+    _tvSeekTimer?.cancel();
+    _tvSeekTimer = Timer(const Duration(seconds: 2), () {
+      _tvSeekDirection.value = '';
+      _tvSeekAmount.value = 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return KeyboardListener(
       focusNode: _keyboardListenerFocusNode,
       autofocus: !settings.isTV.value,
-      onKeyEvent: handlePlayerKeyEvent,
+      onKeyEvent: (e) {
+        if (settings.isTV.value) {
+          _handleTVRemoteEvent(e);
+        } else {
+          handlePlayerKeyEvent(e);
+        }
+      },
       child: Scaffold(
         body: Stack(
           alignment: Alignment.center,
@@ -554,6 +713,48 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
               _buildBrightnessSlider(),
               _buildVolumeSlider(),
             ],
+            // TV Seek Indicator
+            if (settings.isTV.value)
+              Positioned(
+                bottom: 100,
+                left: 0,
+                right: 0,
+                child: Obx(() {
+                  if (_tvSeekDirection.value.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  
+                  return Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _tvSeekDirection.value == 'left'
+                              ? Icons.fast_rewind
+                              : Icons.fast_forward,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${_tvSeekAmount.value}s',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ),
           ],
         ),
       ),
@@ -693,6 +894,9 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
                       e.logicalKey == LogicalKeyboardKey.arrowDown) {
                     toggleControls(val: true);
                   }
+                } else {
+                  // Wenn Controls sichtbar sind, TV-Fernbedienungsevents behandeln
+                  _handleTVRemoteEvent(e);
                 }
               }
             },

@@ -1,3 +1,4 @@
+// lib/screens/anime/widgets/episode_range.dart
 import 'package:anymex/models/Offline/Hive/episode.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

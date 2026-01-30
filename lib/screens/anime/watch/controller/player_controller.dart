@@ -1,3 +1,4 @@
+// lib/screens/anime/watch/controller/player_controller.dart
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -13,6 +14,7 @@ import 'package:anymex/models/player/player_adaptor.dart';
 import 'package:anymex/screens/anime/watch/controller/player_utils.dart';
 import 'package:anymex/screens/anime/watch/controls/widgets/bottom_sheet.dart';
 import 'package:anymex/screens/anime/watch/subtitles/model/online_subtitle.dart';
+import 'package:anymex/screens/anime/watch/controller/tv_remote_handler.dart';
 import 'package:anymex/utils/aniskip.dart' as aniskip;
 import 'package:anymex/utils/color_profiler.dart';
 import 'package:anymex/utils/logger.dart';
@@ -62,6 +64,8 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
   final String? folderName;
   final String? itemName;
   final String? offlineVideoPath;
+  TVRemoteHandler? _tvRemoteHandler;
+  TVRemoteHandler get tvRemoteHandler => _tvRemoteHandler!;
 
   PlayerController(model.Video video, Episode episode, this.episodeList,
       this.anilistData, List<model.Video> episodes,
@@ -201,6 +205,10 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
     _initOrientations();
     _initializePlayer();
     _updateRpc();
+    
+    if (settings.isTV.value) {
+      _initTVRemoteHandler();
+    }
     if (!isOffline.value) {
       _initializeAniSkip();
     }
@@ -217,6 +225,24 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
           .map((e) => AudioTrack.uri(e.file ?? '', title: e.label))
           .toList();
     });
+  }
+
+  void _initTVRemoteHandler() {
+    _tvRemoteHandler = TVRemoteHandler(
+      onSeek: (position) {
+        player.seek(position);
+        currentPosition.value = position;
+      },
+      onToggleMenu: () {
+        toggleControls();
+      },
+      onExitPlayer: () {
+        Get.back();
+      },
+      getCurrentPosition: () => currentPosition.value,
+      getVideoDuration: () => episodeDuration.value,
+      isMenuVisible: () => showControls.value,
+    );
   }
 
   Future<void> _updateRpc() async {
@@ -892,6 +918,8 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
     if (!isOffline.value) {
       DiscordRPCController.instance.updateMediaPresence(media: anilistData);
     }
+    _tvRemoteHandler?.dispose();
+    
     for (final subscription in _subscriptions) {
       subscription.cancel();
     }

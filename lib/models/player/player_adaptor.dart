@@ -1,3 +1,4 @@
+// lib/models/player/player_adaptor.dart
 import 'package:hive/hive.dart';
 
 part 'player_adaptor.g.dart';

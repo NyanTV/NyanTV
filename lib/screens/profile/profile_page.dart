@@ -75,7 +75,7 @@ class ProfilePage extends StatelessWidget {
                             _buildStatContainer(
                               context,
                               isFirst: true,
-                              isLast: false,
+                              isLast: true,
                               label: 'Anime',
                               value: profileData
                                       .value.stats?.animeStats?.animeCount
