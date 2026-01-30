@@ -1,4 +1,5 @@
-name: Build and Release AnymeX - Android
+name: Build Android (AnymeX / NyanTV)
+
 on:
   push:
     tags:
@@ -13,100 +14,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
-          distribution: "temurin"
+          distribution: "adopt"
           java-version: "17"
-      
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
-          cache-key: flutter-${{ env.FLUTTER_VERSION }}
-          cache-path: ${{ runner.tool_cache }}/flutter
-      
-      - name: Cache Flutter dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ runner.tool_cache }}/flutter
-            ~/.pub-cache
-            ${{ github.workspace }}/.dart_tool
-          key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-flutter-
-      
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-      
-      - name: Cache Android SDK
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.android/build-cache
-            ~/.android/cache
-          key: ${{ runner.os }}-android-${{ hashFiles('**/local.properties', '**/gradle.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-android-
-      
-      - name: Setup Android SDK
-        run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-          sdkmanager "cmake;3.22.1" "ndk;25.1.8937393"
-      
-      - name: Setup Android Signing
+
+      - name: Setup Android Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          cd $GITHUB_WORKSPACE
-          
-          # Create key.properties file
-          mkdir -p android
+          mkdir -p android/app
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/anymex.jks
           cat > android/key.properties << EOF
           storePassword=$KEYSTORE_PASSWORD
-          keyPassword=$KEY_PASSWORD
+          keyPassword=$KEYSTORE_PASSWORD
           keyAlias=$KEY_ALIAS
-          storeFile=keystore.jks
+          storeFile=anymex.jks
           EOF
-          
-          # Create keystore file from base64
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
-          else
-            echo "⚠️ No keystore provided - creating debug keystore for testing"
-            keytool -genkeypair \
-              -alias androiddebugkey \
-              -keypass android \
-              -keystore android/app/keystore.jks \
-              -storepass android \
-              -dname "CN=Android Debug,O=Android,C=US" \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000
-          fi
-          
-          # Ensure local.properties exists
-          if [ ! -f "android/local.properties" ]; then
-            echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-            echo "ndk.dir=$ANDROID_HOME/ndk/25.1.8937393" >> android/local.properties
-          fi
-      
-      - name: Setup Environment Variables
+
+      - name: Setup App Environment
         env:
           AL_CLIENT_ID: ${{ secrets.AL_CLIENT_ID }}
           AL_CLIENT_SECRET: ${{ secrets.AL_CLIENT_SECRET }}
@@ -125,79 +63,21 @@ jobs:
           MAL_CLIENT_SECRET=$MAL_CLIENT_SECRET
           CALLBACK_SCHEME=$CALLBACK_SCHEME
           EOF
-      
-      - name: Install Flutter dependencies
+
+      - name: Build Android APKs
         run: |
           flutter pub get
-          flutter --version
-          flutter doctor -v
-      
-      - name: Generate Native Splash Screen
-        run: dart run flutter_native_splash:create
-      
-      - name: Build Android APK (Split ABI)
-        run: |
+          dart run flutter_native_splash:create
           flutter build apk --split-per-abi --release --no-tree-shake-icons
-      
-      - name: Build Android APK (Universal)
-        run: |
           flutter build apk --release --no-tree-shake-icons
-      
-      - name: Rename APK files
-        run: |
           cd build/app/outputs/flutter-apk
-          ls -la
-          
-          # Rename split APKs
-          if [ -f "app-armeabi-v7a-release.apk" ]; then
-            mv app-armeabi-v7a-release.apk AnymeX-Android-armeabi-v7a.apk
-          fi
-          
-          if [ -f "app-arm64-v8a-release.apk" ]; then
-            mv app-arm64-v8a-release.apk AnymeX-Android-arm64-v8a.apk
-          fi
-          
-          if [ -f "app-x86_64-release.apk" ]; then
-            mv app-x86_64-release.apk AnymeX-Android-x86_64.apk
-          fi
-          
-          # Rename universal APK
-          if [ -f "app-release.apk" ]; then
-            mv app-release.apk AnymeX-Android-universal.apk
-          fi
-          
-          echo "📱 Generated APKs:"
-          ls -la *.apk
-      
-      - name: Upload APKs as artifacts
+          mv app-armeabi-v7a-release.apk AnymeX-Android-armeabi-v7a.apk
+          mv app-arm64-v8a-release.apk AnymeX-Android-arm64-v8a.apk
+          mv app-x86_64-release.apk AnymeX-Android-x86_64.apk
+          mv app-release.apk AnymeX-Android-universal.apk
+
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
           name: android-apks
-          path: build/app/outputs/flutter-apk/*.apk
-          retention-days: 7
-
-  create-release:
-    needs: build-android
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      
-    steps:
-      - name: Download Android APKs
-        uses: actions/download-artifact@v4
-        with:
-          name: android-apks
-          path: artifacts/
-      
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          name: Release ${{ github.ref_name }}
-          tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
-          prerelease: false
-          draft: false
-          files: |
-            artifacts/*.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: build/app/outputs/flutter-apk/AnymeX-Android-*.apk

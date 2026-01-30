@@ -164,6 +164,7 @@ app.*.symbols
 .env
 anymex.jks
 keystore.b64
+.secrets
 
 # Flutter Version Management (fvm)
 .fvm/

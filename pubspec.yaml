@@ -80,7 +80,7 @@ dependencies:
   flutter_staggered_animations: ^1.1.1
   material_symbols_icons: ^4.2867.0
   fuzzywuzzy: ^1.2.0
-  expressive_loading_indicator: ^0.0.1
+  expressive_loading_indicator: any
   photo_view: ^0.15.0
   rxdart: any
   ffi: any

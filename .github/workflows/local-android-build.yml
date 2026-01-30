@@ -1,13 +1,8 @@
 name: Local Android Build
 on: [push]
-
-env:
-  FLUTTER_VERSION: "3.32.8"
-
 jobs:
   build-android:
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v3
       
@@ -17,11 +12,72 @@ jobs:
           distribution: "adopt"
           java-version: "17"
       
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          cache: true
+      - name: Setup Android SDK
+        run: |
+          ANDROID_SDK_ROOT=/opt/android-sdk
+          
+          # Check if Android SDK already exists
+          if [ -d "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" ] && [ -d "$ANDROID_SDK_ROOT/ndk/27.0.12077973" ]; then
+            echo "✅ Found existing Android SDK with NDK"
+          else
+            echo "📱 Installing Android SDK with NDK..."
+            
+            # Install Android SDK Command Line Tools
+            mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+            cd $ANDROID_SDK_ROOT/cmdline-tools
+            
+            # Download command line tools (ARM64 compatible)
+            wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+            unzip -q commandlinetools-linux-11076708_latest.zip
+            mv cmdline-tools latest
+            rm commandlinetools-linux-11076708_latest.zip
+            
+            # Accept licenses and install required packages (including NDK)
+            yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
+            $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" "ndk;27.0.12077973"
+            
+            echo "✅ Android SDK installed with NDK"
+          fi
+          
+          # Set environment variables (always needed)
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+      
+      - name: Setup Flutter with Caching
+        run: |
+          echo "🔍 Checking for existing Flutter installation..."
+          
+          # Check if Flutter exists in /opt/flutter
+          if [ -d "/opt/flutter/bin" ]; then
+            echo "✅ Found existing Flutter in /opt/flutter"
+            export PATH="/opt/flutter/bin:$PATH"
+            
+            # Update Flutter to latest stable
+            echo "🔄 Updating Flutter to latest version..."
+            cd /opt/flutter
+            git fetch --tags
+            git checkout stable
+            git pull
+            /opt/flutter/bin/flutter --version
+          else
+            echo "❌ Flutter not found in /opt/flutter"
+            echo "📥 Installing Flutter (latest stable)..."
+            git clone https://github.com/flutter/flutter.git -b stable /opt/flutter
+            export PATH="/opt/flutter/bin:$PATH"
+            /opt/flutter/bin/flutter --version
+          fi
+          
+          # Disable analytics
+          /opt/flutter/bin/flutter config --no-analytics
+          
+          # Pre-download dependencies
+          echo "📦 Pre-downloading Flutter dependencies..."
+          /opt/flutter/bin/flutter doctor
+          
+          # Set PATH for subsequent steps
+          echo "/opt/flutter/bin" >> $GITHUB_PATH
       
       - name: Setup Android
         env:
@@ -29,6 +85,9 @@ jobs:
           KEY_ALIAS: androiddebugkey
         run: |
           cd $GITHUB_WORKSPACE
+          
+          # Remove existing keystore if it exists
+          rm -f android/app/anymex.jks
           
           # Create debug keystore
           mkdir -p android/app
