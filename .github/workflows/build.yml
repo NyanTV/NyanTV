@@ -128,12 +128,6 @@ jobs:
       - name: Start Build Timer
         run: echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
 
-      - name: Warm up Gradle Daemon
-        run: |
-          cd android
-          ./gradlew --version
-          ./gradlew tasks --quiet
-
       - name: Build Android APK (armeabi-v7a)
         run: |
           flutter build apk \
@@ -169,8 +163,9 @@ jobs:
           generate_release_notes: true
           body: |
             ## 🚀 Build Stats
-            - ⏱️ **Build Time:** ${{ env.BUILD_TIME_DISPLAY }}
-            - 📦 **APK Size:** ${{ env.APK_SIZE }}
-            - 🏗️ **Build Number:** ${{ github.run_number }}
+            - ⏱️ **Build Time:** `${{ env.BUILD_TIME_DISPLAY }}`
+            - 📦 **APK Size:** `${{ env.APK_SIZE }}`
+            - 🏗️ **Build Number:** `${{ github.run_number }}`
+            
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
