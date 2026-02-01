@@ -196,6 +196,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeProvider>(context);
+    final Settings settings = Get.find<Settings>();
 
     return Shortcuts(
       shortcuts: <LogicalKeySet, Intent>{
@@ -225,48 +226,55 @@ class MainApp extends StatelessWidget {
             }
           }
         },
-        child: GetMaterialApp(
-          scrollBehavior: MyCustomScrollBehavior(),
-          debugShowCheckedModeBanner: false,
-          title: "NyanTV",
-          theme: theme.lightTheme,
-          darkTheme: theme.darkTheme,
-          themeMode: theme.isSystemMode
-              ? ThemeMode.system
-              : theme.isLightMode
-                  ? ThemeMode.light
-                  : ThemeMode.dark,
-          home: const FilterScreen(),
-          builder: (context, child) {
-            if (PlatformDispatcher.instance.views.length > 1) {
-              return child!;
-            }
-            final isDesktop = Platform.isWindows;
+        child: Obx(() {
+          return Transform.scale(
+          scale: settings.uiScale,
+          alignment: Alignment.topCenter,
+          child: GetMaterialApp(
+            scrollBehavior: MyCustomScrollBehavior(),
+            debugShowCheckedModeBanner: false,
+            title: "NyanTV",
+            theme: theme.lightTheme,
+            darkTheme: theme.darkTheme,
+            themeMode: theme.isSystemMode
+                ? ThemeMode.system
+                : theme.isLightMode
+                    ? ThemeMode.light
+                    : ThemeMode.dark,
+            home: const FilterScreen(),
+            builder: (context, child) {
+              if (PlatformDispatcher.instance.views.length > 1) {
+                return child!;
+              }
+              final isDesktop = Platform.isWindows;
 
-            if (isDesktop) {
-              return Stack(
-                children: [
-                  child!,
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      color: Colors.transparent,
-                      child: NyantvTitleBar.titleBar(),
+              if (isDesktop) {
+                return Stack(
+                  children: [
+                    child!,
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        color: Colors.transparent,
+                        child: NyantvTitleBar.titleBar(),
+                      ),
                     ),
-                  ),
-                ],
-              );
-            }
-            return child!;
-          },
-          enableLog: true,
-          logWriterCallback: (text, {isError = false}) async {
-            Logger.d(text);
-          },
-        ),
-      ),
+                  ],
+                );
+              }
+              return child!;
+            },
+            enableLog: true,
+            logWriterCallback: (text, {isError = false}) async {
+              Logger.d(text);
+            },
+          ),
+          );
+        }),
+      
+    ),
     );
   }
 }
