@@ -196,7 +196,6 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeProvider>(context);
-    final Settings settings = Get.find<Settings>();
 
     return Shortcuts(
       shortcuts: <LogicalKeySet, Intent>{
@@ -209,7 +208,7 @@ class MainApp extends StatelessWidget {
             if (event.logicalKey == LogicalKeyboardKey.escape) {
               if (Get.currentRoute == '/' || Get.currentRoute == '') {
               } else {
-                 Navigator.pop(Get.context!);
+                Navigator.pop(Get.context!);
               }
             } else if (event.logicalKey == LogicalKeyboardKey.f11) {
               bool isFullScreen = await windowManager.isFullScreen();
@@ -226,55 +225,64 @@ class MainApp extends StatelessWidget {
             }
           }
         },
-        child: Obx(() {
-          return Transform.scale(
-          scale: settings.uiScale,
-          alignment: Alignment.topCenter,
-          child: GetMaterialApp(
-            scrollBehavior: MyCustomScrollBehavior(),
-            debugShowCheckedModeBanner: false,
-            title: "NyanTV",
-            theme: theme.lightTheme,
-            darkTheme: theme.darkTheme,
-            themeMode: theme.isSystemMode
-                ? ThemeMode.system
-                : theme.isLightMode
-                    ? ThemeMode.light
-                    : ThemeMode.dark,
-            home: const FilterScreen(),
-            builder: (context, child) {
-              if (PlatformDispatcher.instance.views.length > 1) {
-                return child!;
-              }
-              final isDesktop = Platform.isWindows;
+        child: GetMaterialApp(
+          scrollBehavior: MyCustomScrollBehavior(),
+          debugShowCheckedModeBanner: false,
+          title: "NyanTV",
+          theme: theme.lightTheme,
+          darkTheme: theme.darkTheme,
+          themeMode: theme.isSystemMode
+              ? ThemeMode.system
+              : theme.isLightMode
+                  ? ThemeMode.light
+                  : ThemeMode.dark,
+          home: const FilterScreen(),
+          builder: (context, child) {
+            final settings = Get.find<Settings>();
+            
+            Widget zoomedChild = Obx(() {
+              final scale = settings.uiScale;
+              return Transform.scale(
+                scale: scale,
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width / scale,
+                  height: MediaQuery.of(context).size.height / scale,
+                  child: child!,
+                ),
+              );
+            });
 
-              if (isDesktop) {
-                return Stack(
-                  children: [
-                    child!,
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        color: Colors.transparent,
-                        child: NyantvTitleBar.titleBar(),
-                      ),
+            if (PlatformDispatcher.instance.views.length > 1) {
+              return zoomedChild;
+            }
+
+            final isDesktop = Platform.isWindows;
+
+            if (isDesktop) {
+              return Stack(
+                children: [
+                  zoomedChild,
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      color: Colors.transparent,
+                      child: NyantvTitleBar.titleBar(),
                     ),
-                  ],
-                );
-              }
-              return child!;
-            },
-            enableLog: true,
-            logWriterCallback: (text, {isError = false}) async {
-              Logger.d(text);
-            },
-          ),
-          );
-        }),
-      
-    ),
+                  ),
+                ],
+              );
+            }
+            return zoomedChild;
+          },
+          enableLog: true,
+          logWriterCallback: (text, {isError = false}) async {
+            Logger.d(text);
+          },
+        ),
+      ),
     );
   }
 }
