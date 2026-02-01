@@ -88,15 +88,6 @@ class _SettingsCommonState extends State<SettingsCommon> {
                           description: "Choose which list to show on home page",
                           onTap: () => _showHomePageCardsDialog(context, false),
                         )),
-                    NyantvExpansionTile(
-                        initialExpanded: true,
-                        title: 'MyAnimeList',
-                        content: CustomTile(
-                          icon: Icons.format_list_bulleted_sharp,
-                          title: 'Manage MyAnimeList Lists',
-                          description: "Choose which list to show on home page",
-                          onTap: () => _showHomePageCardsDialog(context, true),
-                        )),
                     // NyantvExpansionTile(
                     //     initialExpanded: true,
                     //     title: 'Experimental',
