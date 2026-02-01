@@ -287,50 +287,54 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                     ),
                   )),
               
-              
-              Obx(() => NyantvExpansionTile(
-                    title: "UI Scaling",
-                    initialExpanded: true,
-                    content: Column(
-                      children: [
-                        CustomSliderTile(
-                          icon: Icons.zoom_in_outlined,
-                          title: "UI Scale Factor",
-                          label: "${(settings.uiScale * 100).toInt()}%",
-                          description: "Adjust the overall UI scale (like browser zoom)",
-                          sliderValue: settings.uiScale,
-                          divisions: 15, // 15 Schritte = ~10% pro Schritt
-                          onChanged: (double value) {
-                            settings.uiScale = value;
-                            settings.update(); // Trigger GetBuilder rebuild in main.dart
-                          },
-                          min: 0.5,  // 50%
-                          max: 2.0,  // 200%
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest
-                                .withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            "Tip: 100% = Normal, 150% = Larger, 200% = Extra Large",
-                            style: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.6),
-                              fontSize: 12,
+                  GetBuilder<Settings>(
+                    builder: (settings) {
+                      return NyantvExpansionTile(
+                        title: "UI Scaling",
+                        initialExpanded: true,
+                        content: Column(
+                          children: [
+                            CustomSliderTile(
+                              icon: Icons.zoom_in_outlined,
+                              title: "UI Scale Factor",
+                              label: "${(settings.uiScale * 100).toInt()}%",
+                              description:
+                                  "Adjust the overall UI scale (like browser zoom)",
+                              sliderValue: settings.uiScale,
+                              divisions: 15,
+                              onChanged: (double value) {
+                                settings.uiScale = value;
+                              },
+                              min: 0.5,
+                              max: 2.0,
                             ),
-                          ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest
+                                    .withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                "Tip: 100% = Normal, 150% = Larger, 200% = Extra Large",
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.6),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  )),
+                      );
+                    },
+                  ),             
+
 
               Obx(() {
                 settings.animationDuration;

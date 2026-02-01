@@ -118,9 +118,9 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
   }
 
   @override
-  RxList<Widget> animeWidgets(BuildContext context) {
+  RxList<Widget> animeWidgets(BuildContext context, ScrollController scrollController) {
     return [
-      buildBigCarousel(trendingAnimes, false),
+      buildBigCarousel(trendingAnimes, false, scrollController),
       buildSection('Recently Updated', recentlyUpdatedAnimes),
       buildSection('Trending Animes', trendingAnimes),
       buildSection('Popular Animes', popularAnimes),

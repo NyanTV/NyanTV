@@ -241,7 +241,7 @@ class SourceController extends GetxController implements BaseService {
   }
 
   @override
-  RxList<Widget> animeWidgets(BuildContext context) => [
+  RxList<Widget> animeWidgets(BuildContext context, ScrollController scrollController) => [
         Obx(() {
           return Column(
             children: _animeSections.value,
