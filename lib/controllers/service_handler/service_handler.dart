@@ -1,5 +1,4 @@
 import 'package:nyantv/utils/logger.dart';
-
 import 'package:nyantv/controllers/cacher/cache_controller.dart';
 import 'package:nyantv/controllers/service_handler/params.dart';
 import 'package:nyantv/controllers/services/anilist/anilist_data.dart';
@@ -64,18 +63,19 @@ class ServiceHandler extends GetxController {
   Rx<Profile> get profileData => serviceType.value == ServicesType.extensions
       ? Profile(name: onlineService.profileData.value.name ?? 'Guest').obs
       : onlineService.profileData;
+
   RxList<TrackedMedia> get animeList => onlineService.animeList;
-
   Rx<TrackedMedia> get currentMedia => onlineService.currentMedia;
-
   RxBool get isLoggedIn => onlineService.isLoggedIn;
 
   // Online Services Method
   Future<void> login() => onlineService.login();
   Future<void> logout() => onlineService.logout();
+
   Future<void> autoLogin() => Future.wait([
         anilistService.autoLogin(),
       ]);
+
   @override
   Future<void> refresh() => onlineService.refresh();
 
@@ -84,8 +84,10 @@ class ServiceHandler extends GetxController {
   ) async =>
       await onlineService.updateListEntry(params);
 
-  RxList<Widget> animeWidgets(BuildContext context) =>
-      service.animeWidgets(context);
+  // GEÄNDERT: ScrollController Parameter hinzugefügt
+  RxList<Widget> animeWidgets(BuildContext context, ScrollController scrollController) =>
+      service.animeWidgets(context, scrollController);
+
   RxList<Widget> homeWidgets(BuildContext context) =>
       service.homeWidgets(context);
 
@@ -110,6 +112,7 @@ class ServiceHandler extends GetxController {
       if (serviceType.value == ServicesType.extensions) {
         return service.fetchDetails(params);
       }
+
       Media? data = cacheController.getCacheById(params.id);
       return data ?? service.fetchDetails(params);
     } catch (e) {

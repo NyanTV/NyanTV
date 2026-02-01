@@ -287,6 +287,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                     ),
                   )),
               
+              
               Obx(() => NyantvExpansionTile(
                     title: "UI Scaling",
                     initialExpanded: true,
@@ -301,6 +302,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                           divisions: 15, // 15 Schritte = ~10% pro Schritt
                           onChanged: (double value) {
                             settings.uiScale = value;
+                            settings.update(); // Trigger GetBuilder rebuild in main.dart
                           },
                           min: 0.5,  // 50%
                           max: 2.0,  // 200%
@@ -312,7 +314,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                             color: Theme.of(context)
                                 .colorScheme
                                 .surfaceContainerHighest
-                                .withValues(alpha: 0.3),
+                                .withOpacity(0.3),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -321,7 +323,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurface
-                                  .withValues(alpha: 0.6),
+                                  .withOpacity(0.6),
                               fontSize: 12,
                             ),
                           ),

@@ -245,28 +245,26 @@ class MainApp extends StatelessWidget {
 
             final isDesktop = Platform.isWindows;
 
-            // UI Scale mit GetBuilder (sicherer als Obx)
-            Widget finalChild = GetBuilder<Settings>(
-              init: Get.find<Settings>(),
-              builder: (settings) {
-                final scale = settings.uiScale;
-                
-                // Validierung - nur skalieren wenn nötig und sicher
-                if (scale <= 0.0 || scale > 3.0 || scale == 1.0) {
-                  return child!; // Kein Scaling nötig oder ungültiger Wert
-                }
-                
-                return Transform.scale(
-                  scale: scale,
-                  alignment: Alignment.topLeft,
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width / scale,
-                    height: MediaQuery.of(context).size.height / scale,
-                    child: child!,
-                  ),
-                );
-              },
-            );
+            // UI Scale mit Obx für reaktive Updates
+            Widget finalChild = Obx(() {
+              final settings = Get.find<Settings>();
+              final scale = settings.uiScale;
+              
+              // Validierung - nur skalieren wenn nötig und sicher
+              if (scale <= 0.0 || scale > 3.0 || scale == 1.0) {
+                return child!; // Kein Scaling nötig oder ungültiger Wert
+              }
+              
+              return Transform.scale(
+                scale: scale,
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width / scale,
+                  height: MediaQuery.of(context).size.height / scale,
+                  child: child!,
+                ),
+              );
+            });
 
             if (isDesktop) {
               return Stack(
@@ -386,7 +384,7 @@ class _FilterScreenState extends State<FilterScreen> {
                               backgroundColor: Theme.of(context)
                                   .colorScheme
                                   .surfaceContainer
-                                  .withValues(alpha: 0.3),
+                                  .withOpacity(0.3),
                               child: authService.isLoggedIn.value
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(59),

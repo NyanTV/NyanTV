@@ -1,5 +1,5 @@
 // ignore_for_file: invalid_use_of_protected_member
-
+// lib/screens/anime/home_page.dart
 import 'package:nyantv/widgets/header.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
@@ -79,7 +79,7 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin {
                 const SizedBox(height: 10),
                 Obx(() {
                   return Column(
-                    children: serviceHandler.animeWidgets(context),
+                    children: serviceHandler.animeWidgets(context, _scrollController),
                   );
                 }),
                 if (!isDesktop)
@@ -89,30 +89,38 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin {
               ],
             ),
           ),
-          CustomAnimatedAppBar(
-            isVisible: _isAppBarVisibleExternally,
-            scrollController: _scrollController,
-            headerContent: const Header(type: PageType.anime),
-            visibleStatusBarStyle: SystemUiOverlayStyle(
-              statusBarIconBrightness:
-                  Theme.of(context).brightness == Brightness.light
-                      ? Brightness.dark
-                      : Brightness.light,
-              statusBarBrightness: Theme.of(context).brightness,
-              statusBarColor: Colors.transparent,
-            ),
-            hiddenStatusBarStyle: SystemUiOverlayStyle(
-              statusBarIconBrightness:
-                  Theme.of(context).brightness == Brightness.light
-                      ? Brightness.light
-                      : Brightness.dark,
-              statusBarBrightness:
-                  Theme.of(context).brightness == Brightness.light
-                      ? Brightness.dark
-                      : Brightness.light,
-              statusBarColor: Colors.transparent,
-            ),
-          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _isAppBarVisibleExternally,
+            builder: (context, isVisible, child) {
+              return IgnorePointer(
+                ignoring: !isVisible,
+                child: CustomAnimatedAppBar(
+                  isVisible: _isAppBarVisibleExternally,
+                  scrollController: _scrollController,
+                  headerContent: const Header(type: PageType.anime),
+                  visibleStatusBarStyle: SystemUiOverlayStyle(
+                    statusBarIconBrightness:
+                        Theme.of(context).brightness == Brightness.light
+                            ? Brightness.dark
+                            : Brightness.light,
+                    statusBarBrightness: Theme.of(context).brightness,
+                    statusBarColor: Colors.transparent,
+                  ),
+                  hiddenStatusBarStyle: SystemUiOverlayStyle(
+                    statusBarIconBrightness:
+                        Theme.of(context).brightness == Brightness.light
+                            ? Brightness.light
+                            : Brightness.dark,
+                    statusBarBrightness:
+                        Theme.of(context).brightness == Brightness.light
+                            ? Brightness.dark
+                            : Brightness.light,
+                    statusBarColor: Colors.transparent,
+                  ),
+                ),
+              );
+            },
+          )
         ],
       ),
     );
