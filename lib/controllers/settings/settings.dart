@@ -1,9 +1,9 @@
-import 'package:anymex/models/player/player_adaptor.dart';
-import 'package:anymex/models/ui/ui_adaptor.dart';
-import 'package:anymex/screens/onboarding/welcome_dialog.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/utils/shaders.dart';
-import 'package:anymex/utils/updater.dart';
+import 'package:nyantv/models/player/player_adaptor.dart';
+import 'package:nyantv/models/ui/ui_adaptor.dart';
+import 'package:nyantv/screens/onboarding/welcome_dialog.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/utils/shaders.dart';
+import 'package:nyantv/utils/updater.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';

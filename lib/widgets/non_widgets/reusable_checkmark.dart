@@ -1,5 +1,5 @@
-import 'package:anymex/widgets/common/checkmark_tile.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/common/checkmark_tile.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

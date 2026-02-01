@@ -1,7 +1,7 @@
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/utils/logger.dart';
 import 'dart:io';
 
-import 'package:anymex/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -114,10 +114,10 @@ class PlayerShaders {
 
   static Future<Directory> _getAppDirectory() async {
     if (Platform.isAndroid) {
-      return Directory('/storage/emulated/0/AnymeX');
+      return Directory('/storage/emulated/0/NyanTV');
     } else {
       final documentsDir = await getApplicationDocumentsDirectory();
-      return Directory('${documentsDir.path}/AnymeX');
+      return Directory('${documentsDir.path}/NyanTV');
     }
   }
 

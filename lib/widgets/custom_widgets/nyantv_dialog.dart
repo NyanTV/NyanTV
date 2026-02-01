@@ -1,9 +1,9 @@
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class AnymexDialog extends StatelessWidget {
+class NyantvDialog extends StatelessWidget {
   final String title;
   final String? message;
   final Widget? contentWidget;
@@ -11,7 +11,7 @@ class AnymexDialog extends StatelessWidget {
   final bool enableV2;
   final EdgeInsets padding;
 
-  const AnymexDialog({
+  const NyantvDialog({
     super.key,
     required this.title,
     this.message,
@@ -24,7 +24,7 @@ class AnymexDialog extends StatelessWidget {
   void show(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AnymexDialog(
+      builder: (context) => NyantvDialog(
         title: title,
         message: message,
         contentWidget: contentWidget,
@@ -54,7 +54,7 @@ class AnymexDialog extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             message != null
-                ? AnymexText(
+                ? NyantvText(
                     text: message!, textAlign: TextAlign.center, size: 14)
                 : contentWidget ?? const SizedBox.shrink(),
             const SizedBox(height: 16),
@@ -73,7 +73,7 @@ class AnymexDialog extends StatelessWidget {
                       backgroundColor:
                           Theme.of(context).colorScheme.surfaceContainer,
                     ),
-                    child: AnymexText(
+                    child: NyantvText(
                         text: 'Cancel',
                         size: 14,
                         color: Theme.of(context).colorScheme.primary,
@@ -94,7 +94,7 @@ class AnymexDialog extends StatelessWidget {
                       backgroundColor:
                           Theme.of(context).colorScheme.primaryFixed,
                     ),
-                    child: const AnymexText(
+                    child: const NyantvText(
                         text: 'Confirm',
                         size: 14,
                         color: Colors.black,
@@ -109,7 +109,7 @@ class AnymexDialog extends StatelessWidget {
     );
   }
 }
-// class AnymexDialog extends StatelessWidget {
+// class NyantvDialog extends StatelessWidget {
 //   final String title;
 //   final String? message;
 //   final Widget? contentWidget;
@@ -119,7 +119,7 @@ class AnymexDialog extends StatelessWidget {
 //   final VoidCallback? onCancel;
 //   final bool enableV2;
 
-//   const AnymexDialog({
+//   const NyantvDialog({
 //     super.key,
 //     required this.title,
 //     this.message,
@@ -134,7 +134,7 @@ class AnymexDialog extends StatelessWidget {
 //   void show(BuildContext context) {
 //     showDialog(
 //       context: context,
-//       builder: (context) => AnymexDialog(
+//       builder: (context) => NyantvDialog(
 //         title: title,
 //         message: message,
 //         contentWidget: contentWidget,
@@ -155,11 +155,11 @@ class AnymexDialog extends StatelessWidget {
 //         child: Column(
 //           mainAxisSize: MainAxisSize.min,
 //           children: [
-//             AnymexText(text: title, size: 18, variant: TextVariant.bold),
+//             NyantvText(text: title, size: 18, variant: TextVariant.bold),
 //             const SizedBox(height: 10),
 //             contentWidget ??
 //                 (message != null
-//                     ? AnymexText(
+//                     ? NyantvText(
 //                         text: message!, textAlign: TextAlign.center, size: 14)
 //                     : const SizedBox.shrink()),
 //             const SizedBox(height: 20),
@@ -178,7 +178,7 @@ class AnymexDialog extends StatelessWidget {
 //                     if (onConfirm != null) onConfirm!();
 //                     Navigator.of(context).pop();
 //                   },
-//                   child: AnymexText(
+//                   child: NyantvText(
 //                     text: confirmText,
 //                     color: Theme.of(context).colorScheme.primary,
 //                   ),

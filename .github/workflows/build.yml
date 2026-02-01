@@ -84,12 +84,12 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           mkdir -p android/app
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/anymex.jks
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/nyantv.jks
           cat > android/key.properties << EOF
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEYSTORE_PASSWORD
           keyAlias=$KEY_ALIAS
-          storeFile=anymex.jks
+          storeFile=nyantv.jks
           EOF
 
       - name: Setup App Environment
@@ -140,7 +140,7 @@ jobs:
       - name: Rename APK
         run: |
           cd build/app/outputs/flutter-apk
-          mv app-armeabi-v7a-release.apk AnymeX-Android-armeabi-v7a.apk
+          mv app-armeabi-v7a-release.apk NyanTV-Android-armeabi-v7a.apk
 
       - name: Calculate Build Stats
         run: |
@@ -148,7 +148,7 @@ jobs:
           BUILD_TIME=$((BUILD_END - BUILD_START))
           BUILD_MIN=$((BUILD_TIME / 60))
           BUILD_SEC=$((BUILD_TIME % 60))
-          APK_SIZE=$(du -h build/app/outputs/flutter-apk/AnymeX-Android-armeabi-v7a.apk | cut -f1)
+          APK_SIZE=$(du -h build/app/outputs/flutter-apk/NyanTV-Android-armeabi-v7a.apk | cut -f1)
           
           echo "⏱️ Build completed in ${BUILD_MIN}m ${BUILD_SEC}s"
           echo "📦 APK Size: $APK_SIZE"
@@ -159,7 +159,7 @@ jobs:
       - name: Upload APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/app/outputs/flutter-apk/AnymeX-Android-armeabi-v7a.apk
+          files: build/app/outputs/flutter-apk/NyanTV-Android-armeabi-v7a.apk
           generate_release_notes: true
           body: |
             ## 🚀 Build Stats

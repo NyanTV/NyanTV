@@ -4,39 +4,39 @@ import 'dart:ui';
 // NEU: Import für Geräte-Erkennung
 import 'package:device_info_plus/device_info_plus.dart'; 
 
-import 'package:anymex/controllers/cacher/cache_controller.dart';
-import 'package:anymex/controllers/discord/discord_rpc.dart';
-import 'package:anymex/controllers/offline/offline_storage_controller.dart';
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/controllers/services/anilist/anilist_auth.dart';
-import 'package:anymex/controllers/ui/greeting.dart';
-import 'package:anymex/controllers/theme.dart';
-import 'package:anymex/models/player/player_adaptor.dart';
-import 'package:anymex/models/ui/ui_adaptor.dart';
-import 'package:anymex/models/Offline/Hive/custom_list.dart';
-import 'package:anymex/models/Offline/Hive/offline_media.dart';
-import 'package:anymex/models/Offline/Hive/chapter.dart';
-import 'package:anymex/models/Offline/Hive/episode.dart';
-import 'package:anymex/models/Offline/Hive/offline_storage.dart';
-import 'package:anymex/models/Offline/Hive/video.dart';
-import 'package:anymex/screens/anime/home_page.dart';
-import 'package:anymex/screens/extensions/ExtensionScreen.dart';
-import 'package:anymex/screens/library/my_library.dart';
-import 'package:anymex/controllers/services/anilist/anilist_data.dart';
-import 'package:anymex/screens/home_page.dart';
-import 'package:anymex/utils/deeplink.dart';
-import 'package:anymex/utils/logger.dart';
-import 'package:anymex/utils/register_protocol/register_protocol.dart';
-import 'package:anymex/widgets/adaptive_wrapper.dart';
-import 'package:anymex/widgets/animation/more_page_transitions.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/common/navbar.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_titlebar.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/non_widgets/settings_sheet.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/controllers/cacher/cache_controller.dart';
+import 'package:nyantv/controllers/discord/discord_rpc.dart';
+import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/controllers/services/anilist/anilist_auth.dart';
+import 'package:nyantv/controllers/ui/greeting.dart';
+import 'package:nyantv/controllers/theme.dart';
+import 'package:nyantv/models/player/player_adaptor.dart';
+import 'package:nyantv/models/ui/ui_adaptor.dart';
+import 'package:nyantv/models/Offline/Hive/custom_list.dart';
+import 'package:nyantv/models/Offline/Hive/offline_media.dart';
+import 'package:nyantv/models/Offline/Hive/chapter.dart';
+import 'package:nyantv/models/Offline/Hive/episode.dart';
+import 'package:nyantv/models/Offline/Hive/offline_storage.dart';
+import 'package:nyantv/models/Offline/Hive/video.dart';
+import 'package:nyantv/screens/anime/home_page.dart';
+import 'package:nyantv/screens/extensions/ExtensionScreen.dart';
+import 'package:nyantv/screens/library/my_library.dart';
+import 'package:nyantv/controllers/services/anilist/anilist_data.dart';
+import 'package:nyantv/screens/home_page.dart';
+import 'package:nyantv/utils/deeplink.dart';
+import 'package:nyantv/utils/logger.dart';
+import 'package:nyantv/utils/register_protocol/register_protocol.dart';
+import 'package:nyantv/widgets/adaptive_wrapper.dart';
+import 'package:nyantv/widgets/animation/more_page_transitions.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/common/navbar.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_titlebar.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/non_widgets/settings_sheet.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:app_links/app_links.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -95,7 +95,7 @@ void main(List<String> args) async {
     }
 
     if (Platform.isWindows) {
-      ['dar', 'anymex', 'sugoireads', 'mangayomi']
+      ['dar', 'nyantv', 'sugoireads', 'mangayomi']
           .forEach(registerProtocolHandler);
     }
     initDeepLinkListener();
@@ -105,7 +105,7 @@ void main(List<String> args) async {
     initializeDateFormatting();
     if (!Platform.isAndroid && !Platform.isIOS) {
       await windowManager.ensureInitialized();
-      await AnymexTitleBar.initialize();
+      await NyantvTitleBar.initialize();
     } else {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
       SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -130,7 +130,7 @@ void main(List<String> args) async {
     Logger.e("CRASH: $error");
     if (error.toString().contains('PathAccessException: lock failed')) {
       Hive.deleteFromDisk();
-      await Hive.initFlutter('AnymeX');
+      await Hive.initFlutter('NyanTV');
       Hive.deleteFromDisk();
     }
     Logger.e("STACK: $stackTrace");
@@ -159,7 +159,7 @@ void initDeepLinkListener() async {
 }
 
 Future<void> initializeHive() async {
-  await Hive.initFlutter('AnymeX');
+  await Hive.initFlutter('NyanTV');
   Hive.registerAdapter(VideoAdapter());
   Hive.registerAdapter(TrackAdapter());
   Hive.registerAdapter(UISettingsAdapter());
@@ -212,7 +212,7 @@ class MainApp extends StatelessWidget {
               }
             } else if (event.logicalKey == LogicalKeyboardKey.f11) {
               bool isFullScreen = await windowManager.isFullScreen();
-              AnymexTitleBar.setFullScreen(!isFullScreen);
+              NyantvTitleBar.setFullScreen(!isFullScreen);
             } else if (event.logicalKey == LogicalKeyboardKey.enter) {
               final isAltPressed = HardwareKeyboard.instance.logicalKeysPressed
                       .contains(LogicalKeyboardKey.altLeft) ||
@@ -220,7 +220,7 @@ class MainApp extends StatelessWidget {
                       .contains(LogicalKeyboardKey.altRight);
               if (isAltPressed) {
                 bool isFullScreen = await windowManager.isFullScreen();
-                AnymexTitleBar.setFullScreen(!isFullScreen);
+                NyantvTitleBar.setFullScreen(!isFullScreen);
               }
             }
           }
@@ -228,7 +228,7 @@ class MainApp extends StatelessWidget {
         child: GetMaterialApp(
           scrollBehavior: MyCustomScrollBehavior(),
           debugShowCheckedModeBanner: false,
-          title: "AnymeX",
+          title: "NyanTV",
           theme: theme.lightTheme,
           darkTheme: theme.darkTheme,
           themeMode: theme.isSystemMode
@@ -253,7 +253,7 @@ class MainApp extends StatelessWidget {
                     right: 0,
                     child: Container(
                       color: Colors.transparent,
-                      child: AnymexTitleBar.titleBar(),
+                      child: NyantvTitleBar.titleBar(),
                     ),
                   ),
                 ],

@@ -1,26 +1,26 @@
 // ignore_for_file: invalid_use_of_protected_member
 // lib/screens/anime/widgets/episode_section.dart
 import 'dart:async';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/screens/extensions/ExtensionSettings/ExtensionSettings.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/utils/logger.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/models/Offline/Hive/episode.dart';
-import 'package:anymex/screens/anime/widgets/episode_list_builder.dart';
-import 'package:anymex/screens/anime/widgets/wrongtitle_modal.dart';
-import 'package:anymex/widgets/common/no_source.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_dropdown.dart';
-import 'package:anymex/widgets/header.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/custom_widgets/custom_textspan.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/screens/extensions/ExtensionSettings/ExtensionSettings.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/utils/logger.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/models/Offline/Hive/episode.dart';
+import 'package:nyantv/screens/anime/widgets/episode_list_builder.dart';
+import 'package:nyantv/screens/anime/widgets/wrongtitle_modal.dart';
+import 'package:nyantv/widgets/common/no_source.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_dropdown.dart';
+import 'package:nyantv/widgets/header.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
 import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:flutter/material.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_progress.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
 
 class EpisodeSection extends StatefulWidget {
@@ -158,7 +158,7 @@ class _EpisodeSectionState extends State<EpisodeSection> {
       }
     }
 
-    return AnymexDropdown(
+    return NyantvDropdown(
       items: items,
       selectedItem: selectedItem,
       label: "SELECT SOURCE",
@@ -185,7 +185,7 @@ class _EpisodeSectionState extends State<EpisodeSection> {
             return const SizedBox(
               height: 300,
               child: Center(
-                child: AnymexText(
+                child: NyantvText(
                   text:
                       "Looks like even the episodes are avoiding your taste in shows\n:(",
                   size: 20,
@@ -199,7 +199,7 @@ class _EpisodeSectionState extends State<EpisodeSection> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const SizedBox(
               height: 500,
-              child: Center(child: AnymexProgressIndicator()),
+              child: Center(child: NyantvProgressIndicator()),
             );
           }
 
@@ -207,7 +207,7 @@ class _EpisodeSectionState extends State<EpisodeSection> {
             if (widget.episodeList?.isEmpty ?? true) {
               return const SizedBox(
                 height: 500,
-                child: Center(child: AnymexProgressIndicator()),
+                child: Center(child: NyantvProgressIndicator()),
               );
             }
           }
@@ -256,12 +256,12 @@ class _EpisodeSectionState extends State<EpisodeSection> {
               child: Row(
                 children: [
                   Expanded(
-                    child: AnymexTextSpans(
+                    child: NyantvTextSpans(
                       spans: [
                         if (!widget.searchedTitle.value.contains('Searching') &&
                             !widget.searchedTitle.value
                                 .contains('No Match Found'))
-                          AnymexTextSpan(
+                          NyantvTextSpan(
                             text: "Found: ",
                             size: 14,
                             color: Theme.of(context)
@@ -269,7 +269,7 @@ class _EpisodeSectionState extends State<EpisodeSection> {
                                 .onSurface
                                 .withOpacity(0.6),
                           ),
-                        AnymexTextSpan(
+                        NyantvTextSpan(
                           text: widget.searchedTitle.value,
                           variant: TextVariant.semiBold,
                           size: 14,
@@ -282,7 +282,7 @@ class _EpisodeSectionState extends State<EpisodeSection> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  AnymexOnTap(
+                  NyantvOnTap(
                     onTap: () {
                       showWrongTitleModal(
                         context,
@@ -331,7 +331,7 @@ class _EpisodeSectionState extends State<EpisodeSection> {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                           const SizedBox(width: 6),
-                          AnymexText(
+                          NyantvText(
                             text: "Wrong Title?",
                             size: 12,
                             color: Theme.of(context).colorScheme.primary,
@@ -359,7 +359,7 @@ class _EpisodeSectionState extends State<EpisodeSection> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const AnymexText(
+                  const NyantvText(
                     text: "Episodes",
                     variant: TextVariant.bold,
                     size: 18,
@@ -368,7 +368,7 @@ class _EpisodeSectionState extends State<EpisodeSection> {
                     if (widget.showAnify.value) {
                       return Row(
                         children: [
-                          const AnymexText(
+                          const NyantvText(
                             text: "Anify / Kitsu",
                             variant: TextVariant.semiBold,
                             size: 16,

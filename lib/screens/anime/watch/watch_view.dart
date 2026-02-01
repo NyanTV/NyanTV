@@ -1,17 +1,17 @@
 // lib/screens/anime/watch/watch_view.dart
-import 'package:anymex/models/Media/media.dart' as anymex;
-import 'package:anymex/models/Offline/Hive/episode.dart';
-import 'package:anymex/models/Offline/Hive/video.dart' as model;
-import 'package:anymex/screens/anime/watch/controller/player_controller.dart';
-import 'package:anymex/screens/anime/watch/controls/bottom_controls.dart';
-import 'package:anymex/screens/anime/watch/controls/center_controls.dart';
-import 'package:anymex/screens/anime/watch/controls/widgets/double_tap_seek.dart';
-import 'package:anymex/screens/anime/watch/controls/widgets/overlay.dart';
-import 'package:anymex/screens/anime/watch/controls/top_controls.dart';
-import 'package:anymex/screens/anime/watch/controls/widgets/episodes_pane.dart';
-import 'package:anymex/screens/anime/watch/controls/widgets/subtitle_text.dart';
-import 'package:anymex/screens/anime/watch/subtitles/subtitle_view.dart';
-import 'package:anymex/screens/anime/widgets/media_indicator.dart';
+import 'package:nyantv/models/Media/media.dart' as nyantv;
+import 'package:nyantv/models/Offline/Hive/episode.dart';
+import 'package:nyantv/models/Offline/Hive/video.dart' as model;
+import 'package:nyantv/screens/anime/watch/controller/player_controller.dart';
+import 'package:nyantv/screens/anime/watch/controls/bottom_controls.dart';
+import 'package:nyantv/screens/anime/watch/controls/center_controls.dart';
+import 'package:nyantv/screens/anime/watch/controls/widgets/double_tap_seek.dart';
+import 'package:nyantv/screens/anime/watch/controls/widgets/overlay.dart';
+import 'package:nyantv/screens/anime/watch/controls/top_controls.dart';
+import 'package:nyantv/screens/anime/watch/controls/widgets/episodes_pane.dart';
+import 'package:nyantv/screens/anime/watch/controls/widgets/subtitle_text.dart';
+import 'package:nyantv/screens/anime/watch/subtitles/subtitle_view.dart';
+import 'package:nyantv/screens/anime/widgets/media_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/services.dart';
@@ -21,7 +21,7 @@ class WatchScreen extends StatefulWidget {
   final model.Video episodeSrc;
   final Episode currentEpisode;
   final List<Episode> episodeList;
-  final anymex.Media anilistData;
+  final nyantv.Media anilistData;
   final List<model.Video> episodeTracks;
   final bool shouldTrack;
 

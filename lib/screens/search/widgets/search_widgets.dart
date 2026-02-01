@@ -1,4 +1,4 @@
-import 'package:anymex/screens/search/widgets/search_filter_selector.dart';
+import 'package:nyantv/screens/search/widgets/search_filter_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 

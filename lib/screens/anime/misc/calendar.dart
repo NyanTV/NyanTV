@@ -1,19 +1,19 @@
 import 'dart:async';
 
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/controllers/services/anilist/calendar_data.dart';
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/screens/anime/details_page.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/header.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/services/anilist/calendar_data.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/screens/anime/details_page.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/header.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:blur/blur.dart';
 import 'package:flutter/material.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_progress.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -111,7 +111,7 @@ class _CalendarState extends State<Calendar>
             const SizedBox(width: 10),
           ],
           automaticallyImplyLeading: false,
-          title: AnymexText(
+          title: NyantvText(
             text: "Calendar",
             color: Theme.of(context).colorScheme.primary,
             variant: TextVariant.semiBold,
@@ -132,7 +132,7 @@ class _CalendarState extends State<Calendar>
                     .toList();
 
                 return Tab(
-                  child: AnymexText(
+                  child: NyantvText(
                     variant: TextVariant.bold,
                     text:
                         '${DateFormat('EEEE, MMMM d, y').format(date)} (${filteredList.length})',
@@ -155,7 +155,7 @@ class _CalendarState extends State<Calendar>
                   .toList();
 
               return isLoading
-                  ? const Center(child: AnymexProgressIndicator())
+                  ? const Center(child: NyantvProgressIndicator())
                   : filteredList.isEmpty
                       ? const Center(child: Text("No Anime Airing on this day"))
                       : GridView.builder(
@@ -212,7 +212,7 @@ class _GridAnimeCardState extends State<GridAnimeCard> {
         children: [
           Stack(
             children: [
-              AnymexOnTap(
+              NyantvOnTap(
                 margin: 0,
                 onTap: () {
                   navigate(() => AnimeDetailsPage(
@@ -248,7 +248,7 @@ class _GridAnimeCardState extends State<GridAnimeCard> {
                   color: Colors.grey, size: 16),
               if (widget.data.nextAiringEpisode?.episode != null) ...[
                 const SizedBox(width: 5),
-                AnymexText(
+                NyantvText(
                   text: 'EPISODE ${widget.data.nextAiringEpisode!.episode}',
                   maxLines: 1,
                   variant: TextVariant.regular,
@@ -262,7 +262,7 @@ class _GridAnimeCardState extends State<GridAnimeCard> {
           const SizedBox(height: 5),
           SizedBox(
             width: cardWidth,
-            child: AnymexText(
+            child: NyantvText(
               text: widget.data.title,
               maxLines: 2,
               size: 14,
@@ -271,7 +271,7 @@ class _GridAnimeCardState extends State<GridAnimeCard> {
           if (widget.data.nextAiringEpisode?.episode != null)
             SizedBox(
               width: cardWidth,
-              child: AnymexText(
+              child: NyantvText(
                 text: '~ | ${widget.data.nextAiringEpisode!.episode - 1} |  ~',
                 maxLines: 1,
                 size: 12,
@@ -302,7 +302,7 @@ class _GridAnimeCardState extends State<GridAnimeCard> {
             color: Theme.of(context).colorScheme.onPrimary,
           ),
           const SizedBox(width: 4),
-          AnymexText(
+          NyantvText(
             text: media.rating,
             color: Theme.of(context).colorScheme.onPrimary,
             size: 12,
@@ -372,7 +372,7 @@ class _BlurAnimeCardState extends State<BlurAnimeCard> {
       Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8),
     ];
 
-    return AnymexOnTap(
+    return NyantvOnTap(
       onTap: () {
         navigate(
             () => AnimeDetailsPage(media: widget.data, tag: widget.data.title));
@@ -435,7 +435,7 @@ class _BlurAnimeCardState extends State<BlurAnimeCard> {
                         SizedBox(
                             height: getResponsiveSize(context,
                                 mobileSize: 10, desktopSize: 30)),
-                        AnymexText(
+                        NyantvText(
                           text:
                               "Episode ${widget.data.nextAiringEpisode!.episode}",
                           size: 14,
@@ -445,7 +445,7 @@ class _BlurAnimeCardState extends State<BlurAnimeCard> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 10),
-                        AnymexText(
+                        NyantvText(
                           text: widget.data.title,
                           size: 14,
                           maxLines: 2,
@@ -469,7 +469,7 @@ class _BlurAnimeCardState extends State<BlurAnimeCard> {
                     borderRadius: BorderRadius.circular((8.multiplyRadius())),
                     color: Theme.of(context).colorScheme.primary,
                   ),
-                  child: AnymexText(
+                  child: NyantvText(
                     text: formatTime(timeLeft.value),
                     size: 12,
                     color: Theme.of(context).colorScheme.onPrimary,

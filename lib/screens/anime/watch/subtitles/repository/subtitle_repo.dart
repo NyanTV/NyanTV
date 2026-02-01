@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:anymex/screens/anime/watch/subtitles/model/online_subtitle.dart';
+import 'package:nyantv/screens/anime/watch/subtitles/model/online_subtitle.dart';
 import 'package:http/http.dart' as http;
 
 class SubtitleRepo {

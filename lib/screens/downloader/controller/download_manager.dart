@@ -1,6 +1,6 @@
 // import 'package:path/path.dart' as p;
 
-// import 'package:anymex/screens/downloader/model/download_item.dart';
+// import 'package:nyantv/screens/downloader/model/download_item.dart';
 // import 'package:flutter/foundation.dart';
 // import 'package:get/get.dart';
 // import 'package:background_downloader/background_downloader.dart';

@@ -1,10 +1,10 @@
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/screens/settings/widgets/card_selector.dart';
-import 'package:anymex/screens/settings/widgets/history_card_selector.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/common/custom_tiles.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/custom_widgets/custom_expansion_tile.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/screens/settings/widgets/card_selector.dart';
+import 'package:nyantv/screens/settings/widgets/history_card_selector.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/common/custom_tiles.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_expansion_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -74,7 +74,7 @@ class _SettingsUiState extends State<SettingsUi> {
                     () => Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        AnymexExpansionTile(
+                        NyantvExpansionTile(
                             title: 'Common',
                             initialExpanded: true,
                             content: Column(
@@ -112,7 +112,7 @@ class _SettingsUiState extends State<SettingsUi> {
                                 10.height(),
                               ],
                             )),
-                        AnymexExpansionTile(
+                        NyantvExpansionTile(
                             title: 'Extras',
                             content: Column(
                               children: [

@@ -1,4 +1,4 @@
-# Installation Guide for AnymeX
+# Installation Guide for NyanTV
 
 ## 📌 Which Version Should You Download?
 
@@ -12,7 +12,7 @@
 | **Linux (AppImage)** | You want a standalone, click-to-run file. |
 | **Linux (RPM)** | You're on Fedora, CentOS, or another RPM-based distro. |
 | **Linux (ZIP)** | You prefer manual setup or portable use. |
-| **Linux ([AUR](https://aur.archlinux.org/))** | You're on Arch Linux — use [`anymex-bin`](https://aur.archlinux.org/packages/anymex-bin). |
+| **Linux ([AUR](https://aur.archlinux.org/))** | You're on Arch Linux — use [`nyantv-bin`](https://aur.archlinux.org/packages/nyantv-bin). |
 | **Windows (ZIP)** | You want a portable version (no installer). |
 | **Windows (Installer)** | You prefer the standard install process. |
 
@@ -35,15 +35,15 @@ Use [CPU-Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z) or [D
    ```powershell
    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
    ```
-2. **Install AnymeX:**
+2. **Install NyanTV:**
    In Command Prompt or PowerShell, run:
    ```powershell
-   choco install com.ryan.anymex
+   choco install com.ryan.nyantv
    ```
 3. **Update later with:**
    In Command Prompt or PowerShell, run:
    ```powershell
-   choco upgrade com.ryan.anymex
+   choco upgrade com.ryan.nyantv
    ```
 ---
 
@@ -56,33 +56,33 @@ Use [CPU-Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z) or [D
    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
    irm get.scoop.sh | iex
    ```
-2. **Add the Anymex bucket:**
+2. **Add the Nyantv bucket:**
    In Command Prompt or PowerShell, run:
    ```powershell
-   scoop bucket add Anymex https://github.com/MiraiEnoki/Anymex_Scoop
+   scoop bucket add Nyantv https://github.com/MiraiEnoki/Nyantv_Scoop
    ```
 3. **Install the app:**
    In Command Prompt or PowerShell, run:
    ```powershell
-   scoop install anymex
+   scoop install nyantv
    ```
 4. **Update later with:**
    In Command Prompt or PowerShell, run:
    ```powershell
-   scoop update anymex
+   scoop update nyantv
    ```
 ---
 
 ### 🔹 Windows (ZIP or Installer)
-- **ZIP**: Download `AnymeX-Windows.zip`, extract, and run `anymex.exe`.
-- **Installer**: Use `AnymeX-x86_64-<version>-Installer.exe` for full setup.
+- **ZIP**: Download `NyanTV-Windows.zip`, extract, and run `nyantv.exe`.
+- **Installer**: Use `NyanTV-x86_64-<version>-Installer.exe` for full setup.
 ---
 
 ### 🔹 Linux
 - **AppImage**: Make it executable and run:
   ```bash
-  chmod +x AnymeX.AppImage
-  ./AnymeX.AppImage
+  chmod +x NyanTV.AppImage
+  ./NyanTV.AppImage
   ```
 - **RPM/ZIP**: Choose based on your distro or install style.
 ---

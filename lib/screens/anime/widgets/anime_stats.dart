@@ -1,13 +1,13 @@
 // ignore_for_file: prefer_const_constructors
 
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/screens/home_page.dart';
-import 'package:anymex/screens/search/search_view.dart';
-import 'package:anymex/utils/fallback/fallback_anime.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/screens/home_page.dart';
+import 'package:nyantv/screens/search/search_view.dart';
+import 'package:nyantv/utils/fallback/fallback_anime.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -40,7 +40,7 @@ class AnimeStats extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  AnymexText(
+                  NyantvText(
                     text:
                         "EPISODE ${data.nextAiringEpisode?.episode} WILL BE RELEASED IN",
                     size: 14,
@@ -51,7 +51,7 @@ class AnimeStats extends StatelessWidget {
                         .withOpacity(0.8),
                   ),
                   const SizedBox(height: 5),
-                  AnymexText(
+                  NyantvText(
                     text: countdown,
                     size: getResponsiveSize(context,
                         mobileSize: 16, desktopSize: 20),
@@ -63,7 +63,7 @@ class AnimeStats extends StatelessWidget {
               ),
             ),
           ),
-        const AnymexText(
+        const NyantvText(
           text: "Statistics",
           variant: TextVariant.bold,
           size: 17,
@@ -88,7 +88,7 @@ class AnimeStats extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 30),
-        const AnymexText(
+        const NyantvText(
           text: "Romaji Title",
           variant: TextVariant.bold,
           size: 17,
@@ -96,7 +96,7 @@ class AnimeStats extends StatelessWidget {
         10.height(),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10.0),
-          child: AnymexText(
+          child: NyantvText(
             text: data.romajiTitle,
             variant: TextVariant.semiBold,
             size: 14,
@@ -104,14 +104,14 @@ class AnimeStats extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 30),
-        const AnymexText(
+        const NyantvText(
           text: "Synopsis",
           variant: TextVariant.bold,
           size: 17,
         ),
         Padding(
           padding: const EdgeInsets.all(10.0),
-          child: AnymexText(
+          child: NyantvText(
             text: data.description,
             size: 14,
             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.9),
@@ -120,7 +120,7 @@ class AnimeStats extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        const AnymexText(
+        const NyantvText(
           text: "Genres",
           variant: TextVariant.bold,
           size: 17,
@@ -178,14 +178,14 @@ class StateItem extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AnymexText(
+          NyantvText(
             text: label,
             variant: TextVariant.semiBold,
             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.9),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: AnymexText(
+            child: NyantvText(
               text: value,
               variant: TextVariant.semiBold,
               color: Theme.of(context).colorScheme.primary,

@@ -1,15 +1,15 @@
 import 'dart:io';
 
-import 'package:anymex/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/models/Anilist/anilist_media_user.dart';
-import 'package:anymex/models/Media/relation.dart';
-import 'package:anymex/models/Offline/Hive/chapter.dart';
-import 'package:anymex/models/Offline/Hive/episode.dart';
-import 'package:anymex/models/Offline/Hive/offline_media.dart';
-import 'package:anymex/models/models_convertor/carousel/carousel_data.dart';
-import 'package:anymex/models/models_convertor/carousel_mapper.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/models/Anilist/anilist_media_user.dart';
+import 'package:nyantv/models/Media/relation.dart';
+import 'package:nyantv/models/Offline/Hive/chapter.dart';
+import 'package:nyantv/models/Offline/Hive/episode.dart';
+import 'package:nyantv/models/Offline/Hive/offline_media.dart';
+import 'package:nyantv/models/models_convertor/carousel/carousel_data.dart';
+import 'package:nyantv/models/models_convertor/carousel_mapper.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

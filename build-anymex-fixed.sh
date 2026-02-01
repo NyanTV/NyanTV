@@ -50,7 +50,7 @@ success "Projekt Cache gelöscht"
 echo ""
 echo -e "${BLUE}🔍 Konfiguriere Flutter SDK...${NC}"
 
-PROJECT_FLUTTER="/Users/murat/Documents/AnymeX-1.3.8/.flutter-sdk-3.32.8"
+PROJECT_FLUTTER="/Users/murat/Documents/NyanTV-1.3.8/.flutter-sdk-3.32.8"
 if [ -d "$PROJECT_FLUTTER" ]; then
     export PATH="$PROJECT_FLUTTER/bin:$PATH"
     export FLUTTER_ROOT="$PROJECT_FLUTTER"
@@ -162,7 +162,7 @@ if [ ! -f ".env" ]; then
     cat > .env << 'EOF'
 AL_CLIENT_ID=35098
 AL_CLIENT_SECRET=PMyeG26XugG35WEunlMUv7X5dwvgG8L5SFA6BNaA
-CALLBACK_SCHEME=anymex
+CALLBACK_SCHEME=nyantv
 EOF
     success ".env erstellt"
 else
@@ -254,10 +254,10 @@ APK_DIR="build/app/outputs/flutter-apk"
 if [ -d "$APK_DIR" ]; then
     cd "$APK_DIR"
     
-    [ -f "app-armeabi-v7a-release.apk" ] && mv app-armeabi-v7a-release.apk AnymeX-Android-armeabi-v7a.apk
-    [ -f "app-arm64-v8a-release.apk" ] && mv app-arm64-v8a-release.apk AnymeX-Android-arm64-v8a.apk
-    [ -f "app-x86_64-release.apk" ] && mv app-x86_64-release.apk AnymeX-Android-x86_64.apk
-    [ -f "app-release.apk" ] && mv app-release.apk AnymeX-Android-universal.apk
+    [ -f "app-armeabi-v7a-release.apk" ] && mv app-armeabi-v7a-release.apk NyanTV-Android-armeabi-v7a.apk
+    [ -f "app-arm64-v8a-release.apk" ] && mv app-arm64-v8a-release.apk NyanTV-Android-arm64-v8a.apk
+    [ -f "app-x86_64-release.apk" ] && mv app-x86_64-release.apk NyanTV-Android-x86_64.apk
+    [ -f "app-release.apk" ] && mv app-release.apk NyanTV-Android-universal.apk
     
     cd - > /dev/null
     success "APKs umbenannt"
@@ -270,10 +270,10 @@ echo -e "${GREEN}✨ BUILD ABGESCHLOSSEN!${NC}"
 echo -e "${GREEN}=============================================${NC}"
 echo ""
 
-APK_COUNT=$(ls -1 "$APK_DIR"/AnymeX-*.apk 2>/dev/null | wc -l)
+APK_COUNT=$(ls -1 "$APK_DIR"/NyanTV-*.apk 2>/dev/null | wc -l)
 if [ $APK_COUNT -gt 0 ]; then
     echo -e "${GREEN}📱 Generierte APKs:${NC}"
-    for apk in "$APK_DIR"/AnymeX-*.apk; do
+    for apk in "$APK_DIR"/NyanTV-*.apk; do
         SIZE=$(du -h "$apk" 2>/dev/null | cut -f1)
         echo -e "   ✅ $(basename "$apk") ($SIZE)"
     done

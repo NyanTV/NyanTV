@@ -1,11 +1,11 @@
 import 'dart:io';
-import 'package:anymex/screens/anime/watch/controls/widgets/bottom_sheet.dart';
-import 'package:anymex/screens/anime/watch/controls/widgets/control_button.dart';
-import 'package:anymex/screens/anime/watch/controls/widgets/progress_slider.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/screens/anime/watch/controls/widgets/bottom_sheet.dart';
+import 'package:nyantv/screens/anime/watch/controls/widgets/control_button.dart';
+import 'package:nyantv/screens/anime/watch/controls/widgets/progress_slider.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:anymex/screens/anime/watch/controller/player_controller.dart';
+import 'package:nyantv/screens/anime/watch/controller/player_controller.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class BottomControls extends StatelessWidget {
@@ -129,7 +129,7 @@ class BottomControls extends StatelessWidget {
                       width: 0.5,
                     ),
                   ),
-                  child: AnymexText(
+                  child: NyantvText(
                     text: '+${controller.playerSettings.skipDuration}',
                     variant: TextVariant.semiBold,
                     color: controller.isLocked.value

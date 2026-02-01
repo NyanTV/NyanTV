@@ -1,4 +1,4 @@
-package com.ryan.anymex
+package com.ryan.nyantv
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -11,7 +11,7 @@ import java.io.InputStreamReader
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "app/architecture"
-    private val PLATFORM_CHANNEL = "app.anymex/platform"
+    private val PLATFORM_CHANNEL = "app.nyantv/platform"
     
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

@@ -1,7 +1,7 @@
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/widgets/common/slider_semantics.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_button.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_dropdown.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/widgets/common/slider_semantics.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_button.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -149,7 +149,7 @@ class _ListEditorModalState extends State<ListEditorModal> {
               color: colorScheme.outline.withOpacity(0.5),
             ),
           ),
-          child: AnymexDropdown(
+          child: NyantvDropdown(
             label: 'Status',
             icon: Icons.info_rounded,
             onChanged: (e) {
@@ -559,7 +559,7 @@ class _ListEditorModalState extends State<ListEditorModal> {
         Expanded(
           child: SizedBox(
             height: 56,
-            child: AnymexButton(
+            child: NyantvButton(
               onTap: () {
                 Navigator.pop(context);
                 widget.onDelete(widget.media.id);
@@ -593,7 +593,7 @@ class _ListEditorModalState extends State<ListEditorModal> {
         Expanded(
           child: SizedBox(
             height: 56,
-            child: AnymexButton(
+            child: NyantvButton(
               borderRadius: const BorderRadius.horizontal(
                   right: Radius.circular(100), left: Radius.circular(10)),
               onTap: () {

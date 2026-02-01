@@ -1,14 +1,14 @@
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/utils/logger.dart';
 
-import 'package:anymex/controllers/cacher/cache_controller.dart';
-import 'package:anymex/controllers/service_handler/params.dart';
-import 'package:anymex/controllers/services/anilist/anilist_data.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/models/Anilist/anilist_media_user.dart';
-import 'package:anymex/models/Anilist/anilist_profile.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/models/Service/base_service.dart';
-import 'package:anymex/models/Service/online_service.dart';
+import 'package:nyantv/controllers/cacher/cache_controller.dart';
+import 'package:nyantv/controllers/service_handler/params.dart';
+import 'package:nyantv/controllers/services/anilist/anilist_data.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/models/Anilist/anilist_media_user.dart';
+import 'package:nyantv/models/Anilist/anilist_profile.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/models/Service/base_service.dart';
+import 'package:nyantv/models/Service/online_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';

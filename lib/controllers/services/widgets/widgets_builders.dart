@@ -1,9 +1,9 @@
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/common/big_carousel.dart';
-import 'package:anymex/widgets/common/future_reusable_carousel.dart';
-import 'package:anymex/widgets/common/reusable_carousel.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/common/big_carousel.dart';
+import 'package:nyantv/widgets/common/future_reusable_carousel.dart';
+import 'package:nyantv/widgets/common/reusable_carousel.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
@@ -42,7 +42,7 @@ Container buildChip(String label) {
     ),
     child: FittedBox(
       fit: BoxFit.scaleDown,
-      child: AnymexText(
+      child: NyantvText(
         text: label,
         variant: TextVariant.bold,
         color: Get.theme.colorScheme.onPrimary,

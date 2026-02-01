@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/utils/language.dart';
-import 'package:anymex/widgets/custom_widgets/custom_button.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/utils/language.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_button.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
@@ -223,7 +223,7 @@ class _ExtensionListState extends State<ExtensionList>
   }
 
   List<Source> _computeRecommendedEntries() {
-    const extens = ['anymex'];
+    const extens = ['nyantv'];
     const preferredLangs = {'en', 'all', 'multi'};
 
     final availableExtensions = _allAvailableExtensions;
@@ -256,7 +256,7 @@ class _ExtensionListState extends State<ExtensionList>
               'Update Pending',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
-            AnymeXButton(
+            NyanTVButton(
               variant: ButtonVariant.outline,
               onTap: () => _updateAllExtensions(updateEntries),
               child: const Text(

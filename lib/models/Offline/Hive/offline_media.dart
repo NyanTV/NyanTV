@@ -1,5 +1,5 @@
-import 'package:anymex/models/Offline/Hive/chapter.dart';
-import 'package:anymex/models/Offline/Hive/episode.dart';
+import 'package:nyantv/models/Offline/Hive/chapter.dart';
+import 'package:nyantv/models/Offline/Hive/episode.dart';
 import 'package:hive/hive.dart';
 part 'offline_media.g.dart';
 

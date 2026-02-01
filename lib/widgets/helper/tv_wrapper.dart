@@ -1,10 +1,10 @@
 // lib/widgets/helper/tv_wrapper.dart
-import 'package:anymex/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-class AnymexOnTap extends StatelessWidget {
+class NyantvOnTap extends StatelessWidget {
   final VoidCallback? onTap;
   final GestureTapUpCallback? onTapUp;
   final GestureTapDownCallback? onTapDown;
@@ -18,7 +18,7 @@ class AnymexOnTap extends StatelessWidget {
   final double borderWidth;
   final double? margin;
 
-  const AnymexOnTap({
+  const NyantvOnTap({
     super.key,
     this.onTap,
     required this.child,
@@ -95,7 +95,7 @@ class AnymexOnTap extends StatelessWidget {
   }
 }
 
-class AnymexOnTapAdv extends StatelessWidget {
+class NyantvOnTapAdv extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget child;
   final double scale;
@@ -105,7 +105,7 @@ class AnymexOnTapAdv extends StatelessWidget {
   final double? margin;
   final KeyEventResult Function(FocusNode, KeyEvent)? onKeyEvent;
 
-  const AnymexOnTapAdv({
+  const NyantvOnTapAdv({
     super.key,
     this.onTap,
     required this.child,

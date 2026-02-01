@@ -1,9 +1,9 @@
 {
-    "repo_url": "RyanYuuki/AnymeX",
+    "repo_url": "RyanYuuki/NyanTV",
     "json_file": "repo/source.json",
-    "app_id": "com.ryan.anymex",
-    "app_name": "AnymeX",
-    "caption": "Update for AnymeX now available!",
+    "app_id": "com.ryan.nyantv",
+    "app_name": "NyanTV",
+    "caption": "Update for NyanTV now available!",
     "tint_colour": "71717A",
-    "image_url": "https://raw.githubusercontent.com/RyanYuuki/AnymeX/refs/heads/main/repo/images/news/update.webp"
+    "image_url": "https://raw.githubusercontent.com/RyanYuuki/NyanTV/refs/heads/main/repo/images/news/update.webp"
 }

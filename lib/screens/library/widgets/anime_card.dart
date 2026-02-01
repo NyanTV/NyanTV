@@ -1,11 +1,11 @@
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/models/Offline/Hive/offline_media.dart';
-import 'package:anymex/screens/anime/details_page.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/header.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/models/Offline/Hive/offline_media.dart';
+import 'package:nyantv/screens/anime/details_page.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/header.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
 import 'package:get/get.dart';
@@ -18,7 +18,7 @@ class AnimeCard extends StatelessWidget {
   const AnimeCard({super.key, required this.data, required this.cardtype});
   @override
   Widget build(BuildContext context) {
-    return AnymexOnTap(
+    return NyantvOnTap(
       margin: 0,
       scale: 1,
       onTap: () {
@@ -64,7 +64,7 @@ class AnimeCard extends StatelessWidget {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                           const SizedBox(width: 3),
-                          AnymexText(
+                          NyantvText(
                             text: data.rating ?? '0.0',
                             variant: TextVariant.bold,
                           ),
@@ -96,7 +96,7 @@ class AnimeCard extends StatelessWidget {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                           const SizedBox(width: 3),
-                          AnymexText(
+                          NyantvText(
                             text: data.currentEpisode?.number ?? '??',
                             variant: TextVariant.bold,
                           ),

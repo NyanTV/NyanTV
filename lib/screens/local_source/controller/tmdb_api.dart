@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:anymex/utils/logger.dart';
-import 'package:anymex/screens/local_source/model/detail_result.dart';
+import 'package:nyantv/utils/logger.dart';
+import 'package:nyantv/screens/local_source/model/detail_result.dart';
 import 'package:dio/dio.dart';
 
 class TmdbApi {

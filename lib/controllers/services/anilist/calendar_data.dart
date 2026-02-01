@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:anymex/utils/logger.dart';
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/models/Media/media.dart';
+import 'package:nyantv/utils/logger.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/models/Media/media.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 

@@ -1,13 +1,13 @@
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/widgets/common/glow.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/widgets/common/glow.dart';
 import 'package:blur/blur.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 enum ButtonVariant { simple, outline }
 
-class AnymeXButton extends StatelessWidget {
+class NyanTVButton extends StatelessWidget {
   final Function() onTap;
   final BorderRadius? borderRadius;
   final Color? backgroundColor;
@@ -18,7 +18,7 @@ class AnymeXButton extends StatelessWidget {
   final double? height;
   final bool isBlurred;
 
-  const AnymeXButton({
+  const NyanTVButton({
     super.key,
     required this.onTap,
     this.borderRadius,

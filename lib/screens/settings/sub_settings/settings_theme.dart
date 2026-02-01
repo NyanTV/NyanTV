@@ -1,15 +1,15 @@
-import 'package:anymex/constants/contants.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/controllers/theme.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/utils/liquid.dart';
-import 'package:anymex/widgets/common/checkmark_tile.dart';
-import 'package:anymex/widgets/common/custom_tiles.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/custom_widgets/custom_expansion_tile.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/constants/contants.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/theme.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/utils/liquid.dart';
+import 'package:nyantv/widgets/common/checkmark_tile.dart';
+import 'package:nyantv/widgets/common/custom_tiles.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_expansion_tile.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
@@ -181,7 +181,7 @@ class _SettingsThemeState extends State<SettingsTheme> {
                   ],
                 ),
                 const SizedBox(height: 30),
-                AnymexExpansionTile(
+                NyantvExpansionTile(
                   title: 'Appearance',
                   content: Column(
                     children: [
@@ -275,7 +275,7 @@ class _SettingsThemeState extends State<SettingsTheme> {
                   initialExpanded: true,
                 ),
                 const SizedBox(height: 10),
-                AnymexExpansionTile(
+                NyantvExpansionTile(
                     initialExpanded: true,
                     title: 'Extras',
                     content: Column(
@@ -308,7 +308,7 @@ class _SettingsThemeState extends State<SettingsTheme> {
                           onChanged: handleOledSwitch,
                         ),
                         const SizedBox(height: 10),
-                        // ExpansionTile(title: AnymexText(text: "Custom Theme")),
+                        // ExpansionTile(title: NyantvText(text: "Custom Theme")),
                         CustomSwitchTile(
                           icon: HugeIcons.strokeRoundedColors,
                           title: "Custom Theme",
@@ -320,12 +320,12 @@ class _SettingsThemeState extends State<SettingsTheme> {
                     )),
                 const SizedBox(height: 10),
                 if (customTheme) ...[
-                  AnymexCard(
+                  NyantvCard(
                     padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        AnymexText(
+                        NyantvText(
                           text: "Custom Themes",
                           size: 16,
                           variant: TextVariant.semiBold,
@@ -461,7 +461,7 @@ class _SettingsThemeState extends State<SettingsTheme> {
               brightness: Brightness.dark);
           bool isSelected = themeMode == theme['label'];
           bool isSystem = theme['label'] == "System";
-          return AnymexOnTap(
+          return NyantvOnTap(
             onTap: () {
               handleThemeMode(theme['label']);
             },

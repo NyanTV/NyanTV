@@ -72,14 +72,14 @@ jobs:
             const issueNumber = context.payload.issue.number;
             const message = `
             **🛠️ Thank you for reporting a bug!**  
-            Your issue has been successfully submitted and is now awaiting review. We appreciate your help in making AnymeX better.
+            Your issue has been successfully submitted and is now awaiting review. We appreciate your help in making NyanTV better.
             **🔍 What Happens Next**  
             - Our team will investigate the issue and provide updates as soon as possible.  
             - You may be asked for additional details or clarification if needed.  
             - Once resolved, we'll notify you of the fix or provide a workaround.
             **👥 Connect with Us**  
             - **[Discord](https://discord.com/invite/azAMuBWd8C)**: Engage with our community and ask questions.  
-            - **[Telegram](https://t.me/AnymeX_Discussion)**: Reach out for real-time discussions and updates.
+            - **[Telegram](https://t.me/NyanTV_Discussion)**: Reach out for real-time discussions and updates.
             We're working hard to resolve the issue and appreciate your patience!
             `;
             await github.rest.issues.createComment({

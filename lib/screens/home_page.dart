@@ -1,24 +1,24 @@
 // ignore_for_file: invalid_use_of_protected_member, deprecated_member_use
 
-import 'package:anymex/widgets/header.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/header.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
 
-import 'package:anymex/controllers/cacher/cache_controller.dart';
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/widgets/common/scroll_aware_app_bar.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_button.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/custom_widgets/custom_textspan.dart';
-import 'package:anymex/widgets/history/tap_history_cards.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
-import 'package:anymex/utils/tv_scroll_mixin.dart';
+import 'package:nyantv/controllers/cacher/cache_controller.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/widgets/common/scroll_aware_app_bar.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_button.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
+import 'package:nyantv/widgets/history/tap_history_cards.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/utils/tv_scroll_mixin.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -154,20 +154,20 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
         Obx(
           () => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: AnymexTextSpans(
+            child: NyantvTextSpans(
               fontSize: 27,
               spans: [
-                const AnymexTextSpan(
+                const NyantvTextSpan(
                     text: 'Hey ',
                     size: 30,
                     variant: TextVariant.bold),
-                AnymexTextSpan(
+                NyantvTextSpan(
                     text:
                         '${serviceHandler.isLoggedIn.value ? serviceHandler.profileData.value.name : 'Guest'}',
                     size: 30,
                     color: Theme.of(context).colorScheme.primary,
                     variant: TextVariant.bold),
-                const AnymexTextSpan(
+                const NyantvTextSpan(
                     text: ', what are we doing today?',
                     size: 30,
                     variant: TextVariant.bold),
@@ -323,7 +323,7 @@ class ImageButton extends StatelessWidget {
             ),
           ),
           Positioned.fill(
-            child: AnymexButton(
+            child: NyantvButton(
               onTap: onPressed,
               padding: EdgeInsets.zero,
               color: Colors.transparent,

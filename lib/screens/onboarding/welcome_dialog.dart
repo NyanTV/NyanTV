@@ -1,13 +1,13 @@
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/utils/logger.dart';
 import 'dart:io';
 
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/screens/settings/sub_settings/settings_accounts.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/common/custom_tiles.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/non_widgets/settings_sheet.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/screens/settings/sub_settings/settings_accounts.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/common/custom_tiles.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/non_widgets/settings_sheet.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -87,7 +87,7 @@ void showWelcomeDialogg(BuildContext context) {
   showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: "Welcome To AnymeX",
+    barrierLabel: "Welcome To NyanTV",
     pageBuilder: (context, animation1, animation2) {
       final settings = Get.find<Settings>();
       final RxBool storagePermissionGranted = false.obs;
@@ -146,7 +146,7 @@ void showWelcomeDialogg(BuildContext context) {
                     ),
                     child: const Center(
                       child: Text(
-                        'Welcome To AnymeX',
+                        'Welcome To NyanTV',
                         style: TextStyle(fontFamily: 'Poppins-SemiBold'),
                       ),
                     ),

@@ -1,6 +1,6 @@
-import 'package:anymex/constants/contants.dart';
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/screens/anime/watch/controller/player_controller.dart';
+import 'package:nyantv/constants/contants.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/screens/anime/watch/controller/player_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:outlined_text/outlined_text.dart';

@@ -1,33 +1,33 @@
 // ignore_for_file: invalid_use_of_protected_member
 // lib/screens/local_source/player/offline_player_old.dart 
 import 'dart:async';
-import 'package:anymex/screens/local_source/player/offline_player.dart';
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/screens/local_source/player/offline_player.dart';
+import 'package:nyantv/utils/logger.dart';
 import 'dart:io';
-import 'package:anymex/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
 
-import 'package:anymex/constants/contants.dart';
-import 'package:anymex/controllers/offline/offline_storage_controller.dart';
-import 'package:anymex/models/player/player_adaptor.dart';
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/screens/anime/widgets/media_indicator_old.dart';
-import 'package:anymex/screens/anime/widgets/video_slider.dart';
-import 'package:anymex/screens/settings/sub_settings/settings_player.dart';
-import 'package:anymex/utils/color_profiler.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/utils/language.dart';
-import 'package:anymex/utils/shaders.dart';
-import 'package:anymex/widgets/common/checkmark_tile.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_titlebar.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
-import 'package:anymex/widgets/custom_widgets/custom_button.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/custom_widgets/custom_textspan.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/constants/contants.dart';
+import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
+import 'package:nyantv/models/player/player_adaptor.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/screens/anime/widgets/media_indicator_old.dart';
+import 'package:nyantv/screens/anime/widgets/video_slider.dart';
+import 'package:nyantv/screens/settings/sub_settings/settings_player.dart';
+import 'package:nyantv/utils/color_profiler.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/utils/language.dart';
+import 'package:nyantv/utils/shaders.dart';
+import 'package:nyantv/widgets/common/checkmark_tile.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_titlebar.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_button.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -509,7 +509,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
           [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
       ScreenBrightness().resetScreenBrightness();
     } else {
-      AnymexTitleBar.setFullScreen(false);
+      NyantvTitleBar.setFullScreen(false);
     }
     _keyboardListenerFocusNode.dispose();
     super.dispose();
@@ -622,7 +622,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
         // Vollbild umschalten
         if (!Platform.isAndroid && !Platform.isIOS) {
           isFullscreen.value = !isFullscreen.value;
-          AnymexTitleBar.setFullScreen(isFullscreen.value);
+          NyantvTitleBar.setFullScreen(isFullscreen.value);
         }
         break;
         
@@ -831,7 +831,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  AnymexText(
+                  NyantvText(
                     text: "${(prevRate.value * 2).toInt()}x",
                     variant: TextVariant.semiBold,
                   ),
@@ -1131,14 +1131,14 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  AnymexText(
+                                  NyantvText(
                                     text: widget.episodePath.name,
                                     variant: TextVariant.semiBold,
                                     maxLines: 3,
                                     color: themeFgColor.value,
                                   ),
                                   5.height(),
-                                  AnymexText(
+                                  NyantvText(
                                     text: widget.episodePath.folderName,
                                     variant: TextVariant.semiBold,
                                     maxLines: 3,
@@ -1185,15 +1185,15 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
                             crossAxisAlignment: CrossAxisAlignment.end,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              AnymexTextSpans(
+                              NyantvTextSpans(
                                 maxLines: 1,
                                 spans: [
-                                  AnymexTextSpan(
+                                  NyantvTextSpan(
                                       text: '${formattedTime.value} ',
                                       variant: TextVariant.semiBold,
                                       color:
                                           themeFgColor.value.withOpacity(0.8)),
-                                  AnymexTextSpan(
+                                  NyantvTextSpan(
                                     variant: TextVariant.semiBold,
                                     text: ' /  ${formattedDuration.value}',
                                   ),
@@ -1334,7 +1334,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
                                             onTap: () async {
                                               isFullscreen.value =
                                                   !isFullscreen.value;
-                                              await AnymexTitleBar
+                                              await NyantvTitleBar
                                                   .setFullScreen(
                                                       isFullscreen.value);
                                             },
@@ -1369,7 +1369,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
   _buildSkipButton(bool invert) {
     return BlurWrapper(
       borderRadius: BorderRadius.circular(20.multiplyRoundness()),
-      child: AnymeXButton(
+      child: NyanTVButton(
         height: 50,
         width: 120,
         variant: ButtonVariant.simple,
@@ -1404,7 +1404,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
                     color: Colors.white,
                   ),
                   const SizedBox(width: 5),
-                  AnymexText(
+                  NyantvText(
                     text: "-${settings.skipDuration}s",
                     variant: TextVariant.semiBold,
                     color: Colors.white,
@@ -1414,7 +1414,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AnymexText(
+                  NyantvText(
                     text: "+${settings.skipDuration}s",
                     variant: TextVariant.semiBold,
                     color: Colors.white,
@@ -1575,7 +1575,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
         margin: EdgeInsets.symmetric(horizontal: isMobile ? 20 : 50),
         child: BlurWrapper(
           borderRadius: BorderRadius.circular(radius),
-          child: AnymexOnTap(
+          child: NyantvOnTap(
             onTap: () {
               player.playOrPause();
             },
@@ -1651,7 +1651,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
           EdgeInsets.symmetric(horizontal: isPlay ? (isMobile ? 20 : 50) : 0),
       child: BlurWrapper(
         borderRadius: BorderRadius.circular(radius),
-        child: AnymexOnTap(
+        child: NyantvOnTap(
           onTap: onTap,
           bgColor: Colors.transparent,
           focusedBorderColor: Colors.transparent,
@@ -1678,7 +1678,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
   Widget _buildIcon({VoidCallback? onTap, IconData? icon}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3),
-      child: AnymexOnTap(
+      child: NyantvOnTap(
         onTap: () {
           onTap?.call();
         },
@@ -1703,7 +1703,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
             child: Column(
               children: [
                 const Center(
-                  child: AnymexText(
+                  child: NyantvText(
                     text: "Choose Audio",
                     size: 18,
                     variant: TextVariant.bold,
@@ -1714,7 +1714,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // "None" option
-                    AnymexOnTap(
+                    NyantvOnTap(
                       onTap: () {
                         Get.back();
                         player.setAudioTrack(AudioTrack.no());
@@ -1722,7 +1722,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
                       child: audioTile(AudioTrack.no()),
                     ),
                     ...audioTracks.map((audio) {
-                      return AnymexOnTap(
+                      return NyantvOnTap(
                         onTap: () {
                           selectedAudioTrack.value = audio;
                           Get.back();
@@ -1747,7 +1747,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
         child: ListTile(
           contentPadding:
               const EdgeInsets.symmetric(vertical: 2.5, horizontal: 10),
-          title: AnymexText(
+          title: NyantvText(
             text: track.title ??
                 completeSubtitleLanguageName(track.language ?? 'None')
                     .toUpperCase(),
@@ -1781,7 +1781,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
             child: Column(
               children: [
                 const Center(
-                  child: AnymexText(
+                  child: NyantvText(
                     text: "Choose Subtitle",
                     size: 18,
                     variant: TextVariant.bold,
@@ -1792,7 +1792,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // "None" option
-                    AnymexOnTap(
+                    NyantvOnTap(
                       onTap: () {
                         Get.back();
                         player.setSubtitleTrack(SubtitleTrack.no());
@@ -1801,7 +1801,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
                           const SubtitleTrack('NULL', 'NONE', 'NONE')),
                     ),
                     ...subtitleTracks.map((subtitle) {
-                      return AnymexOnTap(
+                      return NyantvOnTap(
                         onTap: () {
                           selectedSubTrack.value = subtitle;
                           Get.back();
@@ -1810,7 +1810,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
                         child: subtitleTile(subtitle),
                       );
                     }),
-                    AnymexOnTap(
+                    NyantvOnTap(
                       onTap: () async {
                         final result = await FilePicker.platform.pickFiles(
                           type: FileType.custom,
@@ -1836,7 +1836,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(
                               vertical: 2.5, horizontal: 10),
-                          title: AnymexText(
+                          title: NyantvText(
                             text: 'Add Subtitle',
                             variant: TextVariant.bold,
                             size: 16,
@@ -1870,7 +1870,7 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
         child: ListTile(
           contentPadding:
               const EdgeInsets.symmetric(vertical: 2.5, horizontal: 10),
-          title: AnymexText(
+          title: NyantvText(
             text: title?.toUpperCase() ?? track.id,
             variant: TextVariant.bold,
             size: 16,

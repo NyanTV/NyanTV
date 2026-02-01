@@ -1,9 +1,9 @@
-import 'package:anymex/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-class AnymexDropdown extends StatefulWidget {
+class NyantvDropdown extends StatefulWidget {
   final List<DropdownItem> items;
   final DropdownItem? selectedItem;
   final Function(DropdownItem) onChanged;
@@ -12,7 +12,7 @@ class AnymexDropdown extends StatefulWidget {
   final IconData? actionIcon;
   final VoidCallback? onActionPressed;
 
-  const AnymexDropdown({
+  const NyantvDropdown({
     super.key,
     required this.items,
     this.selectedItem,
@@ -24,10 +24,10 @@ class AnymexDropdown extends StatefulWidget {
   });
 
   @override
-  State<AnymexDropdown> createState() => _AnymexDropdownState();
+  State<NyantvDropdown> createState() => _NyantvDropdownState();
 }
 
-class _AnymexDropdownState extends State<AnymexDropdown>
+class _NyantvDropdownState extends State<NyantvDropdown>
     with TickerProviderStateMixin {
   bool _isOpen = false;
   bool _openUpwards = false;

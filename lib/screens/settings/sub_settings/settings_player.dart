@@ -1,12 +1,12 @@
 // lib/screens/settings/sub_settings/settings_player.dart
-import 'package:anymex/constants/contants.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/widgets/common/checkmark_tile.dart';
-import 'package:anymex/widgets/common/custom_tiles.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/custom_widgets/custom_expansion_tile.dart';
-import 'package:anymex/widgets/non_widgets/reusable_checkmark.dart';
+import 'package:nyantv/constants/contants.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/widgets/common/checkmark_tile.dart';
+import 'package:nyantv/widgets/common/custom_tiles.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_expansion_tile.dart';
+import 'package:nyantv/widgets/non_widgets/reusable_checkmark.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -217,7 +217,7 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
               Obx(() => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      AnymexExpansionTile(
+                      NyantvExpansionTile(
                           initialExpanded: true,
                           title: 'Common',
                           content: Column(
@@ -360,7 +360,7 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                             ],
                           )),
                       // Subtitle Color
-                      AnymexExpansionTile(
+                      NyantvExpansionTile(
                           title: 'Subtitles',
                           content: Column(
                             children: [

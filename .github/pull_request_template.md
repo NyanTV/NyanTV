@@ -1,7 +1,7 @@
 <!--
 # Pull Request
 **Description:**  
-Submit changes or improvements to AnymeX
+Submit changes or improvements to NyanTV
 
 **Title:**  
 Provide a concise and descriptive title for your pull request

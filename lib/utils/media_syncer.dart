@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/utils/logger.dart';
 
-import 'package:anymex/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:http/http.dart';
 
 enum MappingType { anilist, mal }

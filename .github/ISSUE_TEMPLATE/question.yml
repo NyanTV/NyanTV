@@ -1,5 +1,5 @@
 name: ❓ Question
-description: Submit a question or query related to AnymeX
+description: Submit a question or query related to NyanTV
 labels: [question]
 body:
   - type: textarea
@@ -9,7 +9,7 @@ body:
       description: Provide a detailed explanation of your question or query.
       placeholder: |
         Example:
-          "How do I customize the settings in AnymeX to optimize performance?"
+          "How do I customize the settings in NyanTV to optimize performance?"
     validations:
       required: true
 
@@ -17,7 +17,7 @@ body:
     id: related-features
     attributes:
       label: Related Features (if applicable)
-      description: Mention any specific feature or section of AnymeX related to your question.
+      description: Mention any specific feature or section of NyanTV related to your question.
       placeholder: |
         Example: "Settings > Performance"
 

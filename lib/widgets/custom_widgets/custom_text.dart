@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 enum TextVariant { regular, semiBold, bold }
 
-class AnymexText extends StatelessWidget {
+class NyantvText extends StatelessWidget {
   final String text;
   final TextVariant variant;
   final Color? color;
@@ -13,7 +13,7 @@ class AnymexText extends StatelessWidget {
   final FontStyle fontStyle;
   final bool stripHtml;
 
-  const AnymexText({
+  const NyantvText({
     super.key,
     required this.text,
     this.variant = TextVariant.regular,

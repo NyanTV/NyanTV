@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:anymex/utils/extensions.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/utils/extensions.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
 

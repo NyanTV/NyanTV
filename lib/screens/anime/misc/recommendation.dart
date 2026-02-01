@@ -1,17 +1,17 @@
-import 'package:anymex/ai/animeo.dart';
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/screens/anime/details_page.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/animation/slide_scale.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/common/search_bar.dart';
-import 'package:anymex/widgets/header.dart';
-import 'package:anymex/widgets/media_items/media_item.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/ai/animeo.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/screens/anime/details_page.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/animation/slide_scale.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/common/search_bar.dart';
+import 'package:nyantv/widgets/header.dart';
+import 'package:nyantv/widgets/media_items/media_item.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:flutter/material.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_progress.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
 
 class AIRecommendation extends StatefulWidget {
@@ -80,7 +80,7 @@ class _AIRecommendationState extends State<AIRecommendation> {
             icon: const Icon(Icons.arrow_back_ios_new),
           ),
           title: Obx(() {
-            return AnymexText(
+            return NyantvText(
               text:
                   "AI Picks ${recItems.isNotEmpty ? '(${recItems.length})' : ''}",
               color: Theme.of(context).colorScheme.primary,
@@ -97,7 +97,7 @@ class _AIRecommendationState extends State<AIRecommendation> {
         body: Obx(() => recItems.isEmpty
             ? !serviceHandler.isLoggedIn.value
                 ? _buildInputBox(context)
-                : const Center(child: AnymexProgressIndicator())
+                : const Center(child: NyantvProgressIndicator())
             : _buildRecommendations(context)),
       ),
     );
@@ -129,7 +129,7 @@ class _AIRecommendationState extends State<AIRecommendation> {
             decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(12.multiplyRadius())),
-            child: AnymexText(
+            child: NyantvText(
               text: "Search",
               variant: TextVariant.semiBold,
               color: Theme.of(context).colorScheme.onPrimary,
@@ -159,7 +159,7 @@ class _AIRecommendationState extends State<AIRecommendation> {
                   return Obx(() => isLoading.value
                       ? const Padding(
                           padding: EdgeInsets.all(8.0),
-                          child: Center(child: AnymexProgressIndicator()),
+                          child: Center(child: NyantvProgressIndicator()),
                         )
                       : const SizedBox.shrink());
                 }
@@ -197,7 +197,7 @@ class _AIRecommendationState extends State<AIRecommendation> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const AnymexText(
+                const NyantvText(
                   text: "Settings",
                   variant: TextVariant.bold,
                   size: 20,
@@ -207,7 +207,7 @@ class _AIRecommendationState extends State<AIRecommendation> {
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      AnymexText(
+                      NyantvText(
                         text: "Grid",
                         variant: TextVariant.bold,
                         color: Theme.of(context).colorScheme.primary,
@@ -224,7 +224,7 @@ class _AIRecommendationState extends State<AIRecommendation> {
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      AnymexText(
+                      NyantvText(
                         text: "18+",
                         variant: TextVariant.bold,
                         color: Theme.of(context).colorScheme.primary,
@@ -274,7 +274,7 @@ class _AIRecommendationState extends State<AIRecommendation> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AnymexText(
+                  NyantvText(
                     text: data.title,
                     variant: TextVariant.semiBold,
                     maxLines: 2,
@@ -282,7 +282,7 @@ class _AIRecommendationState extends State<AIRecommendation> {
                   ),
                   const SizedBox(height: 5),
                   Flexible(
-                    child: AnymexText(
+                    child: NyantvText(
                       text: data.description,
                       color: Colors.grey[300],
                       maxLines: 5,
@@ -303,7 +303,7 @@ class _AIRecommendationState extends State<AIRecommendation> {
                                 borderRadius:
                                     BorderRadius.circular(8.multiplyRadius()),
                               ),
-                              child: AnymexText(
+                              child: NyantvText(
                                 text: e,
                                 variant: TextVariant.semiBold,
                                 color: Theme.of(context).colorScheme.onPrimary,

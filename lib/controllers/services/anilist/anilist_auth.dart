@@ -1,16 +1,16 @@
 // ignore_for_file: invalid_use_of_protected_member
 
 import 'dart:convert';
-import 'package:anymex/utils/logger.dart';
-import 'package:anymex/controllers/offline/offline_storage_controller.dart';
-import 'package:anymex/controllers/service_handler/params.dart';
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/database/comments_db.dart';
-import 'package:anymex/models/Anilist/anilist_media_user.dart';
-import 'package:anymex/models/Anilist/anilist_profile.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/utils/string_extensions.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/utils/logger.dart';
+import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
+import 'package:nyantv/controllers/service_handler/params.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/database/comments_db.dart';
+import 'package:nyantv/models/Anilist/anilist_media_user.dart';
+import 'package:nyantv/models/Anilist/anilist_profile.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/utils/string_extensions.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
@@ -49,7 +49,7 @@ class AnilistAuth extends GetxController {
     try {
       final result = await FlutterWebAuth2.authenticate(
         url: url,
-        callbackUrlScheme: 'anymex',
+        callbackUrlScheme: 'nyantv',
       );
 
       final code = Uri.parse(result).queryParameters['code'];

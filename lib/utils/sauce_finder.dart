@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/utils/logger.dart';
 import 'dart:io';
 
-import 'package:anymex/models/sauce/sauce_result.dart';
+import 'package:nyantv/models/sauce/sauce_result.dart';
 import 'package:http/http.dart' as http;
 
 class SauceFinder {

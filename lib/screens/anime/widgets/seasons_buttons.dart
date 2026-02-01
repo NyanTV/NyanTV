@@ -1,10 +1,10 @@
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/models/Media/relation.dart';
-import 'package:anymex/screens/anime/details_page.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/models/Media/relation.dart';
+import 'package:nyantv/screens/anime/details_page.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:blur/blur.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -29,7 +29,7 @@ class SeasonsGrid extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const AnymexText(
+                const NyantvText(
                   text: "Seasons",
                   size: 18,
                   variant: TextVariant.bold,

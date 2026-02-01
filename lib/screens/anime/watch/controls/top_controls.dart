@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'package:anymex/screens/anime/watch/controls/widgets/control_button.dart';
-import 'package:anymex/screens/settings/sub_settings/settings_player.dart';
-import 'package:anymex/utils/function.dart';
+import 'package:nyantv/screens/anime/watch/controls/widgets/control_button.dart';
+import 'package:nyantv/screens/settings/sub_settings/settings_player.dart';
+import 'package:nyantv/utils/function.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:anymex/screens/anime/watch/controller/player_controller.dart';
+import 'package:nyantv/screens/anime/watch/controller/player_controller.dart';
 
 class TopControls extends StatelessWidget {
   final bool enableBlur;

@@ -1,24 +1,24 @@
 // ignore_for_file: unnecessary_null_comparison, invalid_use_of_protected_member
 
-import 'package:anymex/screens/search/source_search_page.dart';
-import 'package:anymex/utils/extension_utils.dart';
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/screens/search/source_search_page.dart';
+import 'package:nyantv/utils/extension_utils.dart';
+import 'package:nyantv/utils/logger.dart';
 import 'dart:async';
 import 'dart:io';
-import 'package:anymex/controllers/cacher/cache_controller.dart';
-import 'package:anymex/controllers/service_handler/params.dart';
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/controllers/offline/offline_storage_controller.dart';
-import 'package:anymex/controllers/services/widgets/widgets_builders.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/models/Service/base_service.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/utils/storage_provider.dart';
-import 'package:anymex/widgets/common/search_bar.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/controllers/cacher/cache_controller.dart';
+import 'package:nyantv/controllers/service_handler/params.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
+import 'package:nyantv/controllers/services/widgets/widgets_builders.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/models/Service/base_service.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/utils/storage_provider.dart';
+import 'package:nyantv/widgets/common/search_bar.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/Aniyomi/AniyomiExtensions.dart';
 import 'package:flutter/material.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_progress.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 import 'package:hive/hive.dart';
@@ -94,7 +94,7 @@ class SourceController extends GetxController implements BaseService {
 
   void _initialize() async {
     isar = await StorageProvider().initDB(null);
-    await DartotsuExtensionBridge().init(isar, 'AnymeX');
+    await DartotsuExtensionBridge().init(isar, 'NyanTV');
 
     await initExtensions();
 
@@ -227,7 +227,7 @@ class SourceController extends GetxController implements BaseService {
 
   void _initializeEmptySections() {
     final offlineStorage = Get.find<OfflineStorageController>();
-    _animeSections.value = [const Center(child: AnymexProgressIndicator())];
+    _animeSections.value = [const Center(child: NyantvProgressIndicator())];
     _homeSections.value = [
       Obx(
         () => buildSection(

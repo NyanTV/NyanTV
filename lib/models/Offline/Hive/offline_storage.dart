@@ -1,6 +1,6 @@
 // lib/models/Offline/Hive/offline_storage.dart
-import 'package:anymex/models/Offline/Hive/custom_list.dart';
-import 'package:anymex/models/Offline/Hive/offline_media.dart';
+import 'package:nyantv/models/Offline/Hive/custom_list.dart';
+import 'package:nyantv/models/Offline/Hive/offline_media.dart';
 import 'package:hive/hive.dart';
 
 part 'offline_storage.g.dart';

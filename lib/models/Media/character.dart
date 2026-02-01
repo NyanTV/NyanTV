@@ -1,4 +1,4 @@
-import 'package:anymex/models/Media/voice_actor.dart';
+import 'package:nyantv/models/Media/voice_actor.dart';
 
 class Character {
   final String? name;

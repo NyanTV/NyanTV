@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class AnymexIcon extends StatelessWidget {
+class NyantvIcon extends StatelessWidget {
   final IconData icon;
   final Color? color;
   final double? size;
-  const AnymexIcon(this.icon, {super.key, this.color, this.size});
+  const NyantvIcon(this.icon, {super.key, this.color, this.size});
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +31,9 @@ class AnymexIcon extends StatelessWidget {
   }
 }
 
-class AnymexIconWrapper extends StatelessWidget {
+class NyantvIconWrapper extends StatelessWidget {
   final Widget child;
-  const AnymexIconWrapper({super.key, required this.child});
+  const NyantvIconWrapper({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {

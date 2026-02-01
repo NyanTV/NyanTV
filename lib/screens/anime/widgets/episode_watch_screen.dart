@@ -1,19 +1,19 @@
 // ignore_for_file: invalid_use_of_protected_member, prefer_const_constructors
 // lib/screens/anime/widgets/episode_watch_screen.dart
 import 'dart:ui';
-import 'package:anymex/models/Offline/Hive/video.dart';
-import 'package:anymex/controllers/services/anilist/anilist_auth.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/models/Offline/Hive/episode.dart';
-import 'package:anymex/screens/anime/widgets/episode_range.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/utils/string_extensions.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_chip.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/models/Offline/Hive/video.dart';
+import 'package:nyantv/controllers/services/anilist/anilist_auth.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/models/Offline/Hive/episode.dart';
+import 'package:nyantv/screens/anime/widgets/episode_range.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/utils/string_extensions.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_chip.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart' as d;
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
@@ -117,7 +117,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
                   children: [
                     const Row(
                       children: [
-                        AnymexText(
+                        NyantvText(
                             text: "Episodes",
                             size: 20,
                             variant: TextVariant.semiBold)
@@ -163,7 +163,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
 
     return RepaintBoundary(
       // Prevents unnecessary repaints
-      child: AnymexOnTap(
+      child: NyantvOnTap(
         onTap: () => _handleEpisodeTap(episode, isSelected),
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
@@ -241,7 +241,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
           ),
           10.height(),
           if (!fromSrc)
-            AnymexChip(
+            NyantvChip(
               showCheck: false,
               isSelected: true,
               label: 'Using Universal Scrapper',
@@ -257,13 +257,13 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         10.height(),
-        AnymexText(
+        NyantvText(
           text: "Error Occured",
           variant: TextVariant.bold,
           size: 18,
         ),
         20.height(),
-        AnymexText(
+        NyantvText(
           text: "Server-chan is taking a nap!",
           variant: TextVariant.semiBold,
           size: 18,
@@ -275,7 +275,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
             color: Colors.red.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: AnymexText(
+          child: NyantvText(
             text: errorMessage,
             variant: TextVariant.regular,
             size: 14,
@@ -291,7 +291,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
     return const SizedBox(
       height: 200,
       child: Center(
-        child: AnymexText(
+        child: NyantvText(
           text: "No servers available",
           variant: TextVariant.bold,
           size: 16,
@@ -311,7 +311,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             alignment: Alignment.center,
-            child: const AnymexText(
+            child: const NyantvText(
               text: "Choose Server",
               size: 18,
               variant: TextVariant.bold,
@@ -329,7 +329,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
                 child: ListTile(
                   contentPadding:
                       const EdgeInsets.symmetric(vertical: 2.5, horizontal: 10),
-                  title: AnymexText(
+                  title: NyantvText(
                     text: e.quality.toUpperCase(),
                     variant: TextVariant.bold,
                     size: 16,
@@ -343,7 +343,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   trailing: const Icon(Iconsax.play5),
-                  subtitle: AnymexText(
+                  subtitle: NyantvText(
                     text: sourceController.activeSource.value!.name!
                         .toUpperCase(),
                     variant: TextVariant.semiBold,
@@ -402,7 +402,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: AnymexText(
+              child: NyantvText(
                 text: episode.title ?? 'Episode ${episode.number}',
                 variant: TextVariant.bold,
                 maxLines: 2,
@@ -466,7 +466,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
               Expanded(
                 child: SizedBox(
                   height: 100,
-                  child: AnymexText(
+                  child: NyantvText(
                     text: episode.title ?? 'Episode ${episode.number}',
                     variant: TextVariant.bold,
                     maxLines: 4,
@@ -478,7 +478,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: AnymexText(
+            child: NyantvText(
               text: (episode.desc?.isEmpty ?? true)
                   ? 'No Description Available'
                   : episode.desc!,
@@ -509,7 +509,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
             ),
             boxShadow: [glowingShadow(context)],
           ),
-          child: AnymexText(
+          child: NyantvText(
             text: "EP $episodeNumber",
             variant: TextVariant.bold,
           ),

@@ -1,7 +1,7 @@
-import 'package:anymex/controllers/offline/offline_storage_controller.dart';
+import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:anymex/models/Offline/Hive/offline_media.dart';
+import 'package:nyantv/models/Offline/Hive/offline_media.dart';
 
 class StatisticsPage extends StatelessWidget {
   const StatisticsPage({super.key});

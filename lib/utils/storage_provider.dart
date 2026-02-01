@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:anymex/main.dart' show isar;
+import 'package:nyantv/main.dart' show isar;
 import 'package:dartotsu_extension_bridge/Mangayomi/Eval/dart/model/source_preference.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart'
     hide isar;
@@ -31,7 +31,7 @@ class StorageProvider {
     if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
       return dir;
     } else {
-      String dbDir = path.join(dir.path, 'AnymeX', 'databases');
+      String dbDir = path.join(dir.path, 'NyanTV', 'databases');
       await Directory(dbDir).create(recursive: true);
       return Directory(dbDir);
     }
@@ -53,7 +53,7 @@ class StorageProvider {
         BridgeSettingsSchema
       ],
       directory: dir!.path,
-      name: 'AnymeX',
+      name: 'NyanTV',
       inspector: false,
     );
 

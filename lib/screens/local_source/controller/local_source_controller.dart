@@ -1,16 +1,16 @@
 // controllers/watch_offline_controller.dart
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/utils/logger.dart';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:dartotsu_extension_bridge/Models/DEpisode.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart' as d;
-import 'package:anymex/models/Offline/Hive/video.dart';
-import 'package:anymex/screens/local_source/controller/tmdb_api.dart';
-import 'package:anymex/screens/local_source/model/detail_result.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/models/Offline/Hive/video.dart';
+import 'package:nyantv/screens/local_source/controller/tmdb_api.dart';
+import 'package:nyantv/screens/local_source/model/detail_result.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

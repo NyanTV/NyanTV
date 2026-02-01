@@ -2,33 +2,33 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
-import 'package:anymex/controllers/discord/discord_rpc.dart';
-import 'package:anymex/controllers/offline/offline_storage_controller.dart';
-import 'package:anymex/controllers/service_handler/params.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/models/Media/media.dart' as anymex;
-import 'package:anymex/models/Offline/Hive/episode.dart';
-import 'package:anymex/models/Offline/Hive/video.dart' as model;
-import 'package:anymex/models/player/player_adaptor.dart';
-import 'package:anymex/screens/anime/watch/controller/player_utils.dart';
-import 'package:anymex/screens/anime/watch/controls/widgets/bottom_sheet.dart';
-import 'package:anymex/screens/anime/watch/subtitles/model/online_subtitle.dart';
-import 'package:anymex/screens/anime/watch/controller/tv_remote_handler.dart';
-import 'package:anymex/utils/aniskip.dart' as aniskip;
-import 'package:anymex/utils/color_profiler.dart';
-import 'package:anymex/utils/logger.dart';
-import 'package:anymex/utils/string_extensions.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_titlebar.dart';
-import 'package:anymex/widgets/non_widgets/anymex_toast.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/controllers/discord/discord_rpc.dart';
+import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
+import 'package:nyantv/controllers/service_handler/params.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/models/Media/media.dart' as nyantv;
+import 'package:nyantv/models/Offline/Hive/episode.dart';
+import 'package:nyantv/models/Offline/Hive/video.dart' as model;
+import 'package:nyantv/models/player/player_adaptor.dart';
+import 'package:nyantv/screens/anime/watch/controller/player_utils.dart';
+import 'package:nyantv/screens/anime/watch/controls/widgets/bottom_sheet.dart';
+import 'package:nyantv/screens/anime/watch/subtitles/model/online_subtitle.dart';
+import 'package:nyantv/screens/anime/watch/controller/tv_remote_handler.dart';
+import 'package:nyantv/utils/aniskip.dart' as aniskip;
+import 'package:nyantv/utils/color_profiler.dart';
+import 'package:nyantv/utils/logger.dart';
+import 'package:nyantv/utils/string_extensions.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_titlebar.dart';
+import 'package:nyantv/widgets/non_widgets/nyantv_toast.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:dartotsu_extension_bridge/Models/DEpisode.dart' as d;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:anymex/main.dart';
+import 'package:nyantv/main.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:rxdart/rxdart.dart' show ThrottleExtensions;
@@ -57,7 +57,7 @@ extension PlayerControllerExtensions on PlayerController {
 class PlayerController extends GetxController with WidgetsBindingObserver {
   Rx<Episode> currentEpisode = Rx<Episode>(Episode(number: '1'));
   final List<Episode> episodeList;
-  final anymex.Media anilistData;
+  final nyantv.Media anilistData;
   RxList<model.Video> episodeTracks = RxList();
   final isOffline = false.obs;
 
@@ -88,7 +88,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
     required String videoPath,
     required Episode episode,
     required List<Episode> episodeList,
-    required anymex.Media anilistData,
+    required nyantv.Media anilistData,
   }) {
     final offlineVideo = model.Video(
       videoPath,
@@ -311,7 +311,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
   Future<void> _initOrientations() async {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     ever(isFullScreen,
-        (isFullScreen) => AnymexTitleBar.setFullScreen(isFullScreen));
+        (isFullScreen) => NyantvTitleBar.setFullScreen(isFullScreen));
 
     final orientation = await _getClosestLandscapeOrientation();
 
@@ -413,7 +413,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
       
       // Erstelle ein sicheres Cache-Verzeichnis
       final tempDir = Directory.systemTemp;
-      final cacheDir = Directory('${tempDir.path}/anymex_tv_cache');
+      final cacheDir = Directory('${tempDir.path}/nyantv_tv_cache');
       if (!cacheDir.existsSync()) {
         cacheDir.createSync(recursive: true);
       }
@@ -455,7 +455,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
             
             // Audio optimiert
             "audio-buffer": "0.5",
-            "audio-client-name": "Anymex TV",
+            "audio-client-name": "Nyantv TV",
             
             // Performance
             "vd-lavc-fast": "yes",
@@ -956,7 +956,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
   void _revertOrientations() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     if (!Platform.isAndroid && !Platform.isIOS) {
-      AnymexTitleBar.setFullScreen(false);
+      NyantvTitleBar.setFullScreen(false);
     }
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -1239,7 +1239,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
   void toggleVideoFit() {
     videoFit.value =
         BoxFit.values[(videoFit.value.index + 1) % BoxFit.values.length];
-    AnymexToast.show(
+    NyantvToast.show(
         message: videoFit.value.name.capitalizeFirst ?? '',
         duration: const Duration(milliseconds: 700));
   }

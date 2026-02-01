@@ -1,13 +1,13 @@
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:flutter/material.dart';
 
-class AnymexTextSpan {
+class NyantvTextSpan {
   final String text;
   final TextVariant variant;
   final Color? color;
   final double? size;
 
-  const AnymexTextSpan({
+  const NyantvTextSpan({
     required this.text,
     this.variant = TextVariant.regular,
     this.color,
@@ -15,15 +15,15 @@ class AnymexTextSpan {
   });
 }
 
-class AnymexTextSpans extends StatelessWidget {
-  final List<AnymexTextSpan>? spans;
+class NyantvTextSpans extends StatelessWidget {
+  final List<NyantvTextSpan>? spans;
   final String? text;
   final TextAlign? textAlign;
   final TextOverflow? overflow;
   final int? maxLines;
   final double? fontSize;
 
-  const AnymexTextSpans({
+  const NyantvTextSpans({
     super.key,
     this.spans,
     this.text,

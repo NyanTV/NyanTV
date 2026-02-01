@@ -1,6 +1,6 @@
-import 'package:anymex/models/Offline/Hive/episode.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/header.dart';
+import 'package:nyantv/models/Offline/Hive/episode.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/header.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 
@@ -97,7 +97,7 @@ class BetterEpisode extends StatelessWidget {
           _buildImageSection(context, progress, hasProgress, isCompact: true),
           const SizedBox(width: 10),
           Expanded(
-            child: AnymexText(
+            child: NyantvText(
               text: episode.title ?? '?',
               variant: TextVariant.bold,
             ),
@@ -133,7 +133,7 @@ class BetterEpisode extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: AnymexText(
+                child: NyantvText(
                   text: episode.title ?? 'Unknown Title',
                   variant: TextVariant.bold,
                   maxLines: 3,
@@ -246,7 +246,7 @@ class BetterEpisode extends StatelessWidget {
                 ),
               ],
             ),
-            child: AnymexText(
+            child: NyantvText(
               text: "EP ${episode.number}",
               variant: TextVariant.bold,
               color: Colors.white,
@@ -263,7 +263,7 @@ class BetterEpisode extends StatelessWidget {
         ? 'No Description Available'
         : description!;
 
-    return AnymexText(
+    return NyantvText(
       text: displayText,
       variant: TextVariant.regular,
       maxLines: 3,

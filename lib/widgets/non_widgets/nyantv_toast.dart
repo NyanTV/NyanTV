@@ -1,9 +1,9 @@
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class AnymexToast {
+class NyantvToast {
   static void show({
     required String message,
     Duration duration = const Duration(seconds: 2),
@@ -55,7 +55,7 @@ class AnymexToast {
                   ),
                   12.width(),
                   Flexible(
-                    child: AnymexText(
+                    child: NyantvText(
                       text: message,
                       size: 13,
                       color: colorScheme.onSurface,

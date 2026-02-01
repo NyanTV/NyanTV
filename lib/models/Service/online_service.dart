@@ -1,6 +1,6 @@
-import 'package:anymex/controllers/service_handler/params.dart';
-import 'package:anymex/models/Anilist/anilist_media_user.dart';
-import 'package:anymex/models/Anilist/anilist_profile.dart';
+import 'package:nyantv/controllers/service_handler/params.dart';
+import 'package:nyantv/models/Anilist/anilist_media_user.dart';
+import 'package:nyantv/models/Anilist/anilist_profile.dart';
 import 'package:get/get.dart';
 
 abstract class OnlineService {

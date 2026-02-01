@@ -17,7 +17,7 @@ jobs:
         days-before-issue-close: 0
         only-issue-labels: "bug,question"
         exempt-issue-labels: "do-not-autoclose,Meta request"
-        close-issue-message: "To have a more manageable issue backlog, we're closing older bug reports and questions that weren't addressed within three months. If this issue is still relevant, please [open a new issue](https://github.com/RyanYuuki/AnymeX/issues/new/choose)."
+        close-issue-message: "To have a more manageable issue backlog, we're closing older bug reports and questions that weren't addressed within three months. If this issue is still relevant, please [open a new issue](https://github.com/RyanYuuki/NyanTV/issues/new/choose)."
         close-issue-reason: not_planned
         ascending: true
         operations-per-run: 250

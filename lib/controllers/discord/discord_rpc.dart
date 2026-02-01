@@ -1,12 +1,12 @@
 // discord_rpc_controller.dart
 import 'dart:async';
 import 'dart:io';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/models/Offline/Hive/chapter.dart';
-import 'package:anymex/models/Offline/Hive/episode.dart';
-import 'package:anymex/utils/extension_utils.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/models/Offline/Hive/chapter.dart';
+import 'package:nyantv/models/Offline/Hive/episode.dart';
+import 'package:nyantv/utils/extension_utils.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_discord_rpc_fork/flutter_discord_rpc.dart';
 import 'package:get/get.dart';
@@ -299,8 +299,8 @@ class DiscordRPCController extends GetxController {
         'token': _token.value,
         'properties': {
           '\$os': Platform.operatingSystem,
-          '\$browser': 'AnymeX',
-          '\$device': 'AnymeX Mobile',
+          '\$browser': 'NyanTV',
+          '\$device': 'NyanTV Mobile',
         },
         'presence': {
           'status': 'online',
@@ -414,7 +414,7 @@ class DiscordRPCController extends GetxController {
           'since': null,
           'activities': [
             {
-              'name': 'AnymeX',
+              'name': 'NyanTV',
               'type': 3, // Watching
               'details': animeTitle,
               'state':
@@ -427,16 +427,16 @@ class DiscordRPCController extends GetxController {
                 'large_image': await _processImageUrl(coverUrl),
                 'large_text': animeTitle,
                 'small_image': await _processImageUrl(_getAppIconUrl()),
-                'small_text': 'AnymeX',
+                'small_text': 'NyanTV',
               },
               'buttons': [
                 'View Anime',
-                'Watch on AnymeX',
+                'Watch on NyanTV',
               ],
               'metadata': {
                 'button_urls': [
                   anilistUrl,
-                  'https://github.com/RyanYuuki/AnymeX/',
+                  'https://github.com/RyanYuuki/NyanTV/',
                 ],
               }
             }
@@ -463,13 +463,13 @@ class DiscordRPCController extends GetxController {
               largeImage: await _processImageUrl(coverUrl),
               largeText: animeTitle,
               smallImage: await _processImageUrl(_getAppIconUrl()),
-              smallText: 'AnymeX',
+              smallText: 'NyanTV',
             ),
             buttons: [
               RPCButton(label: 'View Anime', url: anilistUrl),
               const RPCButton(
-                label: 'Watch on AnymeX',
-                url: 'https://github.com/RyanYuuki/AnymeX/',
+                label: 'Watch on NyanTV',
+                url: 'https://github.com/RyanYuuki/NyanTV/',
               ),
             ],
           ),
@@ -512,7 +512,7 @@ class DiscordRPCController extends GetxController {
           'since': null,
           'activities': [
             {
-              'name': 'AnymeX',
+              'name': 'NyanTV',
               'type': 3, // Watching
               'details': animeTitle,
               'state': 'Episode $episodeNumber$timeDisplay (Paused)',
@@ -520,16 +520,16 @@ class DiscordRPCController extends GetxController {
                 'large_image': await _processImageUrl(coverUrl),
                 'large_text': animeTitle,
                 'small_image': await _processImageUrl(_getAppIconUrl()),
-                'small_text': 'AnymeX',
+                'small_text': 'NyanTV',
               },
               'buttons': [
                 'View Anime',
-                'Watch on AnymeX',
+                'Watch on NyanTV',
               ],
               'metadata': {
                 'button_urls': [
                   anilistUrl,
-                  'https://github.com/RyanYuuki/AnymeX/',
+                  'https://github.com/RyanYuuki/NyanTV/',
                 ],
               }
             }
@@ -551,13 +551,13 @@ class DiscordRPCController extends GetxController {
               largeImage: await _processImageUrl(coverUrl),
               largeText: animeTitle,
               smallImage: await _processImageUrl(_getAppIconUrl()),
-              smallText: 'AnymeX',
+              smallText: 'NyanTV',
             ),
             buttons: [
               RPCButton(label: 'View Anime', url: anilistUrl),
               const RPCButton(
-                label: 'Watch on AnymeX',
-                url: 'https://github.com/RyanYuuki/AnymeX/',
+                label: 'Watch on NyanTV',
+                url: 'https://github.com/RyanYuuki/NyanTV/',
               ),
             ],
           ),
@@ -587,7 +587,7 @@ class DiscordRPCController extends GetxController {
           'since': null,
           'activities': [
             {
-              'name': 'AnymeX',
+              'name': 'NyanTV',
               'type': 0,
               'details': animeTitle,
               'state': 'Viewing $type',
@@ -596,16 +596,16 @@ class DiscordRPCController extends GetxController {
                     await _processImageUrl(media.cover ?? media.poster),
                 'large_text': animeTitle,
                 'small_image': await _processImageUrl(_getAppIconUrl()),
-                'small_text': 'AnymeX',
+                'small_text': 'NyanTV',
               },
               'buttons': [
                 'View $type',
-                '${media.mediaType.isAnime ? 'Watch' : 'Read'} on AnymeX',
+                '${media.mediaType.isAnime ? 'Watch' : 'Read'} on NyanTV',
               ],
               'metadata': {
                 'button_urls': [
                   anilistUrl,
-                  'https://github.com/RyanYuuki/AnymeX',
+                  'https://github.com/RyanYuuki/NyanTV',
                 ],
               }
             }
@@ -627,13 +627,13 @@ class DiscordRPCController extends GetxController {
               largeImage: await _processImageUrl(media.cover ?? media.poster),
               largeText: animeTitle,
               smallImage: await _processImageUrl(_getAppIconUrl()),
-              smallText: 'AnymeX',
+              smallText: 'NyanTV',
             ),
             buttons: [
               RPCButton(label: 'View $type', url: anilistUrl),
               const RPCButton(
-                label: 'Watch on AnymeX',
-                url: 'https://github.com/RyanYuuki/AnymeX/',
+                label: 'Watch on NyanTV',
+                url: 'https://github.com/RyanYuuki/NyanTV/',
               ),
             ],
           ),
@@ -673,20 +673,20 @@ class DiscordRPCController extends GetxController {
           'since': null,
           'activities': [
             {
-              'name': 'AnymeX',
+              'name': 'NyanTV',
               'type': 0,
               'details': activity ?? 'Browsing Stuff',
               'state': details ?? 'Idle',
               'assets': {
                 'large_image': await _processImageUrl(_getAppIconUrl()),
-                'large_text': 'AnymeX - Anime & Manga',
+                'large_text': 'NyanTV - Anime & Manga',
               },
               'buttons': [
-                'Download AnymeX',
+                'Download NyanTV',
               ],
               'metadata': {
                 'button_urls': [
-                  'https://github.com/RyanYuuki/AnymeX/',
+                  'https://github.com/RyanYuuki/NyanTV/',
                 ],
               }
             }
@@ -706,7 +706,7 @@ class DiscordRPCController extends GetxController {
             activityType: ActivityType.playing,
             assets: RPCAssets(
               largeImage: await _processImageUrl(_getAppIconUrl()),
-              largeText: 'AnymeX - Anime & Manga',
+              largeText: 'NyanTV - Anime & Manga',
             ),
           ),
         );
@@ -746,7 +746,7 @@ class DiscordRPCController extends GetxController {
   }
 
   String _getAppIconUrl() {
-    return 'https://raw.githubusercontent.com/RyanYuuki/AnymeX/main/assets/images/logo.png';
+    return 'https://raw.githubusercontent.com/RyanYuuki/NyanTV/main/assets/images/logo.png';
   }
 
   Future<void> pause() async {

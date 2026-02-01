@@ -1,9 +1,9 @@
 
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/widgets/header.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/widgets/header.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:blur/blur.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -133,7 +133,7 @@ class GradientPoster extends StatelessWidget {
         Positioned(
             top: 30,
             right: 20,
-            child: AnymexOnTap(
+            child: NyantvOnTap(
               onTap: () {
                 Get.back();
               },

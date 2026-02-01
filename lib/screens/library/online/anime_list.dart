@@ -1,11 +1,11 @@
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/models/Anilist/anilist_media_user.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/media_items/media_item.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/models/Anilist/anilist_media_user.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/media_items/media_item.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:flutter/material.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_progress.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -98,7 +98,7 @@ class _AnimeListState extends State<AnimeList> {
                           filterListByStatus(animeList, tab);
 
                       return Tab(
-                          child: AnymexText(
+                          child: NyantvText(
                         text: '$tab (${filteredAnimeList.length})',
                         variant: TextVariant.bold,
                       ));
@@ -107,7 +107,7 @@ class _AnimeListState extends State<AnimeList> {
                       final filteredAnimeList =
                           filterListByStatus(animeList, tab);
                       return Tab(
-                          child: AnymexText(
+                          child: NyantvText(
                         text: '$tab (${filteredAnimeList.length})',
                         variant: TextVariant.bold,
                       ));
@@ -157,7 +157,7 @@ class AnimeListContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (animeData == null) {
-      return const Center(child: AnymexProgressIndicator());
+      return const Center(child: NyantvProgressIndicator());
     }
 
     final filteredAnimeList = filterListByStatus(animeData!, tabType);

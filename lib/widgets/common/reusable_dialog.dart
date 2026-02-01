@@ -1,4 +1,4 @@
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -23,7 +23,7 @@ void showCustomDialog({
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnymexText(
+            NyantvText(
               text: title,
               variant: TextVariant.bold,
             ),

@@ -1,12 +1,12 @@
-// import 'package:anymex/screens/downloader/controller/download_manager.dart';
-// import 'package:anymex/utils/function.dart';
-// import 'package:anymex/widgets/common/glow.dart';
-// import 'package:anymex/widgets/common/slider_semantics.dart';
-// import 'package:anymex/widgets/non_widgets/snackbar.dart';
+// import 'package:nyantv/screens/downloader/controller/download_manager.dart';
+// import 'package:nyantv/utils/function.dart';
+// import 'package:nyantv/widgets/common/glow.dart';
+// import 'package:nyantv/widgets/common/slider_semantics.dart';
+// import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 // import 'package:file_picker/file_picker.dart';
 // import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
-// import 'package:anymex/screens/downloader/model/download_item.dart';
+// import 'package:nyantv/screens/downloader/model/download_item.dart';
 // import 'package:background_downloader/background_downloader.dart';
 // import 'package:iconsax/iconsax.dart';
 

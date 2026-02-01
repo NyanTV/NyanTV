@@ -1,14 +1,14 @@
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/screens/extensions/ExtensionScreen.dart';
-import 'package:anymex/screens/profile/profile_page.dart';
-import 'package:anymex/screens/settings/settings.dart';
-import 'package:anymex/screens/local_source/local_source_view.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_bottomsheet.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/screens/extensions/ExtensionScreen.dart';
+import 'package:nyantv/screens/profile/profile_page.dart';
+import 'package:nyantv/screens/settings/settings.dart';
+import 'package:nyantv/screens/local_source/local_source_view.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_bottomsheet.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -22,7 +22,7 @@ class SettingsSheet extends StatelessWidget {
   final serviceHandler = Get.find<ServiceHandler>();
 
   static void show(BuildContext context) {
-    AnymexSheet(
+    NyantvSheet(
       customWidget: SettingsSheet(),
     ).show(context);
   }
@@ -42,13 +42,13 @@ class SettingsSheet extends StatelessWidget {
         },
     ];
 
-    AnymexSheet.custom(
+    NyantvSheet.custom(
         Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const AnymexText(
+              const NyantvText(
                 text: "Select Service",
                 size: 16,
                 variant: TextVariant.semiBold,
@@ -65,7 +65,7 @@ class SettingsSheet extends StatelessWidget {
                             size: 30,
                             color: Theme.of(context).colorScheme.primary,
                           ),
-                    title: AnymexText(
+                    title: NyantvText(
                       text: service['name'] as String,
                       variant: TextVariant.semiBold,
                       color: serviceHandler.serviceType.value == service['type']
@@ -122,7 +122,7 @@ class SettingsSheet extends StatelessWidget {
                   Text(serviceHandler.profileData.value.name ?? 'Guest'),
                   if (serviceHandler.serviceType.value !=
                       ServicesType.extensions)
-                    AnymexOnTap(
+                    NyantvOnTap(
                       onTap: () {
                         if (serviceHandler.isLoggedIn.value) {
                           serviceHandler.logout();
@@ -143,7 +143,7 @@ class SettingsSheet extends StatelessWidget {
               const Expanded(
                 child: SizedBox.shrink(),
               ),
-              AnymexOnTap(
+              NyantvOnTap(
                 child: IconButton(
                     onPressed: () {
                       snackBar('This feature is not available yet.');
@@ -160,7 +160,7 @@ class SettingsSheet extends StatelessWidget {
             const SizedBox(height: 10),
             if (serviceHandler.isLoggedIn.value &&
                 serviceHandler.serviceType.value == ServicesType.anilist)
-              AnymexOnTap(
+              NyantvOnTap(
                 child: ListTile(
                   leading: const Icon(Iconsax.user),
                   title: const Text('View Profile'),
@@ -184,7 +184,7 @@ class SettingsSheet extends StatelessWidget {
                     )
                   : const SizedBox.shrink();
             }),
-            AnymexOnTap(
+            NyantvOnTap(
               child: ListTile(
                 leading: const Icon(HugeIcons.strokeRoundedAiSetting),
                 title: const Text('Change Service'),
@@ -194,7 +194,7 @@ class SettingsSheet extends StatelessWidget {
                 },
               ),
             ),
-            AnymexOnTap(
+            NyantvOnTap(
               child: ListTile(
                 leading: const Icon(Iconsax.document_download),
                 title: const Text('Local Media'),
@@ -204,7 +204,7 @@ class SettingsSheet extends StatelessWidget {
                 },
               ),
             ),
-            AnymexOnTap(
+            NyantvOnTap(
               child: ListTile(
                 leading: const Icon(Iconsax.setting),
                 title: const Text('Settings'),

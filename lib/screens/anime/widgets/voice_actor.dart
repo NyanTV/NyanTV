@@ -1,8 +1,8 @@
 import 'dart:math' show Random;
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/models/Media/character.dart';
-import 'package:anymex/widgets/animation/slide_scale.dart';
-import 'package:anymex/widgets/header.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/models/Media/character.dart';
+import 'package:nyantv/widgets/animation/slide_scale.dart';
+import 'package:nyantv/widgets/header.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';

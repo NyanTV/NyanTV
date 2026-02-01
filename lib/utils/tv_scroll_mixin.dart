@@ -1,7 +1,7 @@
 // lib/utils/tv_scroll_mixin.dart
 // Universal Mixin for TV Auto-Scroll
 
-import 'package:anymex/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

@@ -1,8 +1,8 @@
-import 'package:anymex/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class AnymexContainer extends StatelessWidget {
+class NyantvContainer extends StatelessWidget {
   final Widget? child;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
@@ -18,7 +18,7 @@ class AnymexContainer extends StatelessWidget {
   final Clip clipBehavior;
   final bool enableGlow;
 
-  const AnymexContainer({
+  const NyantvContainer({
     super.key,
     this.child,
     this.padding,

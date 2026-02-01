@@ -1,8 +1,8 @@
-import 'package:anymex/controllers/services/widgets/widgets_builders.dart';
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/controllers/services/widgets/widgets_builders.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -159,7 +159,7 @@ class TappableSearchBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20),
       decoration: BoxDecoration(boxShadow: [lightGlowingShadow(context)]),
       clipBehavior: Clip.antiAlias,
-      child: AnymexOnTap(
+      child: NyantvOnTap(
         onTap: onSubmitted,
         scale: 1,
         margin: 0,
@@ -183,7 +183,7 @@ class TappableSearchBar extends StatelessWidget {
               children: [
                 // const SizedBox(width: 12),
                 // Expanded(
-                //   child: AnymexText(
+                //   child: NyantvText(
                 //     text: hintText,
                 //     color: Theme.of(context).hintColor,
                 //     size: 16,

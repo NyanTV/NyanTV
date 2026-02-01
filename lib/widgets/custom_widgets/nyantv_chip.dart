@@ -1,15 +1,15 @@
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class AnymexChip extends StatelessWidget {
+class NyantvChip extends StatelessWidget {
   final String label;
   final bool isSelected;
   final Function(bool e) onSelected;
   final bool showCheck;
 
-  const AnymexChip({
+  const NyantvChip({
     super.key,
     required this.label,
     required this.isSelected,
@@ -64,13 +64,13 @@ class AnymexChip extends StatelessWidget {
   }
 }
 
-class AnymexIconChip extends StatelessWidget {
+class NyantvIconChip extends StatelessWidget {
   final Widget icon;
   final bool isSelected;
   final Function(bool e) onSelected;
   final bool showCheck;
 
-  const AnymexIconChip(
+  const NyantvIconChip(
       {super.key,
       required this.icon,
       required this.isSelected,

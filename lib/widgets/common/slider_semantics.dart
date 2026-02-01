@@ -1,4 +1,4 @@
-import 'package:anymex/widgets/common/glow.dart';
+import 'package:nyantv/widgets/common/glow.dart';
 import 'package:flutter/material.dart';
 
 class CustomSlider extends StatefulWidget {

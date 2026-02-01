@@ -1,5 +1,5 @@
 name: 🐛 Issue Report
-description: Report a bug or problem in AnymeX
+description: Report a bug or problem in NyanTV
 labels: [bug]
 body:
   - type: textarea
@@ -47,10 +47,10 @@ body:
         Paste the logs here or upload as an attachment.
       
   - type: input
-    id: anymex-version
+    id: nyantv-version
     attributes:
-      label: AnymeX Version
-      description: Specify the version of AnymeX in which the issue occurred.
+      label: NyanTV Version
+      description: Specify the version of NyanTV in which the issue occurred.
       placeholder: |
         Example: "1.2.3"
     validations:
@@ -91,7 +91,7 @@ body:
       options:
         - label: I have searched existing issues to confirm this is not a duplicate.
           required: true
-        - label: I am using the **[latest](https://github.com/RyanYuuki/AnymeX/releases/latest)** version of AnymeX. If not, I have provided a reason for not updating.
+        - label: I am using the **[latest](https://github.com/RyanYuuki/NyanTV/releases/latest)** version of NyanTV. If not, I have provided a reason for not updating.
           required: true
         - label: If this is an issue with an extension, I should be opening an issue in the extension's repository.
           required: false

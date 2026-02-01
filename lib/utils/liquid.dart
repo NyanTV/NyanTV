@@ -1,12 +1,12 @@
 // ignore_for_file: depend_on_referenced_packages, use_build_context_synchronously
 
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/utils/logger.dart';
 import 'dart:isolate';
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_progress.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -153,7 +153,7 @@ class Liquid {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        AnymexProgressIndicator(
+                        NyantvProgressIndicator(
                           value: progressController.progress.value > 0
                               ? progressController.progress.value
                               : null,

@@ -1,5 +1,5 @@
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/common/reusable_carousel.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/common/reusable_carousel.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';

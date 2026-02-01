@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/utils/logger.dart';
 
-import 'package:anymex/models/Offline/Hive/episode.dart';
+import 'package:nyantv/models/Offline/Hive/episode.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 

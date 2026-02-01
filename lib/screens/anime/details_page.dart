@@ -1,43 +1,43 @@
 // ignore_for_file: invalid_use_of_protected_member
 import 'dart:async';
-import 'package:anymex/controllers/discord/discord_rpc.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/utils/logger.dart';
-import 'package:anymex/controllers/service_handler/params.dart';
-import 'package:anymex/controllers/source/source_mapper.dart';
-import 'package:anymex/database/comments_db.dart';
-import 'package:anymex/database/model/comment.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_button.dart';
+import 'package:nyantv/controllers/discord/discord_rpc.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/utils/logger.dart';
+import 'package:nyantv/controllers/service_handler/params.dart';
+import 'package:nyantv/controllers/source/source_mapper.dart';
+import 'package:nyantv/database/comments_db.dart';
+import 'package:nyantv/database/model/comment.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_button.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/controllers/services/anilist/anilist_auth.dart';
-import 'package:anymex/controllers/offline/offline_storage_controller.dart';
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/controllers/services/anilist/anilist_data.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/models/Anilist/anilist_media_user.dart';
-import 'package:anymex/models/Offline/Hive/episode.dart';
-import 'package:anymex/screens/anime/widgets/anime_stats.dart';
-import 'package:anymex/screens/anime/widgets/custom_list_dialog.dart';
-import 'package:anymex/screens/anime/widgets/episode_section.dart';
-import 'package:anymex/screens/anime/widgets/list_editor.dart';
-import 'package:anymex/screens/anime/widgets/seasons_buttons.dart';
-import 'package:anymex/screens/anime/widgets/voice_actor.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/utils/media_syncer.dart';
-import 'package:anymex/utils/string_extensions.dart';
-import 'package:anymex/widgets/anime/gradient_image.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/common/navbar.dart';
-import 'package:anymex/widgets/common/reusable_carousel.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/custom_widgets/custom_textspan.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/services/anilist/anilist_auth.dart';
+import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/controllers/services/anilist/anilist_data.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/models/Anilist/anilist_media_user.dart';
+import 'package:nyantv/models/Offline/Hive/episode.dart';
+import 'package:nyantv/screens/anime/widgets/anime_stats.dart';
+import 'package:nyantv/screens/anime/widgets/custom_list_dialog.dart';
+import 'package:nyantv/screens/anime/widgets/episode_section.dart';
+import 'package:nyantv/screens/anime/widgets/list_editor.dart';
+import 'package:nyantv/screens/anime/widgets/seasons_buttons.dart';
+import 'package:nyantv/screens/anime/widgets/voice_actor.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/utils/media_syncer.dart';
+import 'package:nyantv/utils/string_extensions.dart';
+import 'package:nyantv/widgets/anime/gradient_image.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/common/navbar.dart';
+import 'package:nyantv/widgets/common/reusable_carousel.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:expandable_page_view/expandable_page_view.dart';
 import 'package:flutter/material.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_progress.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:iconly/iconly.dart';
@@ -436,7 +436,7 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      AnymexText(
+                                      NyantvText(
                                         text: convertAniListStatus(
                                             animeStatus.value),
                                         variant: TextVariant.bold,
@@ -484,7 +484,7 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
                           ),
                         ] else ...[
                           Expanded(
-                            child: AnymexButton2(
+                            child: NyantvButton2(
                               onTap: () {
                                 showCustomListDialog(
                                     context,
@@ -508,7 +508,7 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
           ] else ...[
             const SizedBox(
               height: 400,
-              child: Center(child: AnymexProgressIndicator()),
+              child: Center(child: NyantvProgressIndicator()),
             )
           ],
           ExpandablePageView(
@@ -570,25 +570,25 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: AnymexTextSpans(
+            child: NyantvTextSpans(
               fontSize: 14,
               spans: [
-                AnymexTextSpan(
+                NyantvTextSpan(
                   text: "Episode ",
                   color:
                       Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                 ),
-                AnymexTextSpan(
+                NyantvTextSpan(
                   text: currentAnime.value?.episodeCount?.toString() ?? '0',
                   variant: TextVariant.bold,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                AnymexTextSpan(
+                NyantvTextSpan(
                   text: ' of ',
                   color:
                       Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                 ),
-                AnymexTextSpan(
+                NyantvTextSpan(
                   text: anilistData?.totalEpisodes.toString() ??
                       anilistData?.totalEpisodes.toString() ??
                       '??',

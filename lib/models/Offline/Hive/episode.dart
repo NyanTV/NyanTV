@@ -1,4 +1,4 @@
-import 'package:anymex/models/Offline/Hive/video.dart';
+import 'package:nyantv/models/Offline/Hive/video.dart';
 import 'package:hive/hive.dart';
 
 part 'episode.g.dart';

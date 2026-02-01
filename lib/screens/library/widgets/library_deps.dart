@@ -1,9 +1,9 @@
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/widgets/common/slider_semantics.dart';
-import 'package:anymex/widgets/custom_widgets/custom_icon_wrapper.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/widgets/common/slider_semantics.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_icon_wrapper.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -123,7 +123,7 @@ class CustomSliderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnymexOnTapAdv(
+    return NyantvOnTapAdv(
       onKeyEvent: (p0, e) {
         if (e is KeyDownEvent) {
           double step = (max - min) / (divisions ?? (max - min));
@@ -148,7 +148,7 @@ class CustomSliderTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                AnymexIcon(icon,
+                NyantvIcon(icon,
                     size: 30, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 20),
                 Expanded(
@@ -184,7 +184,7 @@ class CustomSliderTile extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10.0),
               child: Row(
                 children: [
-                  AnymexText(
+                  NyantvText(
                     text: sliderValue.toInt() == 0
                         ? 'Auto'
                         : (sliderValue % 1 == 0
@@ -214,7 +214,7 @@ class CustomSliderTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  AnymexText(
+                  NyantvText(
                     text: max % 1 == 0
                         ? max.toInt().toString()
                         : max.toStringAsFixed(1),

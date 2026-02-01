@@ -2,40 +2,40 @@
 // lib/screens/anime/watch_page.dart
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:anymex/screens/anime/widgets/media_indicator_old.dart';
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/screens/anime/widgets/media_indicator_old.dart';
+import 'package:nyantv/utils/logger.dart';
 import 'dart:io';
-import 'package:anymex/controllers/service_handler/params.dart';
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/models/Offline/Hive/video.dart' as model;
-import 'package:anymex/constants/contants.dart';
-import 'package:anymex/controllers/offline/offline_storage_controller.dart';
-import 'package:anymex/models/player/player_adaptor.dart';
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/models/Media/media.dart' as anymex;
-import 'package:anymex/models/Offline/Hive/episode.dart';
-import 'package:anymex/screens/anime/widgets/episode_watch_screen.dart';
-import 'package:anymex/screens/anime/widgets/video_slider.dart';
-import 'package:anymex/screens/settings/sub_settings/settings_player.dart';
-import 'package:anymex/utils/color_profiler.dart';
-import 'package:anymex/utils/shaders.dart';
-import 'package:anymex/utils/string_extensions.dart';
-import 'package:anymex/widgets/common/checkmark_tile.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_titlebar.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
-import 'package:anymex/screens/anime/watch/controller/tv_remote_handler.dart';
-import 'package:anymex/widgets/custom_widgets/custom_button.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/custom_widgets/custom_textspan.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/controllers/service_handler/params.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/models/Offline/Hive/video.dart' as model;
+import 'package:nyantv/constants/contants.dart';
+import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
+import 'package:nyantv/models/player/player_adaptor.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/models/Media/media.dart' as nyantv;
+import 'package:nyantv/models/Offline/Hive/episode.dart';
+import 'package:nyantv/screens/anime/widgets/episode_watch_screen.dart';
+import 'package:nyantv/screens/anime/widgets/video_slider.dart';
+import 'package:nyantv/screens/settings/sub_settings/settings_player.dart';
+import 'package:nyantv/utils/color_profiler.dart';
+import 'package:nyantv/utils/shaders.dart';
+import 'package:nyantv/utils/string_extensions.dart';
+import 'package:nyantv/widgets/common/checkmark_tile.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_titlebar.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/screens/anime/watch/controller/tv_remote_handler.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_button.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart' as d;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_progress.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -47,14 +47,14 @@ import 'package:screen_brightness/screen_brightness.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:volume_controller/volume_controller.dart';
-import 'package:anymex/utils/aniskip.dart' as aniskip;
-import 'package:anymex/utils/tv_scroll_mixin.dart';
+import 'package:nyantv/utils/aniskip.dart' as aniskip;
+import 'package:nyantv/utils/tv_scroll_mixin.dart';
 
 class WatchPage extends StatefulWidget {
   final model.Video episodeSrc;
   final Episode currentEpisode;
   final List<Episode> episodeList;
-  final anymex.Media anilistData;
+  final nyantv.Media anilistData;
   final List<model.Video> episodeTracks;
   final bool shouldTrack;
   const WatchPage(
@@ -75,7 +75,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   late Rx<Episode> currentEpisode;
   late RxList<model.Video> episodeTracks;
   late RxList<Episode> episodeList;
-  late Rx<anymex.Media> anilistData;
+  late Rx<nyantv.Media> anilistData;
   RxList<model.Track?> subtitles = <model.Track>[].obs;
 
   // Library
@@ -157,7 +157,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       // TV-spezifische Player-Einstellungen
       final tempDir = Directory.systemTemp;
       if (tempDir.existsSync()) {
-        final cacheDir = Directory('${tempDir.path}/anymex_cache');
+        final cacheDir = Directory('${tempDir.path}/nyantv_cache');
         if (!cacheDir.existsSync()) {
           cacheDir.createSync(recursive: true);
         }
@@ -461,7 +461,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   void _initRxVariables() {
     episode = Rx<model.Video>(widget.episodeSrc);
     episodeList = RxList<Episode>(widget.episodeList);
-    anilistData = Rx<anymex.Media>(widget.anilistData);
+    anilistData = Rx<nyantv.Media>(widget.anilistData);
     currentEpisode = Rx<Episode>(widget.currentEpisode);
     currentEpisode.value.source = sourceController.activeSource.value!.name;
     episodeTracks = RxList<model.Video>(widget.episodeTracks);
@@ -783,7 +783,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       ScreenBrightness.instance.resetScreenBrightness();
     } else {
       if (!isMobile) {
-        AnymexTitleBar.setFullScreen(false);
+        NyantvTitleBar.setFullScreen(false);
       }
     }
     _tvRemoteHandler?.dispose();
@@ -906,7 +906,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  AnymexText(
+                  NyantvText(
                     text: "${(prevRate.value * 2).toInt()}x",
                     variant: TextVariant.semiBold,
                   ),
@@ -1242,7 +1242,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
             padding: const EdgeInsets.all(20.0),
             children: [
               const Center(
-                child: AnymexText(
+                child: NyantvText(
                   text: "Choose Audio",
                   size: 18,
                   variant: TextVariant.bold,
@@ -1271,7 +1271,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(
                                   vertical: 2.5, horizontal: 10),
-                              title: AnymexText(
+                              title: NyantvText(
                                 text: e.label ?? '??',
                                 variant: TextVariant.bold,
                                 size: 16,
@@ -1319,7 +1319,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Center(
-                  child: AnymexText(
+                  child: NyantvText(
                     text: "Choose Track",
                     size: 18,
                     variant: TextVariant.bold,
@@ -1330,7 +1330,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                   mainAxisSize: MainAxisSize.min,
                   children: episodeTracks.map((e) {
                     final isSelected = episode.value.quality == e.quality;
-                    return AnymexOnTap(
+                    return NyantvOnTap(
                       onTap: () {
                         episode.value = e;
                         player.open(Media(
@@ -1350,7 +1350,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(
                               vertical: 2.5, horizontal: 10),
-                          title: AnymexText(
+                          title: NyantvText(
                             text: e.quality,
                             variant: TextVariant.bold,
                             size: 16,
@@ -1394,7 +1394,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
             child: Column(
               children: [
                 const Center(
-                  child: AnymexText(
+                  child: NyantvText(
                     text: "Choose Subtitle",
                     size: 18,
                     variant: TextVariant.bold,
@@ -1405,7 +1405,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // "None" option
-                    AnymexOnTap(
+                    NyantvOnTap(
                       onTap: () {
                         selectedSubIndex.value = -1;
                         Get.back();
@@ -1418,7 +1418,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                     ...subtitles.asMap().entries.map((entry) {
                       final index = entry.key;
                       final e = entry.value;
-                      return AnymexOnTap(
+                      return NyantvOnTap(
                         onTap: () {
                           selectedSubIndex.value = index;
                           Get.back();
@@ -1429,7 +1429,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                       );
                     }),
                     // "Add Subtitle" option
-                    AnymexOnTap(
+                    NyantvOnTap(
                       onTap: () async {
                         final result = await FilePicker.platform.pickFiles(
                           type: FileType.custom,
@@ -1469,7 +1469,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       child: ListTile(
         contentPadding:
             const EdgeInsets.symmetric(vertical: 2.5, horizontal: 10),
-        title: AnymexText(
+        title: NyantvText(
           text: text,
           variant: TextVariant.bold,
           size: 16,
@@ -1552,14 +1552,14 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  AnymexText(
+                                  NyantvText(
                                     text:
                                         'Episode ${currentEpisode.value.number}: ${currentEpisode.value.title}',
                                     variant: TextVariant.semiBold,
                                     maxLines: 3,
                                     color: themeFgColor.value,
                                   ),
-                                  AnymexText(
+                                  NyantvText(
                                     text: anilistData.value.title.toUpperCase(),
                                     variant: TextVariant.bold,
                                     color: Colors.white.withOpacity(0.8),
@@ -1647,15 +1647,15 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                             crossAxisAlignment: CrossAxisAlignment.end,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              AnymexTextSpans(
+                              NyantvTextSpans(
                                 maxLines: 1,
                                 spans: [
-                                  AnymexTextSpan(
+                                  NyantvTextSpan(
                                       text: '${formattedTime.value} ',
                                       variant: TextVariant.semiBold,
                                       color:
                                           themeFgColor.value.withOpacity(0.8)),
-                                  AnymexTextSpan(
+                                  NyantvTextSpan(
                                     variant: TextVariant.semiBold,
                                     text: ' /  ${formattedDuration.value}',
                                   ),
@@ -1808,7 +1808,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                             onTap: () async {
                                               isFullscreen.value =
                                                   !isFullscreen.value;
-                                              await AnymexTitleBar
+                                              await NyantvTitleBar
                                                   .setFullScreen(
                                                       isFullscreen.value);
                                             },
@@ -1843,7 +1843,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   _buildSkipButton(bool invert) {
     return BlurWrapper(
       borderRadius: BorderRadius.circular(20.multiplyRoundness()),
-      child: AnymeXButton(
+      child: NyanTVButton(
         height: 50,
         width: 120,
         variant: ButtonVariant.simple,
@@ -1878,7 +1878,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                     color: Colors.white,
                   ),
                   const SizedBox(width: 5),
-                  AnymexText(
+                  NyantvText(
                     text: "-${settings.skipDuration}s",
                     variant: TextVariant.semiBold,
                     color: Colors.white,
@@ -1888,7 +1888,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AnymexText(
+                  NyantvText(
                     text: "+${settings.skipDuration}s",
                     variant: TextVariant.semiBold,
                     color: Colors.white,
@@ -2074,7 +2074,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         margin: EdgeInsets.symmetric(horizontal: isMobile ? 20 : 50),
         child: BlurWrapper(
           borderRadius: BorderRadius.circular(radius),
-          child: AnymexOnTap(
+          child: NyantvOnTap(
             onTap: () {
               player.playOrPause();
             },
@@ -2204,7 +2204,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           EdgeInsets.symmetric(horizontal: isPlay ? (isMobile ? 20 : 50) : 0),
       child: BlurWrapper(
         borderRadius: BorderRadius.circular(radius),
-        child: AnymexOnTap(
+        child: NyantvOnTap(
           onTap: onTap,
           bgColor: Colors.transparent,
           focusedBorderColor: Colors.transparent,
@@ -2235,14 +2235,14 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           horizontal:
               getResponsiveSize(context, mobileSize: 25, desktopSize: 50)),
       child: SizedBox(
-          height: size, width: size, child: const AnymexProgressIndicator()),
+          height: size, width: size, child: const NyantvProgressIndicator()),
     );
   }
 
   Widget _buildIcon({VoidCallback? onTap, IconData? icon}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3),
-      child: AnymexOnTap(
+      child: NyantvOnTap(
         onTap: () {
           onTap?.call();
         },

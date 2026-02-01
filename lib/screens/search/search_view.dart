@@ -1,14 +1,14 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/utils/logger.dart';
 
-import 'package:anymex/controllers/service_handler/params.dart';
-import 'package:anymex/screens/search/widgets/inline_search_history.dart';
-import 'package:anymex/screens/search/widgets/search_widgets.dart';
-import 'package:anymex/screens/settings/misc/sauce_finder_view.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/media_items/media_item.dart';
+import 'package:nyantv/controllers/service_handler/params.dart';
+import 'package:nyantv/screens/search/widgets/inline_search_history.dart';
+import 'package:nyantv/screens/search/widgets/search_widgets.dart';
+import 'package:nyantv/screens/settings/misc/sauce_finder_view.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/media_items/media_item.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -16,10 +16,10 @@ import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hive/hive.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/screens/anime/details_page.dart';
-import 'package:anymex/widgets/common/glow.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/screens/anime/details_page.dart';
+import 'package:nyantv/widgets/common/glow.dart';
 
 enum ViewMode { grid, list }
 

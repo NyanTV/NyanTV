@@ -1,9 +1,9 @@
-import 'package:anymex/utils/logger.dart' as d;
+import 'package:nyantv/utils/logger.dart' as d;
 
-// import 'package:anymex/controllers/service_handler/service_handler.dart';
-// import 'package:anymex/utils/logger.dart';
-// import 'package:anymex/utils/string_extensions.dart';
-// import 'package:anymex/widgets/non_widgets/snackbar.dart';
+// import 'package:nyantv/controllers/service_handler/service_handler.dart';
+// import 'package:nyantv/utils/logger.dart';
+// import 'package:nyantv/utils/string_extensions.dart';
+// import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 // import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'model/comment.dart';

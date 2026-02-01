@@ -1,12 +1,12 @@
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/utils/logger.dart';
 
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/utils/shaders.dart';
-import 'package:anymex/widgets/common/custom_tiles.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_dropdown.dart';
-import 'package:anymex/widgets/custom_widgets/custom_expansion_tile.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/utils/shaders.dart';
+import 'package:nyantv/widgets/common/custom_tiles.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_dropdown.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_expansion_tile.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -107,7 +107,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
 
       final dio = Dio();
       await dio.download(
-        'https://github.com/RyanYuuki/AnymeX/raw/refs/heads/main/assets/shaders/shaders_new.zip',
+        'https://github.com/RyanYuuki/NyanTV/raw/refs/heads/main/assets/shaders/shaders_new.zip',
         tempFilePath,
         onReceiveProgress: (received, total) {
           if (total != -1) {
@@ -265,7 +265,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                 ],
               ),
               const SizedBox(height: 30),
-              Obx(() => AnymexExpansionTile(
+              Obx(() => NyantvExpansionTile(
                     title: "Reader",
                     initialExpanded: true,
                     content: Column(
@@ -288,7 +288,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                   )),
               Obx(() {
                 settings.animationDuration;
-                return AnymexExpansionTile(
+                return NyantvExpansionTile(
                   title: 'Player',
                   initialExpanded: true,
                   content: Container(
@@ -582,7 +582,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                                 return Container(
                                                   margin: const EdgeInsets.only(
                                                       top: 20.0),
-                                                  child: AnymexDropdown(
+                                                  child: NyantvDropdown(
                                                       items: availProfiles
                                                           .map((e) =>
                                                               DropdownItem(

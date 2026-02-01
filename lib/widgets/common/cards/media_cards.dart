@@ -1,9 +1,9 @@
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/utils/extension_utils.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/common/cards/base_card.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/header.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/utils/extension_utils.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/common/cards/base_card.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/header.dart';
 import 'package:blur/blur.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
 import 'package:flutter/material.dart';
@@ -86,7 +86,7 @@ class SaikouCard extends CarouselCard {
               color: theme.colorScheme.onPrimary,
             ),
             const SizedBox(width: 4),
-            AnymexText(
+            NyantvText(
               text: itemData.source ?? '',
               color: theme.colorScheme.onPrimary,
               size: 12,
@@ -147,7 +147,7 @@ class ModernCard extends CarouselCard {
                     ),
                   ),
                   padding: const EdgeInsets.all(8),
-                  child: AnymexText(
+                  child: NyantvText(
                     text: itemData.title ?? '?',
                     maxLines: 2,
                     size: isDesktop(context) ? 14 : 12,
@@ -230,7 +230,7 @@ class ExoticCard extends CarouselCard {
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 3),
-              child: AnymexText(
+              child: NyantvText(
                 text: itemData.title ?? '?',
                 maxLines: 1,
                 size: isDesktop(context) ? 14 : 12,
@@ -252,14 +252,14 @@ class ExoticCard extends CarouselCard {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (variant == DataVariant.library) ...[
-                    AnymexText(
+                    NyantvText(
                       text: !type.isAnime ? 'Chapter ' : 'Episode ',
                       size: 12,
                       color: Theme.of(context).colorScheme.onPrimary,
                       variant: TextVariant.bold,
                     ),
                     const SizedBox(width: 4),
-                    AnymexText(
+                    NyantvText(
                       text: itemData.source ?? '',
                       color: Theme.of(context).colorScheme.onPrimary,
                       size: 12,
@@ -273,7 +273,7 @@ class ExoticCard extends CarouselCard {
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
                     const SizedBox(width: 4),
-                    AnymexText(
+                    NyantvText(
                       text: itemData.extraData ?? '',
                       color: Theme.of(context).colorScheme.onPrimary,
                       size: 12,
@@ -364,7 +364,7 @@ class MinimalExoticCard extends CarouselCard {
                             ),
                           ),
                           padding: const EdgeInsets.all(8),
-                          child: AnymexText(
+                          child: NyantvText(
                             text: itemData.title ?? '?',
                             maxLines: 2,
                             size: isDesktop(context) ? 14 : 12,
@@ -394,14 +394,14 @@ class MinimalExoticCard extends CarouselCard {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (variant == DataVariant.library) ...[
-                    AnymexText(
+                    NyantvText(
                       text: !type.isAnime ? 'Chapter ' : 'Episode ',
                       size: 12,
                       color: Theme.of(context).colorScheme.onPrimary,
                       variant: TextVariant.bold,
                     ),
                     const SizedBox(width: 4),
-                    AnymexText(
+                    NyantvText(
                       text: itemData.source ?? '',
                       color: Theme.of(context).colorScheme.onPrimary,
                       size: 12,
@@ -419,7 +419,7 @@ class MinimalExoticCard extends CarouselCard {
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
                     const SizedBox(width: 4),
-                    AnymexText(
+                    NyantvText(
                       text: itemData.extraData ?? '',
                       color: Theme.of(context).colorScheme.onPrimary,
                       size: 12,
@@ -485,7 +485,7 @@ class BlurCard extends CarouselCard {
                 bottom: 0,
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-                  child: AnymexText(
+                  child: NyantvText(
                     text: itemData.title ?? '?',
                     maxLines: 2,
                     size: isDesktop(context) ? 14 : 12,
@@ -537,7 +537,7 @@ class BlurCard extends CarouselCard {
                   color: theme.colorScheme.primary,
                 ),
                 const SizedBox(width: 4),
-                AnymexText(
+                NyantvText(
                   text: itemData.extraData ?? '',
                   color: theme.colorScheme.primary,
                   size: 12,

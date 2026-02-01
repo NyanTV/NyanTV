@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -323,7 +323,7 @@ class _BubbleSnackBarState extends State<_BubbleSnackBar>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (widget.title != null) ...[
-                            AnymexText(
+                            NyantvText(
                               text: widget.title!,
                               variant: TextVariant.bold,
                               size: 16,
@@ -332,7 +332,7 @@ class _BubbleSnackBarState extends State<_BubbleSnackBar>
                             ),
                             const SizedBox(height: 4),
                           ],
-                          AnymexText(
+                          NyantvText(
                             text: widget.message,
                             size: 14,
                             maxLines: widget.maxLines,

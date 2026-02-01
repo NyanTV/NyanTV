@@ -1,6 +1,6 @@
-import 'package:anymex/models/models_convertor/carousel/carousel_data.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/models/models_convertor/carousel/carousel_data.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
@@ -28,7 +28,7 @@ abstract class CarouselCard extends StatelessWidget {
   Widget buildCardTitle(bool isDesktop) {
     return SizedBox(
       height: 50,
-      child: AnymexText(
+      child: NyantvText(
         text: itemData.title ?? '?',
         maxLines: 2,
         size: isDesktop ? 14 : 12,
@@ -60,7 +60,7 @@ abstract class CarouselCard extends StatelessWidget {
               color: theme.colorScheme.onPrimary,
             ),
             const SizedBox(width: 4),
-            AnymexText(
+            NyantvText(
               text: itemData.extraData ?? '',
               color: theme.colorScheme.onPrimary,
               size: 11,
@@ -97,7 +97,7 @@ abstract class CarouselCard extends StatelessWidget {
               color: theme.colorScheme.onPrimary,
             ),
             const SizedBox(width: 4),
-            AnymexText(
+            NyantvText(
               text: itemData.extraData ?? '',
               color: theme.colorScheme.onPrimary,
               size: 12,

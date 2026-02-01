@@ -1,6 +1,6 @@
-import 'package:anymex/screens/library/widgets/history_model.dart';
-import 'package:anymex/screens/library/widgets/unified_history_card.dart';
-import 'package:anymex/screens/settings/widgets/history_card_selector.dart';
+import 'package:nyantv/screens/library/widgets/history_model.dart';
+import 'package:nyantv/screens/library/widgets/unified_history_card.dart';
+import 'package:nyantv/screens/settings/widgets/history_card_selector.dart';
 import 'package:flutter/material.dart';
 
 class HistoryCardGate extends StatelessWidget {

@@ -1,13 +1,13 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:anymex/screens/anime/watch/controller/player_controller.dart';
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/screens/anime/watch/controller/player_controller.dart';
+import 'package:nyantv/utils/logger.dart';
 
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/utils/shaders.dart';
-import 'package:anymex/widgets/common/slider_semantics.dart';
-import 'package:anymex/widgets/custom_widgets/custom_expansion_tile.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/utils/shaders.dart';
+import 'package:nyantv/widgets/common/slider_semantics.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_expansion_tile.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -464,7 +464,7 @@ class _ColorProfileBottomSheetState extends State<ColorProfileBottomSheet>
             ),
           ),
           const SizedBox(height: 20),
-          AnymexExpansionTile(
+          NyantvExpansionTile(
             title: 'ANIME 4K',
             initialExpanded: true,
             content: Column(
@@ -477,7 +477,7 @@ class _ColorProfileBottomSheetState extends State<ColorProfileBottomSheet>
                       : settingsController.selectedShader == shader;
                   return IgnorePointer(
                     ignoring: !enableShaders,
-                    child: AnymexOnTap(
+                    child: NyantvOnTap(
                       onTap: () => setShaders(shader),
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -623,7 +623,7 @@ class _ColorProfileBottomSheetState extends State<ColorProfileBottomSheet>
         ),
         const SizedBox(height: 20),
         ...groupedProfiles.entries.map((category) {
-          return AnymexExpansionTile(
+          return NyantvExpansionTile(
             title: category.key,
             initialExpanded: true,
             content: Column(

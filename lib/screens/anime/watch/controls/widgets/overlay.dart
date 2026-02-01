@@ -1,5 +1,5 @@
 // lib/screens/anime/watch/controls/widgets/overlay.dart
-import 'package:anymex/screens/anime/watch/controller/player_controller.dart';
+import 'package:nyantv/screens/anime/watch/controller/player_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

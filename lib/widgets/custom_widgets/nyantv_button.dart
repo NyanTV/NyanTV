@@ -1,8 +1,8 @@
-import 'package:anymex/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class AnymexButton extends StatelessWidget {
+class NyantvButton extends StatelessWidget {
   final Widget? child;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
@@ -19,7 +19,7 @@ class AnymexButton extends StatelessWidget {
   final bool enableGlow;
   final Function()? onTap;
 
-  const AnymexButton({
+  const NyantvButton({
     super.key,
     this.child,
     this.padding,
@@ -100,14 +100,14 @@ class AnymexButton extends StatelessWidget {
 
 enum ButtonType { ticon, child }
 
-class AnymexButton2 extends StatelessWidget {
+class NyantvButton2 extends StatelessWidget {
   final Widget? child;
   final VoidCallback onTap;
   final ButtonType type;
   final String? label;
   final IconData? icon;
 
-  const AnymexButton2({
+  const NyantvButton2({
     super.key,
     this.child,
     required this.onTap,

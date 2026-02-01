@@ -1,12 +1,12 @@
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/utils/logger.dart';
 
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/models/Anilist/anilist_media_user.dart';
-import 'package:anymex/models/Media/character.dart';
-import 'package:anymex/models/Media/relation.dart';
-import 'package:anymex/models/Offline/Hive/chapter.dart';
-import 'package:anymex/models/Offline/Hive/offline_media.dart';
-import 'package:anymex/models/models_convertor/carousel/carousel_data.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/models/Anilist/anilist_media_user.dart';
+import 'package:nyantv/models/Media/character.dart';
+import 'package:nyantv/models/Media/relation.dart';
+import 'package:nyantv/models/Offline/Hive/chapter.dart';
+import 'package:nyantv/models/Offline/Hive/offline_media.dart';
+import 'package:nyantv/models/models_convertor/carousel/carousel_data.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 
 class Media {

@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/screens/extensions/ExtensionList.dart';
-import 'package:anymex/screens/extensions/widgets/repo_sheet.dart';
-import 'package:anymex/utils/language.dart';
-import 'package:anymex/utils/storage_provider.dart';
-import 'package:anymex/widgets/AlertDialogBuilder.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/common/search_bar.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/screens/extensions/ExtensionList.dart';
+import 'package:nyantv/screens/extensions/widgets/repo_sheet.dart';
+import 'package:nyantv/utils/language.dart';
+import 'package:nyantv/utils/storage_provider.dart';
+import 'package:nyantv/widgets/AlertDialogBuilder.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/common/search_bar.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart'
     hide Extension, ExtensionList;
 import 'package:flutter/gestures.dart';
@@ -135,7 +135,7 @@ class _ExtensionScreenState extends State<ExtensionScreen>
             backgroundColor: Colors.transparent,
             leading: getResponsiveValue(context,
                 mobileValue: Center(
-                  child: AnymexOnTap(
+                  child: NyantvOnTap(
                     onTap: () => Get.back(),
                     child: Container(
                         width: 35,
@@ -161,7 +161,7 @@ class _ExtensionScreenState extends State<ExtensionScreen>
             ),
             iconTheme: IconThemeData(color: theme.primary),
             actions: [
-              AnymexOnTap(
+              NyantvOnTap(
                 onTap: repoSheet,
                 child: IconButton(
                   icon:
@@ -169,7 +169,7 @@ class _ExtensionScreenState extends State<ExtensionScreen>
                   onPressed: repoSheet,
                 ),
               ),
-              AnymexOnTap(
+              NyantvOnTap(
                 child: IconButton(
                   icon: Icon(Iconsax.language_square, color: theme.primary),
                   onPressed: () {

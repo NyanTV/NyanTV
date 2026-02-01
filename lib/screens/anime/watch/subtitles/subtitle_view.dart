@@ -1,11 +1,11 @@
-import 'package:anymex/screens/anime/watch/controller/player_controller.dart';
-import 'package:anymex/screens/anime/watch/controls/widgets/episodes_pane.dart';
-import 'package:anymex/screens/anime/watch/subtitles/model/imdb_item.dart';
-import 'package:anymex/screens/anime/watch/subtitles/model/online_subtitle.dart';
-import 'package:anymex/screens/anime/watch/subtitles/repository/imdb_repo.dart';
-import 'package:anymex/screens/anime/watch/subtitles/repository/subtitle_repo.dart';
-import 'package:anymex/utils/logger.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_chip.dart';
+import 'package:nyantv/screens/anime/watch/controller/player_controller.dart';
+import 'package:nyantv/screens/anime/watch/controls/widgets/episodes_pane.dart';
+import 'package:nyantv/screens/anime/watch/subtitles/model/imdb_item.dart';
+import 'package:nyantv/screens/anime/watch/subtitles/model/online_subtitle.dart';
+import 'package:nyantv/screens/anime/watch/subtitles/repository/imdb_repo.dart';
+import 'package:nyantv/screens/anime/watch/subtitles/repository/subtitle_repo.dart';
+import 'package:nyantv/utils/logger.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_chip.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
@@ -392,7 +392,7 @@ class _SubtitleSearchBottomSheetState extends State<SubtitleSearchBottomSheet> {
                 children: _filterOptions.map((filter) {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: Obx(() => AnymexChip(
+                    child: Obx(() => NyantvChip(
                           label: filter,
                           isSelected: filter == _selectedFilter.value,
                           onSelected: _isLoading

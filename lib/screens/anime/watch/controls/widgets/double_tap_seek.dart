@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:anymex/widgets/animation/animations.dart';
+import 'package:nyantv/widgets/animation/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:anymex/screens/anime/watch/controller/player_controller.dart';
+import 'package:nyantv/screens/anime/watch/controller/player_controller.dart';
 import 'dart:async';
 
 import 'package:get/get.dart';

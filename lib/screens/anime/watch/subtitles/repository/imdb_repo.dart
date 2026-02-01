@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:anymex/screens/anime/watch/subtitles/model/imdb_item.dart';
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/screens/anime/watch/subtitles/model/imdb_item.dart';
+import 'package:nyantv/utils/logger.dart';
 import 'package:http/http.dart' as http;
 
 class ImdbRepo {

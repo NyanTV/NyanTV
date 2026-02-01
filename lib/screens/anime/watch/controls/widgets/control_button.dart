@@ -1,4 +1,4 @@
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -74,7 +74,7 @@ class _ControlButtonState extends State<ControlButton>
     final iconSize = widget.compact ? 20.0 : (widget.isPrimary ? 26.0 : 24.0);
     final hasFocus = widget.showFocus && Focus.of(context).hasFocus;
 
-    Widget button = AnymexOnTap(
+    Widget button = NyantvOnTap(
       onTapDown: (_) => _handleTapDown(),
       onTapUp: (_) => _handleTapUp(),
       onTapCancel: _handleTapCancel,

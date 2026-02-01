@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:anymex/controllers/source/source_controller.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';

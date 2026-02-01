@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:anymex/screens/anime/watch/controls/widgets/control_button.dart';
+import 'package:nyantv/screens/anime/watch/controls/widgets/control_button.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:anymex/screens/anime/watch/controller/player_controller.dart';
+import 'package:nyantv/screens/anime/watch/controller/player_controller.dart';
 
 class CenterControls extends StatelessWidget {
   const CenterControls({super.key});

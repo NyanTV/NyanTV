@@ -1,7 +1,7 @@
-name: anymex
+name: nyantv
 description: "An Anilist Client"
 publish_to: "GitHub"
-version: 3.0.3+25
+version: 3.0.4+25
 
 environment:
   sdk: ">=3.4.4 <4.0.0"
@@ -143,9 +143,9 @@ flutter:
         - asset: assets/fonts/Poppins/Poppins-Bold.ttf
 
 inno_bundle:
-  id: 8fbd47cb-d6e1-5343-a9f6-61661647c94c
-  publisher: Ryan Yuuki
-  name: AnymeX
-  version: 3.0.3
+  id: 1E872EE2-D856-43CC-AD79-14E9B7D7E985
+  publisher: hoemotion
+  name: NyanTV
+  version: 3.0.4
   admin: auto
-  installer_icon: ./anymex.ico
+  installer_icon: ./nyantv.ico

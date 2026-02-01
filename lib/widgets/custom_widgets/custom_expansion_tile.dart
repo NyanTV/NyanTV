@@ -1,14 +1,14 @@
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class AnymexExpansionTile extends StatelessWidget {
+class NyantvExpansionTile extends StatelessWidget {
   final String title;
   final Widget content;
   final bool initialExpanded;
 
-  AnymexExpansionTile({
+  NyantvExpansionTile({
     super.key,
     required this.title,
     required this.content,
@@ -21,14 +21,14 @@ class AnymexExpansionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return AnymexCard(
+    return NyantvCard(
       child: ExpansionTile(
         shape: ShapeBorder.lerp(
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
           1,
         ),
-        title: AnymexText(
+        title: NyantvText(
           text: title,
           size: 16,
           variant: TextVariant.semiBold,
@@ -43,13 +43,13 @@ class AnymexExpansionTile extends StatelessWidget {
   }
 }
 
-class AnymexCard extends StatelessWidget {
+class NyantvCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets? padding;
   final bool enableAnimation;
   final Color? color;
   final ShapeBorder? shape;
-  const AnymexCard(
+  const NyantvCard(
       {super.key,
       required this.child,
       this.padding,

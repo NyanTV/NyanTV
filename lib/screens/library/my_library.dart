@@ -1,27 +1,27 @@
-import 'package:anymex/controllers/offline/offline_storage_controller.dart';
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/models/Media/media.dart';
-import 'package:anymex/models/Offline/Hive/offline_media.dart';
-import 'package:anymex/screens/anime/details_page.dart';
-import 'package:anymex/screens/library/editor/list_editor.dart';
-import 'package:anymex/screens/library/widgets/history_model.dart';
-import 'package:anymex/screens/library/widgets/library_deps.dart';
-import 'package:anymex/screens/settings/widgets/history_card_gate.dart';
-import 'package:anymex/screens/settings/widgets/history_card_selector.dart';
-import 'package:anymex/utils/extension_utils.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/common/cards/base_card.dart';
-import 'package:anymex/widgets/common/cards/card_gate.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_bottomsheet.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_chip.dart';
-import 'package:anymex/widgets/custom_widgets/custom_expansion_tile.dart';
-import 'package:anymex/widgets/exceptions/empty_library.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/models/Media/media.dart';
+import 'package:nyantv/models/Offline/Hive/offline_media.dart';
+import 'package:nyantv/screens/anime/details_page.dart';
+import 'package:nyantv/screens/library/editor/list_editor.dart';
+import 'package:nyantv/screens/library/widgets/history_model.dart';
+import 'package:nyantv/screens/library/widgets/library_deps.dart';
+import 'package:nyantv/screens/settings/widgets/history_card_gate.dart';
+import 'package:nyantv/screens/settings/widgets/history_card_selector.dart';
+import 'package:nyantv/utils/extension_utils.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/common/cards/base_card.dart';
+import 'package:nyantv/widgets/common/cards/card_gate.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_bottomsheet.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_chip.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_expansion_tile.dart';
+import 'package:nyantv/widgets/exceptions/empty_library.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -229,7 +229,7 @@ class _MyLibraryState extends State<MyLibrary> {
                     (context, i) {
                       final tag = getRandomTag(addition: i.toString());
                       OfflineMedia item = items[i];
-                      return AnymexOnTap(
+                      return NyantvOnTap(
                         margin: 0,
                         scale: 1,
                         onTap: () {
@@ -294,7 +294,7 @@ class _MyLibraryState extends State<MyLibrary> {
           return Row(children: [
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: AnymexIconChip(
+              child: NyantvIconChip(
                 icon: Row(
                   children: [
                     Icon(
@@ -305,7 +305,7 @@ class _MyLibraryState extends State<MyLibrary> {
                             ? Theme.of(context).colorScheme.onPrimary
                             : Theme.of(context).colorScheme.onSurfaceVariant),
                     5.width(),
-                    AnymexText(text: '($historyCount)')
+                    NyantvText(text: '($historyCount)')
                   ],
                 ),
                 isSelected: selectedListIndex.value == -1,
@@ -324,7 +324,7 @@ class _MyLibraryState extends State<MyLibrary> {
               customListData.length,
               (index) => Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: AnymexChip(
+                child: NyantvChip(
                   label:
                       '${customListData[index].listName} (${customListData[index].listData.length})',
                   isSelected: selectedListIndex.value == index,
@@ -342,13 +342,13 @@ class _MyLibraryState extends State<MyLibrary> {
             ),
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: AnymexIconChip(
+              child: NyantvIconChip(
                 icon: Row(
                   children: [
                     Icon(Iconsax.edit,
                         color: Theme.of(context).colorScheme.onSurfaceVariant),
                     5.width(),
-                    const AnymexText(text: 'Edit')
+                    const NyantvText(text: 'Edit')
                   ],
                 ),
                 isSelected: false,
@@ -674,7 +674,7 @@ class _MyLibraryState extends State<MyLibrary> {
         ));
   }
 
-  void showSortingSettings() => AnymexSheet(
+  void showSortingSettings() => NyantvSheet(
         title: 'Settings',
         contentWidget: StatefulBuilder(
           builder: (context, setState) {
@@ -684,7 +684,7 @@ class _MyLibraryState extends State<MyLibrary> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    AnymexExpansionTile(
+                    NyantvExpansionTile(
                         title: 'Sort By',
                         initialExpanded: true,
                         content: Column(children: [
@@ -733,7 +733,7 @@ class _MyLibraryState extends State<MyLibrary> {
                             ],
                           ),
                         ])),
-                    AnymexExpansionTile(
+                    NyantvExpansionTile(
                         title: 'Grid',
                         content: Column(
                           children: [
@@ -869,7 +869,7 @@ class _MyLibraryState extends State<MyLibrary> {
                             ? theme.colorScheme.primary
                             : theme.colorScheme.onSurfaceVariant,
                       ),
-                      child: AnymexText(
+                      child: NyantvText(
                         text: title,
                         textAlign: TextAlign.center,
                         maxLines: 1,

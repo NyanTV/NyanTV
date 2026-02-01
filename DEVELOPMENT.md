@@ -4,7 +4,7 @@ Looking to contribute? Great! Here's some actions that are required to get start
 
 ## Flutter
 
-The bread and butter! Flutter is an open source framework for building beautiful, natively compiled, multi-platform applications from a single codebase. It's also how we make AnymeX.  
+The bread and butter! Flutter is an open source framework for building beautiful, natively compiled, multi-platform applications from a single codebase. It's also how we make NyanTV.  
 Follow the installation guide based on your development platform: [Install | Flutter](https://docs.flutter.dev/get-started/install)
 
 > [!NOTE]  
@@ -41,7 +41,7 @@ SIMKL_CLIENT_ID: 0
 SIMKL_CLIENT_SECRET: 0
 MAL_CLIENT_ID: 0
 MAL_CLIENT_SECRET: 0
-CALLBACK_SCHEME: anymex://callback
+CALLBACK_SCHEME: nyantv://callback
 ```
 
 You can however create your own API keys and populate the values as necessary.
@@ -51,7 +51,7 @@ You can however create your own API keys and populate the values as necessary.
 | Key         | Value             |
 | ------------| ----------------- |
 | Name        | *any*             |
-| Redirect URL| anymex://callback |
+| Redirect URL| nyantv://callback |
 
 ### Simlk
 

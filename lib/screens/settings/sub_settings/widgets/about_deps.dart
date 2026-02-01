@@ -1,4 +1,4 @@
-import 'package:anymex/screens/settings/sub_settings/settings_about.dart';
+import 'package:nyantv/screens/settings/sub_settings/settings_about.dart';
 import 'package:flutter/material.dart';
 
 class ProfileInfo extends StatelessWidget {

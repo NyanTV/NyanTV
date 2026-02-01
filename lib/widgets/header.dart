@@ -1,16 +1,16 @@
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/controllers/ui/greeting.dart';
-import 'package:anymex/controllers/theme.dart';
-import 'package:anymex/screens/search/search_view.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/common/search_bar.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
-import 'package:anymex/widgets/custom_widgets/custom_textspan.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
-import 'package:anymex/widgets/non_widgets/settings_sheet.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/controllers/ui/greeting.dart';
+import 'package:nyantv/controllers/theme.dart';
+import 'package:nyantv/screens/search/search_view.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/common/search_bar.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/widgets/non_widgets/settings_sheet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -51,7 +51,7 @@ class Header extends StatelessWidget {
               ),
               const Spacer(),
               if (profileData.serviceType.value == ServicesType.extensions) ...[
-                AnymexOnTap(
+                NyantvOnTap(
                     child: CircleAvatar(
                   radius: 24,
                   backgroundColor:
@@ -70,7 +70,7 @@ class Header extends StatelessWidget {
                 )),
               ] else ...[
                 getResponsiveValue(context,
-                    mobileValue: AnymexOnTap(
+                    mobileValue: NyantvOnTap(
                       child: CircleAvatar(
                           radius: 24,
                           backgroundColor: Theme.of(context)
@@ -124,17 +124,17 @@ class Header extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AnymexTextSpans(
+                    NyantvTextSpans(
                       fontSize: 24,
                       spans: [
-                        const AnymexTextSpan(
+                        const NyantvTextSpan(
                             text: 'Hey ', variant: TextVariant.bold),
-                        AnymexTextSpan(
+                        NyantvTextSpan(
                             text:
                                 '${serviceHandler.isLoggedIn.value ? serviceHandler.profileData.value.name : 'Guest'}',
                             color: Theme.of(context).colorScheme.primary,
                             variant: TextVariant.bold),
-                        const AnymexTextSpan(
+                        const NyantvTextSpan(
                             text: ', what are we doing today?',
                             variant: TextVariant.bold)
                       ],
@@ -162,8 +162,8 @@ class Header extends StatelessWidget {
     });
   }
 
-  AnymexOnTap _profileIcon(BuildContext context, ServiceHandler profileData) {
-    return AnymexOnTap(
+  NyantvOnTap _profileIcon(BuildContext context, ServiceHandler profileData) {
+    return NyantvOnTap(
       onTap: () {
         return SettingsSheet.show(context);
       },

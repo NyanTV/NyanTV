@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
-class AnymexTitleBar {
+class NyantvTitleBar {
   static final ValueNotifier<bool> isFullScreen = ValueNotifier(false);
 
   static Future<void> initialize() async {
@@ -78,7 +78,7 @@ class _TitleBarWidget extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                'AnymeX',
+                'NyanTV',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,

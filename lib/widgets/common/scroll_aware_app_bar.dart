@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:anymex/mixins/scroll_aware_app_bar_mixin.dart';
-import 'package:anymex/widgets/common/animated_app_bar.dart';
+import 'package:nyantv/mixins/scroll_aware_app_bar_mixin.dart';
+import 'package:nyantv/widgets/common/animated_app_bar.dart';
 
 class CustomAnimatedAppBar extends StatefulWidget {
   final ValueNotifier<bool> isVisible;

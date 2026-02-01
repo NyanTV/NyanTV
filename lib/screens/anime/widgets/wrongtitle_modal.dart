@@ -1,11 +1,11 @@
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
-import 'package:anymex/controllers/source/source_controller.dart';
-import 'package:anymex/widgets/common/search_bar.dart';
-import 'package:anymex/widgets/header.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/widgets/common/search_bar.dart';
+import 'package:nyantv/widgets/header.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:flutter/material.dart';
-import 'package:anymex/widgets/custom_widgets/anymex_progress.dart';
+import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
 
 class WrongTitleModal extends StatefulWidget {
@@ -69,7 +69,7 @@ class _WrongTitleModalState extends State<WrongTitleModal> {
                 future: searchFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: AnymexProgressIndicator());
+                    return const Center(child: NyantvProgressIndicator());
                   } else if (snapshot.hasError) {
                     return Center(
                       child: Text('Error: ${snapshot.error}'),
@@ -94,7 +94,7 @@ class _WrongTitleModalState extends State<WrongTitleModal> {
                       itemCount: results.length,
                       itemBuilder: (context, index) {
                         final item = results[index];
-                        return AnymexOnTap(
+                        return NyantvOnTap(
                           onTap: () {
                             widget.onTap(item);
                             Get.back();

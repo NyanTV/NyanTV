@@ -1,8 +1,8 @@
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/common/slider_semantics.dart';
-import 'package:anymex/widgets/helper/tv_wrapper.dart';
-import 'package:anymex/widgets/custom_widgets/custom_icon_wrapper.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/common/slider_semantics.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_icon_wrapper.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconly/iconly.dart';
@@ -32,13 +32,13 @@ class CustomSwitchTile extends StatelessWidget {
     if (disabled) {
       return Opacity(
         opacity: 0.4,
-        child: AnymexOnTap(
+        child: NyantvOnTap(
           onTap: () {},
           child: Padding(
             padding: padding,
             child: Row(
               children: [
-                AnymexIcon(icon,
+                NyantvIcon(icon,
                     size: 30, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 20),
                 Expanded(
@@ -85,7 +85,7 @@ class CustomSwitchTile extends StatelessWidget {
         ),
       );
     }
-    return AnymexOnTap(
+    return NyantvOnTap(
       onTap: () {
         onChanged.call(!switchValue);
       },
@@ -93,7 +93,7 @@ class CustomSwitchTile extends StatelessWidget {
         padding: padding,
         child: Row(
           children: [
-            AnymexIcon(icon,
+            NyantvIcon(icon,
                 size: 30, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 20),
             Expanded(
@@ -167,7 +167,7 @@ class CustomTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnymexOnTap(
+    return NyantvOnTap(
       onTap: onTap,
       child: InkWell(
         onTap: onTap,
@@ -177,7 +177,7 @@ class CustomTile extends StatelessWidget {
           child: Row(
             children: [
               if (prefix == null)
-                AnymexIcon(icon,
+                NyantvIcon(icon,
                     size: 30, color: Theme.of(context).colorScheme.primary)
               else
                 prefix!,
@@ -252,7 +252,7 @@ class CustomSliderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnymexOnTapAdv(
+    return NyantvOnTapAdv(
       onKeyEvent: (p0, e) {
         if (e is KeyDownEvent) {
           double step = (max - min) / (divisions ?? (max - min));
@@ -277,7 +277,7 @@ class CustomSliderTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                AnymexIcon(icon,
+                NyantvIcon(icon,
                     size: 30, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 20),
                 Expanded(
@@ -313,7 +313,7 @@ class CustomSliderTile extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10.0),
               child: Row(
                 children: [
-                  AnymexText(
+                  NyantvText(
                     text: sliderValue % 1 == 0
                         ? sliderValue.toInt().toString()
                         : sliderValue.toStringAsFixed(1),
@@ -341,7 +341,7 @@ class CustomSliderTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  AnymexText(
+                  NyantvText(
                     text: max % 1 == 0
                         ? max.toInt().toString()
                         : max.toStringAsFixed(1),
@@ -358,7 +358,7 @@ class CustomSliderTile extends StatelessWidget {
 }
 
 extension TVSupport on Widget {
-  AnymexOnTap tvSupport() {
-    return AnymexOnTap(child: this);
+  NyantvOnTap tvSupport() {
+    return NyantvOnTap(child: this);
   }
 }

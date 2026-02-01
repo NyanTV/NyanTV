@@ -1,15 +1,15 @@
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:blur/blur.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class AnymexSheet extends StatelessWidget {
+class NyantvSheet extends StatelessWidget {
   final String? title;
   final String? message;
   final Widget? contentWidget;
   final Widget? customWidget;
 
-  const AnymexSheet({
+  const NyantvSheet({
     super.key,
     this.title,
     this.message,
@@ -17,7 +17,7 @@ class AnymexSheet extends StatelessWidget {
     this.customWidget,
   });
 
-  static void custom(Widget widget, BuildContext context) => AnymexSheet(
+  static void custom(Widget widget, BuildContext context) => NyantvSheet(
         customWidget: widget,
       ).show(context);
 
@@ -30,7 +30,7 @@ class AnymexSheet extends StatelessWidget {
       //     ? Colors.transparent
       //     : context.theme.colorScheme.surface,
       backgroundColor: context.theme.colorScheme.surface,
-      builder: (context) => AnymexSheet(
+      builder: (context) => NyantvSheet(
         title: title,
         message: message,
         contentWidget: contentWidget,
@@ -61,12 +61,12 @@ class AnymexSheet extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (title != null) ...[
-                  AnymexText(text: title!, size: 18, variant: TextVariant.bold),
+                  NyantvText(text: title!, size: 18, variant: TextVariant.bold),
                   const SizedBox(height: 10),
                 ],
                 contentWidget ??
                     (message != null
-                        ? AnymexText(
+                        ? NyantvText(
                             text: message!,
                             textAlign: TextAlign.center,
                             size: 14)

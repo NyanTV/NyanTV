@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:anymex/constants/contants.dart';
-import 'package:anymex/controllers/settings/settings.dart';
+import 'package:nyantv/constants/contants.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

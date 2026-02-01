@@ -65,7 +65,7 @@ jobs:
           const issueNumber = context.payload.issue.number;
           const message = `
           **💡 Thank you for your feature request!**
-            Your request has been successfully submitted and is now under consideration. We value your input in shaping the future of AnymeX.
+            Your request has been successfully submitted and is now under consideration. We value your input in shaping the future of NyanTV.
 
           **📈 What to Expect Next**
           - Our team will review your request and assess its feasibility.
@@ -74,7 +74,7 @@ jobs:
 
           **👥 Stay Connected**
           - **[Discord](https://discord.com/invite/azAMuBWd8C)**: Join our community to discuss ideas and stay updated.
-          - **[Telegram](https://t.me/AnymeX_Discussion)**: Connect with us directly for real-time updates.
+          - **[Telegram](https://t.me/NyanTV_Discussion)**: Connect with us directly for real-time updates.
 
           We appreciate your suggestion and look forward to potentially implementing it!
           `;

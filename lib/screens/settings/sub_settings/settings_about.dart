@@ -1,7 +1,7 @@
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/screens/settings/sub_settings/widgets/about_deps.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/screens/settings/sub_settings/widgets/about_deps.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -63,7 +63,7 @@ class AboutPage extends StatelessWidget {
                                   ? snapshot.data!.version
                                   : '';
                               return ProfileInfo(
-                                username: "AnymeX",
+                                username: "NyanTV",
                                 version: "v$version",
                                 subtitle: "",
                               );
@@ -143,7 +143,7 @@ class AboutPage extends StatelessWidget {
                 items: [
                   CustomListTile(
                     onTap: () async {
-                      await launchUrlHelper('https://t.me/AnymeX_Discussion');
+                      await launchUrlHelper('https://t.me/NyanTV_Discussion');
                     },
                     leading: const Icon(HugeIcons.strokeRoundedTelegram),
                     title: "Telegram",
@@ -158,7 +158,7 @@ class AboutPage extends StatelessWidget {
                   CustomListTile(
                     onTap: () async {
                       await launchUrlHelper(
-                          'https://www.reddit.com/r/AnymeX_/');
+                          'https://www.reddit.com/r/NyanTV_/');
                     },
                     leading: const Icon(HugeIcons.strokeRoundedReddit),
                     title: "Reddit",
@@ -181,7 +181,7 @@ class AboutPage extends StatelessWidget {
                   CustomListTile(
                     onTap: () async {
                       await launchUrlHelper(
-                          'https://github.com/RyanYuuki/AnymeX');
+                          'https://github.com/RyanYuuki/NyanTV');
                     },
                     leading: const Icon(HugeIcons.strokeRoundedGithub),
                     title: "GitHub",
@@ -194,12 +194,12 @@ class AboutPage extends StatelessWidget {
                     leading: const Icon(HugeIcons.strokeRoundedCoffee01),
                     title: "Ko-fi",
                     subtitle:
-                        "Consider donating to support the maintainer of AnymeX",
+                        "Consider donating to support the maintainer of NyanTV",
                   ),
                   CustomListTile(
                     onTap: () async {
                       await launchUrlHelper(
-                          'https://github.com/RyanYuuki/AnymeX/issues');
+                          'https://github.com/RyanYuuki/NyanTV/issues');
                     },
                     leading: const Icon(Icons.bug_report),
                     title: "Features/Issues",

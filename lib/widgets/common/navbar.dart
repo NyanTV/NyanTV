@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:anymex/controllers/settings/methods.dart';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/widgets/animation/slide_scale.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
+import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/widgets/animation/slide_scale.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

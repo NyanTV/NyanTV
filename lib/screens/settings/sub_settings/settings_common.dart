@@ -1,9 +1,9 @@
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/database/data_keys/general.dart';
-import 'package:anymex/widgets/common/custom_tiles.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/custom_widgets/custom_expansion_tile.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/database/data_keys/general.dart';
+import 'package:nyantv/widgets/common/custom_tiles.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_expansion_tile.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
@@ -64,14 +64,14 @@ class _SettingsCommonState extends State<SettingsCommon> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AnymexExpansionTile(
+                    NyantvExpansionTile(
                         initialExpanded: true,
                         title: 'Universal',
                         content: CustomSwitchTile(
                             icon: Icons.touch_app_rounded,
                             title: 'Ask for tracking permission',
                             description:
-                                'If enabled, Anymex will ask for tracking permission if not then it will track by default.',
+                                'If enabled, Nyantv will ask for tracking permission if not then it will track by default.',
                             switchValue: shouldAskForPermission,
                             onChanged: (e) {
                               setState(() {
@@ -79,7 +79,7 @@ class _SettingsCommonState extends State<SettingsCommon> {
                                 General.shouldAskForTrack.set(e);
                               });
                             })),
-                    AnymexExpansionTile(
+                    NyantvExpansionTile(
                         initialExpanded: true,
                         title: 'Anilist',
                         content: CustomTile(
@@ -88,7 +88,7 @@ class _SettingsCommonState extends State<SettingsCommon> {
                           description: "Choose which list to show on home page",
                           onTap: () => _showHomePageCardsDialog(context, false),
                         )),
-                    AnymexExpansionTile(
+                    NyantvExpansionTile(
                         initialExpanded: true,
                         title: 'MyAnimeList',
                         content: CustomTile(
@@ -97,7 +97,7 @@ class _SettingsCommonState extends State<SettingsCommon> {
                           description: "Choose which list to show on home page",
                           onTap: () => _showHomePageCardsDialog(context, true),
                         )),
-                    // AnymexExpansionTile(
+                    // NyantvExpansionTile(
                     //     initialExpanded: true,
                     //     title: 'Experimental',
                     //     content: CustomSwitchTile(

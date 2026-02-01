@@ -6,12 +6,12 @@ import 'dart:convert';
 
 class AppNamePackageManager {
   static const String configBackupPath = 'app_config_backup.json';
-  static const String basePackageName = 'com.ryan.anymex';
-  static const String baseAppName = 'AnymeX';
+  static const String basePackageName = 'com.ryan.nyantv';
+  static const String baseAppName = 'NyanTV';
 
   void run() async {
     try {
-      print('🚀 AnymeX App Name & Package Manager\n');
+      print('🚀 NyanTV App Name & Package Manager\n');
 
       final currentConfig = await getCurrentConfig();
 
@@ -191,7 +191,7 @@ class AppNamePackageManager {
     final appName = stdin.readLineSync()?.trim();
 
     stdout
-        .write('📝 Enter custom package name (e.g., com.ryan.anymex.custom): ');
+        .write('📝 Enter custom package name (e.g., com.ryan.nyantv.custom): ');
     final packageName = stdin.readLineSync()?.trim();
 
     if (appName == null ||

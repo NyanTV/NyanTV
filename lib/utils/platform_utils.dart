@@ -59,7 +59,7 @@ class PlatformUtils {
       // Check UI Mode via platform channel
 
 
-      final result = await const MethodChannel('app.anymex/platform')
+      final result = await const MethodChannel('app.nyantv/platform')
 
 
           .invokeMethod<String>('getUIMode');

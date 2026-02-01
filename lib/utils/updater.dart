@@ -1,7 +1,7 @@
-import 'package:anymex/utils/logger.dart';
+import 'package:nyantv/utils/logger.dart';
 import 'dart:io';
-import 'package:anymex/utils/abi_checker.dart';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/utils/abi_checker.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dio/dio.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +17,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 
 class UpdateManager {
   static const String _repoUrl =
-      'https://api.github.com/repos/RyanYuuki/AnymeX/releases/latest';
+      'https://api.github.com/repos/RyanYuuki/NyanTV/releases/latest';
 
   String getDownloadUrlByArch(List<dynamic> assets, String arch) {
     for (var asset in assets) {
@@ -322,7 +322,7 @@ class _UpdateBottomSheetState extends State<UpdateBottomSheet>
     }
 
     final result =
-        await InstallPlugin.installApk(savePath, appId: 'com.ryan.anymex');
+        await InstallPlugin.installApk(savePath, appId: 'com.ryan.nyantv');
     if (result['isSuccess']) {
       _showSuccessDialog();
     } else {

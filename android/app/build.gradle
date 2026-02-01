@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.ryan.anymex"
+    namespace = "com.ryan.nyantv"
     compileSdk = 35
 
     ndkVersion = "27.0.12077973"
@@ -25,7 +25,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.ryan.anymex"
+        applicationId = "com.ryan.nyantv"
         minSdk = 23
         targetSdk = 35
         versionCode = flutter.versionCode
@@ -34,8 +34,8 @@ android {
 
     packagingOptions {
         jniLibs {
-            useLegacyPackaging true
-            keepDebugSymbols += "**/*.so"
+            useLegacyPackaging false
+            //keepDebugSymbols += "**/*.so"
         }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"

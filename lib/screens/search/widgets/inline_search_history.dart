@@ -1,8 +1,8 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:anymex/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:flutter/material.dart';
-import 'package:anymex/widgets/custom_widgets/custom_text.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:iconsax/iconsax.dart';
@@ -82,7 +82,7 @@ class InlineSearchHistory extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    AnymexText(
+                    NyantvText(
                       text: 'Recent Searches',
                       variant: TextVariant.semiBold,
                       size: 15,
@@ -115,7 +115,7 @@ class InlineSearchHistory extends StatelessWidget {
                               .withOpacity(0.8),
                         ),
                         const SizedBox(width: 4),
-                        AnymexText(
+                        NyantvText(
                           text: "Clear",
                           size: 11,
                           color: Theme.of(context)
@@ -191,7 +191,7 @@ class InlineSearchHistory extends StatelessWidget {
 
                             // Search term
                             Expanded(
-                              child: AnymexText(
+                              child: NyantvText(
                                 text: term,
                                 size: 13,
                                 color: Theme.of(context)

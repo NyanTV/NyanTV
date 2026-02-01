@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'package:anymex/controllers/settings/settings.dart';
-import 'package:anymex/screens/settings/sub_settings/widgets/repo_dialog.dart';
-import 'package:anymex/widgets/common/custom_tiles.dart';
-import 'package:anymex/widgets/common/glow.dart';
-import 'package:anymex/widgets/custom_widgets/custom_expansion_tile.dart';
-import 'package:anymex/widgets/helper/platform_builder.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/screens/settings/sub_settings/widgets/repo_dialog.dart';
+import 'package:nyantv/widgets/common/custom_tiles.dart';
+import 'package:nyantv/widgets/common/glow.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_expansion_tile.dart';
+import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:flutter/material.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
@@ -63,7 +63,7 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AnymexExpansionTile(
+                    NyantvExpansionTile(
                         initialExpanded: true,
                         title: 'Extensions',
                         content: Column(
@@ -80,7 +80,7 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
                           ],
                         )),
                     if (Platform.isAndroid)
-                      AnymexExpansionTile(
+                      NyantvExpansionTile(
                           initialExpanded: true,
                           title: 'Android Extensions',
                           content: Column(

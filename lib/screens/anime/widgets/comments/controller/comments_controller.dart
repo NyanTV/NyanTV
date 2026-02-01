@@ -1,6 +1,6 @@
-import 'package:anymex/controllers/service_handler/service_handler.dart';
-import 'package:anymex/database/comments_db.dart';
-import 'package:anymex/database/model/comment.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/database/comments_db.dart';
+import 'package:nyantv/database/model/comment.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';

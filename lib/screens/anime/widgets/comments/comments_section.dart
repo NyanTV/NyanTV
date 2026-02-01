@@ -1,5 +1,5 @@
-import 'package:anymex/database/model/comment.dart';
-import 'package:anymex/screens/anime/widgets/comments/controller/comments_controller.dart';
+import 'package:nyantv/database/model/comment.dart';
+import 'package:nyantv/screens/anime/widgets/comments/controller/comments_controller.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

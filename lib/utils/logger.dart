@@ -1,7 +1,7 @@
 import 'dart:developer' as developer;
 import 'dart:io';
 import 'dart:async';
-import 'package:anymex/widgets/non_widgets/snackbar.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';

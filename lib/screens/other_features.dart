@@ -1,7 +1,7 @@
-import 'package:anymex/screens/anime/misc/calendar.dart';
-import 'package:anymex/screens/anime/misc/recommendation.dart';
-import 'package:anymex/utils/function.dart';
-import 'package:anymex/widgets/common/glow.dart';
+import 'package:nyantv/screens/anime/misc/calendar.dart';
+import 'package:nyantv/screens/anime/misc/recommendation.dart';
+import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/common/glow.dart';
 import 'package:flutter/material.dart';
 
 class OtherFeaturesPage extends StatelessWidget {
