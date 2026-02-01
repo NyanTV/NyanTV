@@ -43,7 +43,13 @@ class Settings extends GetxController {
     preferences.put('selected_profile', value);
   }
 
-  double get uiScale => preferences.get('ui_scale', defaultValue: 1.0);
+  double get uiScale {
+  final value = preferences.get('ui_scale', defaultValue: 1.0);
+  if (value <= 0.0 || value > 3.0) {
+    return 1.0;
+  }
+  return value;
+  }
   set uiScale(double value) {
     preferences.put('ui_scale', value);
     update();

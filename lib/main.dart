@@ -238,31 +238,40 @@ class MainApp extends StatelessWidget {
                   : ThemeMode.dark,
           home: const FilterScreen(),
           builder: (context, child) {
-            final settings = Get.find<Settings>();
-            
-            Widget zoomedChild = Obx(() {
-              final scale = settings.uiScale;
-              return Transform.scale(
-                scale: scale,
-                alignment: Alignment.topLeft,
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width / scale,
-                  height: MediaQuery.of(context).size.height / scale,
-                  child: child!,
-                ),
-              );
-            });
-
+            // Prüfe erst, ob multiple views existieren
             if (PlatformDispatcher.instance.views.length > 1) {
-              return zoomedChild;
+              return child!;
             }
 
             final isDesktop = Platform.isWindows;
 
+            // UI Scale mit GetBuilder (sicherer als Obx)
+            Widget finalChild = GetBuilder<Settings>(
+              init: Get.find<Settings>(),
+              builder: (settings) {
+                final scale = settings.uiScale;
+                
+                // Validierung - nur skalieren wenn nötig und sicher
+                if (scale <= 0.0 || scale > 3.0 || scale == 1.0) {
+                  return child!; // Kein Scaling nötig oder ungültiger Wert
+                }
+                
+                return Transform.scale(
+                  scale: scale,
+                  alignment: Alignment.topLeft,
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width / scale,
+                    height: MediaQuery.of(context).size.height / scale,
+                    child: child!,
+                  ),
+                );
+              },
+            );
+
             if (isDesktop) {
               return Stack(
                 children: [
-                  zoomedChild,
+                  finalChild,
                   Positioned(
                     top: 0,
                     left: 0,
@@ -275,7 +284,8 @@ class MainApp extends StatelessWidget {
                 ],
               );
             }
-            return zoomedChild;
+            
+            return finalChild;
           },
           enableLog: true,
           logWriterCallback: (text, {isError = false}) async {

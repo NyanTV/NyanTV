@@ -46,14 +46,13 @@ class UISettingsAdapter extends TypeAdapter<UISettings> {
         liquidMode: fields[18] ?? false,
         liquidBackgroundPath: fields[19] ?? '',
         retainOriginalColor: fields[20] ?? false,
-        usePosterColor: fields[21] ?? false,
-        uiScale: fields[22] ?? 1.0);
+        usePosterColor: fields[21] ?? false);
   }
 
   @override
   void write(BinaryWriter writer, UISettings obj) {
     writer
-      ..writeByte(23)
+      ..writeByte(22)
       ..writeByte(0)
       ..write(obj.glowMultiplier)
       ..writeByte(1)
@@ -97,9 +96,7 @@ class UISettingsAdapter extends TypeAdapter<UISettings> {
       ..writeByte(20)
       ..write(obj.retainOriginalColor)
       ..writeByte(21)
-      ..write(obj.usePosterColor)
-      ..writeByte(22)
-      ..write(obj.uiScale);
+      ..write(obj.usePosterColor);
   }
 
   @override
@@ -112,4 +109,3 @@ class UISettingsAdapter extends TypeAdapter<UISettings> {
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
-  

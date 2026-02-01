@@ -70,9 +70,6 @@ class UISettings extends HiveObject {
   @HiveField(21)
   bool usePosterColor;
 
-  @HiveField(22)
-  double uiScale;
-
   UISettings(
       {this.glowMultiplier = 0.0,
       this.radiusMultiplier = 1.0,
@@ -110,6 +107,5 @@ class UISettings extends HiveObject {
       this.retainOriginalColor = false,
       this.liquidBackgroundPath = '',
       this.usePosterColor = false,
-      this.uiScale = 1.0,
       });
 }
