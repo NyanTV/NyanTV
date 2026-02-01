@@ -1,6 +1,6 @@
 {
   "name": "NyanTV",
-  "identifier": "com.ryan.nyantv",
+  "identifier": "com.mukatos.nyantv",
   "headerURL": "https://raw.githubusercontent.com/RyanYuuki/NyanTV/refs/heads/main/repo/images/headers/source_header.webp",
   "website": "https://github.com/RyanYuuki/NyanTV",
   "iconURL": "https://raw.githubusercontent.com/RyanYuuki/NyanTV/refs/heads/main/repo/images/icons/nyantv.webp",
@@ -11,7 +11,7 @@
     {
       "beta": false,
       "name": "NyanTV",
-      "bundleIdentifier": "com.ryan.nyantv",
+      "bundleIdentifier": "com.mukatos.nyantv",
       "developerName": "RyanYuuki",
       "subtitle": "Multiservice tracking client",
       "version": "3.0.2",
@@ -159,7 +159,7 @@
   ],
   "news": [
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "2.9.2-hotfix - 24 Feb",
       "identifier": "release-2.9.2-hotfix",
       "caption": "Update for NyanTV now available!",
@@ -170,7 +170,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v2.9.2-hotfix"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "2.9.3-hotfix - 18 Mar",
       "identifier": "release-2.9.3-hotfix",
       "caption": "Update for NyanTV now available!",
@@ -181,7 +181,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v2.9.3-hotfix"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "2.9.4 - 26 May",
       "identifier": "release-2.9.4",
       "caption": "Update for NyanTV now available!",
@@ -192,7 +192,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v2.9.4"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "2.9.4-hotfix - 27 May",
       "identifier": "release-2.9.4-hotfix",
       "caption": "Update for NyanTV now available!",
@@ -203,7 +203,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v2.9.4-hotfix"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "2.9.4-hotfixx - 27 May",
       "identifier": "release-2.9.4-hotfixx",
       "caption": "Update for NyanTV now available!",
@@ -214,7 +214,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v2.9.4-hotfixx"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "2.9.5 - 20 Jun",
       "identifier": "release-2.9.5",
       "caption": "Update for NyanTV now available!",
@@ -225,7 +225,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v2.9.5"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "2.9.6 - 01 Jul",
       "identifier": "release-2.9.6",
       "caption": "Update for NyanTV now available!",
@@ -236,7 +236,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v2.9.6"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "2.9.6-hotfix - 01 Jul",
       "identifier": "release-2.9.6-hotfix",
       "caption": "Update for NyanTV now available!",
@@ -247,7 +247,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v2.9.6-hotfix"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "2.9.7 - 13 Jul",
       "identifier": "release-2.9.7",
       "caption": "Update for NyanTV now available!",
@@ -258,7 +258,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v2.9.7"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "2.9.8 - 26 Jul",
       "identifier": "release-2.9.8",
       "caption": "Update for NyanTV now available!",
@@ -269,7 +269,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v2.9.8"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "2.9.8-hotfix - 26 Jul",
       "identifier": "release-2.9.8-hotfix",
       "caption": "Update for NyanTV now available!",
@@ -280,7 +280,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v2.9.8-hotfix"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "2.9.9 - 03 Aug",
       "identifier": "release-2.9.9",
       "caption": "Update for NyanTV now available!",
@@ -291,7 +291,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v2.9.9"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "3.0.0 - 31 Aug",
       "identifier": "release-3.0.0",
       "caption": "Update for NyanTV now available!",
@@ -302,7 +302,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v3.0.0"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "3.0.1 - 01 Sep",
       "identifier": "release-3.0.1",
       "caption": "Update for NyanTV now available!",
@@ -313,7 +313,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v3.0.1"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "3.0.1-hotfix - 28 Sep",
       "identifier": "release-3.0.1-hotfix",
       "caption": "Update for NyanTV now available!",
@@ -324,7 +324,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v3.0.1-hotfix"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "3.0.2 - 05 Oct",
       "identifier": "release-3.0.2",
       "caption": "Update for NyanTV now available!",
@@ -335,7 +335,7 @@
       "url": "https://github.com/RyanYuuki/NyanTV/releases/tag/v3.0.2"
     },
     {
-      "appID": "com.ryan.nyantv",
+      "appID": "com.mukatos.nyantv",
       "title": "3.0.2-hotfix - 12 Oct",
       "identifier": "release-3.0.2-hotfix",
       "caption": "Update for NyanTV now available!",

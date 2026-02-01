@@ -38,12 +38,12 @@ Use [CPU-Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z) or [D
 2. **Install NyanTV:**
    In Command Prompt or PowerShell, run:
    ```powershell
-   choco install com.ryan.nyantv
+   choco install com.mukatos.nyantv
    ```
 3. **Update later with:**
    In Command Prompt or PowerShell, run:
    ```powershell
-   choco upgrade com.ryan.nyantv
+   choco upgrade com.mukatos.nyantv
    ```
 ---
 

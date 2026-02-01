@@ -72,7 +72,7 @@
 ### Windows
   <p>
     <a href="/INSTALLATION.md"><img src="https://img.shields.io/badge/Scoop-NyanTV-white?style=for-the-badge&labelColor=black" alt="Scoop"/></a>
-    <a href="/INSTALLATION.md"><img src="https://img.shields.io/badge/Chocolatey-com.ryan.nyantv-white?style=for-the-badge&labelColor=black" alt="Chocolatey"/></a>
+    <a href="/INSTALLATION.md"><img src="https://img.shields.io/badge/Chocolatey-com.mukatos.nyantv-white?style=for-the-badge&labelColor=black" alt="Chocolatey"/></a>
   </p>
 </div>
 

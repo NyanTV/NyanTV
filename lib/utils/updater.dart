@@ -322,7 +322,7 @@ class _UpdateBottomSheetState extends State<UpdateBottomSheet>
     }
 
     final result =
-        await InstallPlugin.installApk(savePath, appId: 'com.ryan.nyantv');
+        await InstallPlugin.installApk(savePath, appId: 'com.mukatos.nyantv');
     if (result['isSuccess']) {
       _showSuccessDialog();
     } else {

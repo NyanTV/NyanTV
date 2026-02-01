@@ -1,4 +1,4 @@
-package com.ryan.nyantv
+package com.mukatos.nyantv
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
