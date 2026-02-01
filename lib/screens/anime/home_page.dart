@@ -1,5 +1,5 @@
 // ignore_for_file: invalid_use_of_protected_member
-// lib/screens/anime/home_page.dart
+
 import 'package:nyantv/widgets/header.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
@@ -21,108 +21,100 @@ import 'package:nyantv/widgets/history/tap_history_cards.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 
 class AnimeHomePage extends StatefulWidget {
-  const AnimeHomePage({
-    super.key,
-  });
+const AnimeHomePage({
+super.key,
+});
 
-  @override
-  State<AnimeHomePage> createState() => _AnimeHomePageState();
+@override
+State<AnimeHomePage> createState() => _AnimeHomePageState();
 }
 
 class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin {
-  late ScrollController _scrollController;
-  final ValueNotifier<bool> _isAppBarVisibleExternally =
-      ValueNotifier<bool>(true);
+late ScrollController _scrollController;
+final ValueNotifier<bool> _isAppBarVisibleExternally =
+ValueNotifier<bool>(true);
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Get.find<Settings>().checkForUpdates(context);
-      Get.find<Settings>().showWelcomeDialog(context);
-    });
-    _scrollController = ScrollController();
-    initTVScroll();
-  }
+@override
+void initState() {
+super.initState();
+WidgetsBinding.instance.addPostFrameCallback((_) {
+Get.find<Settings>().checkForUpdates(context);
+Get.find<Settings>().showWelcomeDialog(context);
+});
+_scrollController = ScrollController();
+initTVScroll();
+}
 
-  ScrollController get scrollController => _scrollController;
+ScrollController get scrollController => _scrollController;
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    _isAppBarVisibleExternally.dispose();
-    
-    disposeTVScroll();
-    super.dispose();
-  }
+@override
+void dispose() {
+_scrollController.dispose();
+_isAppBarVisibleExternally.dispose();
 
-  @override
-  Widget build(BuildContext context) {
-    final serviceHandler = Get.find<ServiceHandler>();
-    bool isTV = Get.find<Settings>().isTV.value;
-    final isDesktop = isTV ? true : MediaQuery.of(context).size.width > 600;
-    final statusBarHeight = MediaQuery.of(context).padding.top;
-    const appBarHeight = kToolbarHeight + 20;
-    final double bottomNavBarHeight = MediaQuery.of(context).padding.bottom;
+disposeTVScroll();
+super.dispose();
+}
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            controller: _scrollController,
-            physics: getTVScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: statusBarHeight + appBarHeight),
-                const SizedBox(height: 10),
-                Obx(() {
-                  return Column(
-                    children: serviceHandler.animeWidgets(context, _scrollController),
-                  );
-                }),
-                if (!isDesktop)
-                  SizedBox(height: bottomNavBarHeight)
-                else
-                  const SizedBox(height: 50),
-              ],
+@override
+Widget build(BuildContext context) {
+final serviceHandler = Get.find<ServiceHandler>();
+bool isTV = Get.find<Settings>().isTV.value;
+final isDesktop = isTV ? true : MediaQuery.of(context).size.width > 600;
+final statusBarHeight = MediaQuery.of(context).padding.top;
+const appBarHeight = kToolbarHeight + 20;
+final double bottomNavBarHeight = MediaQuery.of(context).padding.bottom;
+
+return Scaffold(
+extendBodyBehindAppBar: true,
+body: Stack(
+children: [
+SingleChildScrollView(
+controller: _scrollController,
+physics: getTVScrollPhysics(),
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.start,
+children: [
+SizedBox(height: statusBarHeight + appBarHeight),
+const SizedBox(height: 10),
+Obx(() {
+return Column(
+                    children: serviceHandler.animeWidgets(context),
+);
+}),
+if (!isDesktop)
+SizedBox(height: bottomNavBarHeight)
+else
+const SizedBox(height: 50),
+],
+),
+),
+          CustomAnimatedAppBar(
+            isVisible: _isAppBarVisibleExternally,
+            scrollController: _scrollController,
+            headerContent: const Header(type: PageType.anime),
+            visibleStatusBarStyle: SystemUiOverlayStyle(
+              statusBarIconBrightness:
+                  Theme.of(context).brightness == Brightness.light
+                      ? Brightness.dark
+                      : Brightness.light,
+              statusBarBrightness: Theme.of(context).brightness,
+              statusBarColor: Colors.transparent,
+            ),
+            hiddenStatusBarStyle: SystemUiOverlayStyle(
+              statusBarIconBrightness:
+                  Theme.of(context).brightness == Brightness.light
+                      ? Brightness.light
+                      : Brightness.dark,
+              statusBarBrightness:
+                  Theme.of(context).brightness == Brightness.light
+                      ? Brightness.dark
+                      : Brightness.light,
+              statusBarColor: Colors.transparent,
             ),
           ),
-          ValueListenableBuilder<bool>(
-            valueListenable: _isAppBarVisibleExternally,
-            builder: (context, isVisible, child) {
-              return IgnorePointer(
-                ignoring: !isVisible,
-                child: CustomAnimatedAppBar(
-                  isVisible: _isAppBarVisibleExternally,
-                  scrollController: _scrollController,
-                  headerContent: const Header(type: PageType.anime),
-                  visibleStatusBarStyle: SystemUiOverlayStyle(
-                    statusBarIconBrightness:
-                        Theme.of(context).brightness == Brightness.light
-                            ? Brightness.dark
-                            : Brightness.light,
-                    statusBarBrightness: Theme.of(context).brightness,
-                    statusBarColor: Colors.transparent,
-                  ),
-                  hiddenStatusBarStyle: SystemUiOverlayStyle(
-                    statusBarIconBrightness:
-                        Theme.of(context).brightness == Brightness.light
-                            ? Brightness.light
-                            : Brightness.dark,
-                    statusBarBrightness:
-                        Theme.of(context).brightness == Brightness.light
-                            ? Brightness.dark
-                            : Brightness.light,
-                    statusBarColor: Colors.transparent,
-                  ),
-                ),
-              );
-            },
-          )
-        ],
-      ),
-    );
-  }
+],
+),
+);
+}
 }
