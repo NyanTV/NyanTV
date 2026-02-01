@@ -71,7 +71,7 @@ class UISettings extends HiveObject {
   bool usePosterColor;
 
   UISettings(
-      {this.glowMultiplier = 1.0,
+      {this.glowMultiplier = 0.0,
       this.radiusMultiplier = 1.0,
       this.saikouLayout = false,
       this.tabBarHeight = 50.0,
@@ -79,13 +79,12 @@ class UISettings extends HiveObject {
       this.tabBarRoundness = 10.0,
       this.compactCards = false,
       this.cardRoundness = 1.0,
-      this.blurMultipler = 1.0,
-      this.animationDuration = 200,
+      this.blurMultipler = 0.0,
+      this.animationDuration = 0,
       this.glowDensity = 0.3,
-      this.translucentTabBar = true,
+      this.translucentTabBar = false,
       this.homePageCards = const {
         "Continue Watching": true,
-        "Continue Reading": true,
         "Completed TV": false,
         "Completed Movie": false,
         "Paused Animes": false,
@@ -95,17 +94,16 @@ class UISettings extends HiveObject {
       },
       this.homePageCardsMal = const {
         "Continue Watching": true,
-        "Continue Reading": true,
         "Completed TV": false,
         "Paused Animes": false,
         "Dropped Animes": false,
         "Planning Animes": false,
       },
-      this.enableAnimation = true,
-      this.disableGradient = false,
-      this.cardStyle = 2,
+      this.enableAnimation = false,
+      this.disableGradient = true,
+      this.cardStyle = 3,
       this.historyCardStyle = 0,
-      this.liquidMode = true,
+      this.liquidMode = false,
       this.retainOriginalColor = false,
       this.liquidBackgroundPath = '',
       this.usePosterColor = false});
