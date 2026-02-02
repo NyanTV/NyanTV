@@ -246,27 +246,35 @@ return child!;
 final isDesktop = Platform.isWindows;
 
             // UI Scale mit GetBuilder (sicherer als Obx)
-            Widget finalChild = GetBuilder<Settings>(
-              init: Get.find<Settings>(),
-              builder: (settings) {
-                final scale = settings.uiScale;
-                
-                // Validierung - nur skalieren wenn nötig und sicher
-                if (scale <= 0.0 || scale > 3.0 || scale == 1.0) {
-                  return child!; // Kein Scaling nötig oder ungültiger Wert
-                }
-                
-                return Transform.scale(
-                  scale: scale,
-                  alignment: Alignment.topLeft,
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width / scale,
-                    height: MediaQuery.of(context).size.height / scale,
-                    child: child!,
-                  ),
-                );
-              },
-            );
+Widget finalChild = GetBuilder<Settings>(
+  init: Get.find<Settings>(),
+  builder: (settings) {
+    final scale = settings.uiScale;
+
+    if (scale <= 0.0 || scale > 3.0 || scale == 1.0) {
+      return child!;
+    }
+
+    final originalSize = MediaQuery.of(context).size;
+    final scaledSize = Size(
+      originalSize.width / scale,
+      originalSize.height / scale,
+    );
+
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(size: scaledSize),
+      child: FittedBox(
+        fit: BoxFit.contain,
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: scaledSize.width,
+          height: scaledSize.height,
+          child: child!,
+        ),
+      ),
+    );
+  },
+);
 
 if (isDesktop) {
 return Stack(

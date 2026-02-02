@@ -49,7 +49,9 @@
 
 # NyanTV: Multiservice Tracking Client
 
-**NyanTV** is a multiservice tracking client designed exclusively for managing and tracking anime and manga progress across [**AniList**](https://anilist.co/), [**MyAnimeList**](https://myanimelist.net/), and [**Simkl**](https://simkl.com/).
+**NyanTV** is a tracking client designed exclusively for managing and tracking anime progress across [**AniList**](https://anilist.co/) on Android TV.
+
+**NyanTV** is a fork of [**AnymeX**](https://github.com/RyanYuuki/AnymeX), if you are using a platform other than Android TV, use their repo.
 
 > [!IMPORTANT]  
 > **NyanTV is a tracking tool only.** It does not host, provide, distribute, or endorse any streaming content, media, or third-party extensions.  
@@ -58,9 +60,9 @@
 >  
 > **No Liability:** The developers of NyanTV disclaim all liability for misuse, legal issues, or violations arising from user actions. Legal concerns, including DMCA claims, should be directed to the respective third-party services, not NyanTV. The app is provided "as-is" without warranties.  
 >  
-> **Services:** NyanTV integrates only with the official APIs of supported services (AniList, MyAnimeList, Simkl). Third-party extensions are the responsibility of their creators, not the NyanTV developers.  
+> **Services:** NyanTV integrates only with the official APIs of supported services (AniList). Third-party extensions are the responsibility of their creators, not the NyanTV developers.  
 >  
-> **By using NyanTV, you agree to comply with our [Terms of Service](./TOS.md). Please review the ToS to understand our DMCA-compliant, tracking functionality and our non-involvement with any content or services beyond AniList, MyAnimeList, and Simkl.**
+> **By using NyanTV, you agree to comply with our [Terms of Service](./TOS.md). Please review the ToS to understand our DMCA-compliant, tracking functionality and our non-involvement with any content or services beyond AniList.**
 
 ## Downloads
 
@@ -69,23 +71,9 @@
     <a href="https://github.com/RyanYuuki/NyanTV/releases/latest"><img src="https://img.shields.io/github/v/release/RyanYuuki/NyanTV?color=white&labelColor=black&display_name=tag&style=for-the-badge&label=Stable" alt="Latest Stable Release"/></a>
   </p>
   
-### Windows
-  <p>
-    <a href="/INSTALLATION.md"><img src="https://img.shields.io/badge/Scoop-NyanTV-white?style=for-the-badge&labelColor=black" alt="Scoop"/></a>
-    <a href="/INSTALLATION.md"><img src="https://img.shields.io/badge/Chocolatey-com.mukatos.nyantv-white?style=for-the-badge&labelColor=black" alt="Chocolatey"/></a>
-  </p>
 </div>
 
 <div align="center">
-  
-### iOS Sideloading Sources
-  <p>
-    <a href="https://intradeus.github.io/http-protocol-redirector?r=altstore://source?url=https://raw.githubusercontent.com/RyanYuuki/NyanTV/refs/heads/main/repo/source.json"><img alt="AltStore Source" src="https://img.shields.io/badge/open_in_app-_?style=for-the-badge&label=AltStore&labelColor=black&color=white"></a>
-    <a href="https://intradeus.github.io/http-protocol-redirector?r=feather://source/https://raw.githubusercontent.com/RyanYuuki/NyanTV/refs/heads/main/repo/source.json"><img alt="Feather Source" src="https://img.shields.io/badge/open_in_app-_?style=for-the-badge&label=Feather&labelColor=black&color=white"></a>
-    <a href="https://intradeus.github.io/http-protocol-redirector?r=sidestore://source?url=https://raw.githubusercontent.com/RyanYuuki/NyanTV/refs/heads/main/repo/source.json"><img alt="SideStore Source" src="https://img.shields.io/badge/open_in_app-_?style=for-the-badge&label=SideStore&labelColor=black&color=white"></a>
-    <a href="https://raw.githubusercontent.com/RyanYuuki/NyanTV/refs/heads/main/repo/source.json"><img alt="Direct Source URL" src="https://img.shields.io/badge/copy_%2F_paste-_?style=for-the-badge&label=Direct%20Source%20URL&labelColor=black&color=white"></a>
-  </p>
-</div>
 
 <!--## Screenshots
 

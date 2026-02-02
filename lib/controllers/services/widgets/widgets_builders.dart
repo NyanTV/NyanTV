@@ -52,7 +52,7 @@ Container buildChip(String label) {
   );
 }
 
-Widget buildBigCarousel(List<Media> data, bool isManga, ScrollController scrollController, {CarouselType? type}) {
+Widget buildBigCarousel(List<Media> data, bool isManga, {CarouselType? type}) {
   return BigCarousel(
       data: data,
       carouselType:
