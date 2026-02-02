@@ -228,6 +228,7 @@ class TVScrollableWrapper extends StatefulWidget {
 
 class _TVScrollableWrapperState extends State<TVScrollableWrapper> {
   late ScrollController _scrollController;
+  FocusNode? _lastFocusedNode;
 
   @override
   void initState() {
@@ -241,6 +242,21 @@ class _TVScrollableWrapperState extends State<TVScrollableWrapper> {
       _scrollController.dispose();
     }
     super.dispose();
+  }
+
+  bool _canScrollInDirection(LogicalKeyboardKey key) {
+    if (!_scrollController.hasClients) return false;
+
+    final currentPosition = _scrollController.position.pixels;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final minScroll = _scrollController.position.minScrollExtent;
+
+    if (key == LogicalKeyboardKey.arrowDown) {
+      return currentPosition < maxScroll;
+    } else if (key == LogicalKeyboardKey.arrowUp) {
+      return currentPosition > minScroll;
+    }
+    return false;
   }
 
   void _handleManualScroll(LogicalKeyboardKey key) {
@@ -283,7 +299,6 @@ class _TVScrollableWrapperState extends State<TVScrollableWrapper> {
       );
     }
 
-    // TV Mode: With D-Pad Scroll Support
     return Focus(
       canRequestFocus: false,
       skipTraversal: true,
@@ -297,19 +312,63 @@ class _TVScrollableWrapperState extends State<TVScrollableWrapper> {
 
           final currentFocus = FocusManager.instance.primaryFocus;
           
+          // Wenn kein Fokus existiert, einfach scrollen wenn möglich
           if (currentFocus == null) {
-            _handleManualScroll(key);
-            return KeyEventResult.handled;
+            if (_canScrollInDirection(key)) {
+              _handleManualScroll(key);
+              return KeyEventResult.handled;
+            }
+            return KeyEventResult.ignored;
           }
 
-          bool canFocus = false;
+          // Speichere den aktuellen Fokus
+          _lastFocusedNode = currentFocus;
+
+          // WICHTIG: Prüfe ZUERST ob wir scrollen können, bevor wir fokussieren
+          // Das verhindert das Springen zur Sidebar wenn noch Content oben/unten ist
+          final canScroll = _canScrollInDirection(key);
+          
+          // Versuche zu fokussieren
+          bool didFocus = false;
           if (key == LogicalKeyboardKey.arrowDown) {
-            canFocus = currentFocus.nextFocus();
+            didFocus = currentFocus.nextFocus();
           } else if (key == LogicalKeyboardKey.arrowUp) {
-            canFocus = currentFocus.previousFocus();
+            didFocus = currentFocus.previousFocus();
           }
 
-          if (!canFocus) {
+          // Prüfe ob der Fokus zu einem komplett anderen Widget gesprungen ist
+          // (z.B. zur Sidebar) anstatt zum nächsten Element in der Scroll-Area
+          final newFocus = FocusManager.instance.primaryFocus;
+          
+          if (didFocus && newFocus != null && _lastFocusedNode != null) {
+            // Wenn der neue Fokus außerhalb unseres ScrollView ist (z.B. Sidebar)
+            // UND wir können noch scrollen, dann scrollen wir stattdessen
+            final newContext = newFocus.context;
+            final scrollContext = context;
+            
+            bool isInScrollView = false;
+            if (newContext != null) {
+              // Prüfe ob der neue Fokus ein Kind unseres ScrollView ist
+              newContext.visitAncestorElements((element) {
+                if (element == scrollContext) {
+                  isInScrollView = true;
+                  return false;
+                }
+                return true;
+              });
+            }
+            
+            // Wenn der neue Fokus NICHT in unserem ScrollView ist UND wir können scrollen
+            if (!isInScrollView && canScroll) {
+              // Fokus zurücksetzen
+              _lastFocusedNode?.requestFocus();
+              // Stattdessen scrollen
+              _handleManualScroll(key);
+              return KeyEventResult.handled;
+            }
+          }
+
+          if (!didFocus && canScroll) {
             _handleManualScroll(key);
             return KeyEventResult.handled;
           }

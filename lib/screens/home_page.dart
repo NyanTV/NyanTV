@@ -19,7 +19,6 @@ import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
 import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:nyantv/widgets/history/tap_history_cards.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
-import 'package:nyantv/utils/tv_scroll_mixin.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({

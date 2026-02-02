@@ -28,6 +28,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
+import 'package:flutter/services.dart';
 
 class EpisodeListBuilder extends StatefulWidget {
   const EpisodeListBuilder({
@@ -141,10 +142,7 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 10.0),
-          child: Focus(
-            canRequestFocus: true,
-            child: Obx(_buildContinueButton),
-          ),
+          child: Obx(_buildContinueButton),
         ),
         EpisodeChunkSelector(
           chunks: chunkedEpisodes,
@@ -191,24 +189,49 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
                 return Focus(
                   canRequestFocus: true,
                   autofocus: index == 0,
-
-                  child: Opacity(
-                    opacity: completedEpisode
-                        ? 0.5
-                        : currentEpisode
-                            ? 0.8
-                            : 1,
-                    child: BetterEpisode(
-                      episode: episode,
-                      isSelected: isSelected,
-                      layoutType: isAnify.value
-                          ? EpisodeLayoutType.detailed
-                          : EpisodeLayoutType.compact,
-                      fallbackImageUrl:
-                          episode.thumbnail ?? widget.anilistData!.poster,
-                      offlineEpisodes: offlineEpisodes,
-                      onTap: () => _handleEpisodeSelection(episode),
-                    ),
+                  onKeyEvent: (node, event) {
+                    if (event is KeyDownEvent &&
+                        (event.logicalKey == LogicalKeyboardKey.select ||
+                        event.logicalKey == LogicalKeyboardKey.enter)) {
+                      _handleEpisodeSelection(episode);
+                      return KeyEventResult.handled;
+                    }
+                    return KeyEventResult.ignored;
+                  },
+                  child: Builder(
+                    builder: (context) {
+                      final isFocused = Focus.of(context).hasFocus;
+                      
+                      return Opacity(
+                        opacity: completedEpisode
+                            ? 0.5
+                            : currentEpisode
+                                ? 0.8
+                                : 1,
+                        child: Container(
+                          decoration: isFocused
+                              ? BoxDecoration(
+                                  border: Border.all(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    width: 3,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                )
+                              : null,
+                          child: BetterEpisode(
+                            episode: episode,
+                            isSelected: isSelected,
+                            layoutType: isAnify.value
+                                ? EpisodeLayoutType.detailed
+                                : EpisodeLayoutType.compact,
+                            fallbackImageUrl:
+                                episode.thumbnail ?? widget.anilistData!.poster,
+                            offlineEpisodes: offlineEpisodes,
+                            onTap: () => _handleEpisodeSelection(episode),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               });
