@@ -224,7 +224,7 @@ class CustomTile extends StatelessWidget {
   }
 }
 
-class CustomSliderTile extends StatelessWidget {
+class CustomSliderTile extends StatefulWidget {
   final IconData icon;
   final String title;
   final String description;
@@ -251,19 +251,24 @@ class CustomSliderTile extends StatelessWidget {
   });
 
   @override
+  State<CustomSliderTile> createState() => _CustomSliderTileState();
+}
+
+class _CustomSliderTileState extends State<CustomSliderTile> {
+  @override
   Widget build(BuildContext context) {
     return NyantvOnTapAdv(
       onKeyEvent: (p0, e) {
         if (e is KeyDownEvent) {
-          double step = (max - min) / (divisions ?? (max - min));
+          double step = (widget.max - widget.min) / (widget.divisions ?? (widget.max - widget.min));
 
           if (e.logicalKey == LogicalKeyboardKey.arrowRight) {
-            double newValue = (sliderValue + step).clamp(min, max);
-            onChanged(newValue);
+            double newValue = (widget.sliderValue + step).clamp(widget.min, widget.max);
+            widget.onChanged(newValue);
             return KeyEventResult.handled;
           } else if (e.logicalKey == LogicalKeyboardKey.arrowLeft) {
-            double newValue = (sliderValue - step).clamp(min, max);
-            onChanged(newValue);
+            double newValue = (widget.sliderValue - step).clamp(widget.min, widget.max);
+            widget.onChanged(newValue);
             return KeyEventResult.handled;
           }
         } else if (e is KeyUpEvent) {
@@ -277,7 +282,7 @@ class CustomSliderTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                NyantvIcon(icon,
+                NyantvIcon(widget.icon,
                     size: 30, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 20),
                 Expanded(
@@ -285,7 +290,7 @@ class CustomSliderTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title,
+                        widget.title,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -294,7 +299,7 @@ class CustomSliderTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        description,
+                        widget.description,
                         style: TextStyle(
                           fontSize: 14,
                           color: Theme.of(context)
@@ -314,9 +319,9 @@ class CustomSliderTile extends StatelessWidget {
               child: Row(
                 children: [
                   NyantvText(
-                    text: sliderValue % 1 == 0
-                        ? sliderValue.toInt().toString()
-                        : sliderValue.toStringAsFixed(1),
+                    text: widget.sliderValue % 1 == 0
+                        ? widget.sliderValue.toInt().toString()
+                        : widget.sliderValue.toStringAsFixed(1),
                     variant: TextVariant.semiBold,
                   ),
                   const SizedBox(width: 10),
@@ -324,15 +329,15 @@ class CustomSliderTile extends StatelessWidget {
                     child: CustomSlider(
                       focusNode: FocusNode(
                           canRequestFocus: false, skipTraversal: true),
-                      value: double.parse(sliderValue.toStringAsFixed(1)),
-                      onChanged: onChanged,
-                      max: max,
-                      min: min,
-                      label: label ?? sliderValue.toStringAsFixed(1),
-                      onDragEnd: onChangedEnd,
+                      value: double.parse(widget.sliderValue.toStringAsFixed(1)),
+                      onChanged: widget.onChanged,
+                      max: widget.max,
+                      min: widget.min,
+                      label: widget.label ?? widget.sliderValue.toStringAsFixed(1),
+                      onDragEnd: widget.onChangedEnd,
                       glowBlurMultiplier: 1,
                       glowSpreadMultiplier: 1,
-                      divisions: divisions?.toInt() ?? (max * 10).toInt(),
+                      divisions: widget.divisions?.toInt() ?? (widget.max * 10).toInt(),
                       customValueIndicatorSize: RoundedSliderValueIndicator(
                           Theme.of(context).colorScheme,
                           width: 40,
@@ -342,9 +347,9 @@ class CustomSliderTile extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   NyantvText(
-                    text: max % 1 == 0
-                        ? max.toInt().toString()
-                        : max.toStringAsFixed(1),
+                    text: widget.max % 1 == 0
+                        ? widget.max.toInt().toString()
+                        : widget.max.toStringAsFixed(1),
                     variant: TextVariant.semiBold,
                   )
                 ],

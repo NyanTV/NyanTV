@@ -1,4 +1,3 @@
-// lib/widgets/helper/tv_wrapper.dart
 import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -95,7 +94,7 @@ class NyantvOnTap extends StatelessWidget {
   }
 }
 
-class NyantvOnTapAdv extends StatelessWidget {
+class NyantvOnTapAdv extends StatefulWidget {
   final VoidCallback? onTap;
   final Widget child;
   final double scale;
@@ -104,6 +103,8 @@ class NyantvOnTapAdv extends StatelessWidget {
   final double borderWidth;
   final double? margin;
   final KeyEventResult Function(FocusNode, KeyEvent)? onKeyEvent;
+  final FocusNode? focusNode;
+  final Function(bool)? onFocusChange;
 
   const NyantvOnTapAdv({
     super.key,
@@ -115,33 +116,74 @@ class NyantvOnTapAdv extends StatelessWidget {
     this.borderWidth = 2.0,
     this.margin,
     this.onKeyEvent,
+    this.focusNode,
+    this.onFocusChange,
   });
+
+  @override
+  State<NyantvOnTapAdv> createState() => _NyantvOnTapAdvState();
+}
+
+class _NyantvOnTapAdvState extends State<NyantvOnTapAdv> {
+  late FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = widget.focusNode ?? FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    if (widget.focusNode == null) {
+      _focusNode.dispose();
+    } else {
+      _focusNode.removeListener(_onFocusChange);
+    }
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (_focusNode.hasFocus && mounted) {
+      // Auto-scroll when focused
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        alignment: 0.5,
+      );
+      widget.onFocusChange?.call(true);
+    } else {
+      widget.onFocusChange?.call(false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Focus(
+      focusNode: _focusNode,
       onKeyEvent: (node, event) {
-        if (event.logicalKey == LogicalKeyboardKey.enter &&
+        if (event.logicalKey == LogicalKeyboardKey.enter ||
             event.logicalKey == LogicalKeyboardKey.space) {
-          if (onTap != null) {
-            onTap!.call();
+          if (widget.onTap != null) {
+            widget.onTap!.call();
             return KeyEventResult.handled;
           }
           return KeyEventResult.ignored;
         }
-        return onKeyEvent?.call(node, event) ?? KeyEventResult.ignored;
+        return widget.onKeyEvent?.call(node, event) ?? KeyEventResult.ignored;
       },
       child: Builder(
         builder: (BuildContext context) {
           final bool isFocused = Focus.of(context).hasFocus;
           return GestureDetector(
-            onTap: onTap,
+            onTap: widget.onTap,
             child: AnimatedContainer(
-              duration: animationDuration,
-              transform: Matrix4.identity()..scale(isFocused ? scale : 1.0),
-              padding:
-                  EdgeInsets.symmetric(vertical: isFocused ? (margin ?? 5) : 0),
-              margin: EdgeInsets.only(left: isFocused ? (margin ?? 5) : 0),
+              duration: widget.animationDuration,
+              transform: Matrix4.identity()..scale(isFocused ? widget.scale : 1.0),
+              padding: EdgeInsets.symmetric(vertical: isFocused ? (widget.margin ?? 5) : 0),
+              margin: EdgeInsets.only(left: isFocused ? (widget.margin ?? 5) : 0),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 color: isFocused
@@ -149,17 +191,137 @@ class NyantvOnTapAdv extends StatelessWidget {
                     : Colors.transparent,
                 border: Border.all(
                   color: isFocused
-                      ? (focusedBorderColor ??
+                      ? (widget.focusedBorderColor ??
                           Theme.of(context).colorScheme.primary)
                       : Colors.transparent,
-                  width: borderWidth,
+                  width: widget.borderWidth,
                   strokeAlign: BorderSide.strokeAlignOutside,
                 ),
               ),
-              child: child,
+              child: widget.child,
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// Wrapper for Scrollable Content with D-Pad Support
+class TVScrollableWrapper extends StatefulWidget {
+  final Widget child;
+  final ScrollController? scrollController;
+  final EdgeInsets? padding;
+  final double scrollStep;
+
+  const TVScrollableWrapper({
+    super.key,
+    required this.child,
+    this.scrollController,
+    this.padding,
+    this.scrollStep = 100.0,
+  });
+
+  @override
+  State<TVScrollableWrapper> createState() => _TVScrollableWrapperState();
+}
+
+class _TVScrollableWrapperState extends State<TVScrollableWrapper> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = widget.scrollController ?? ScrollController();
+  }
+
+  @override
+  void dispose() {
+    if (widget.scrollController == null) {
+      _scrollController.dispose();
+    }
+    super.dispose();
+  }
+
+  void _handleManualScroll(LogicalKeyboardKey key) {
+    if (!_scrollController.hasClients) return;
+
+    final currentPosition = _scrollController.position.pixels;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final minScroll = _scrollController.position.minScrollExtent;
+
+    if (key == LogicalKeyboardKey.arrowDown) {
+      if (currentPosition < maxScroll) {
+        final newPosition = (currentPosition + widget.scrollStep).clamp(minScroll, maxScroll);
+        _scrollController.animateTo(
+          newPosition,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
+      }
+    } else if (key == LogicalKeyboardKey.arrowUp) {
+      if (currentPosition > minScroll) {
+        final newPosition = (currentPosition - widget.scrollStep).clamp(minScroll, maxScroll);
+        _scrollController.animateTo(
+          newPosition,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isTV = Get.find<Settings>().isTV.value;
+
+    if (!isTV) {
+      return SingleChildScrollView(
+        controller: _scrollController,
+        padding: widget.padding,
+        child: widget.child,
+      );
+    }
+
+    // TV Mode: With D-Pad Scroll Support
+    return Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent) {
+          final key = event.logicalKey;
+          
+          if (key != LogicalKeyboardKey.arrowDown && key != LogicalKeyboardKey.arrowUp) {
+            return KeyEventResult.ignored;
+          }
+
+          final currentFocus = FocusManager.instance.primaryFocus;
+          
+          if (currentFocus == null) {
+            _handleManualScroll(key);
+            return KeyEventResult.handled;
+          }
+
+          bool canFocus = false;
+          if (key == LogicalKeyboardKey.arrowDown) {
+            canFocus = currentFocus.nextFocus();
+          } else if (key == LogicalKeyboardKey.arrowUp) {
+            canFocus = currentFocus.previousFocus();
+          }
+
+          if (!canFocus) {
+            _handleManualScroll(key);
+            return KeyEventResult.handled;
+          }
+          
+          return KeyEventResult.ignored;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        padding: widget.padding,
+        child: widget.child,
       ),
     );
   }

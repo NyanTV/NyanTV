@@ -12,6 +12,7 @@ import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
+import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 
 import 'package:outlined_text/outlined_text.dart';
 
@@ -178,7 +179,7 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
         backgroundColor: widget.isModal
             ? Theme.of(context).colorScheme.surfaceContainer
             : Colors.transparent,
-        body: SingleChildScrollView(
+        body: TVScrollableWrapper(
           padding: getResponsiveValue(context,
               mobileValue: const EdgeInsets.fromLTRB(10.0, 50.0, 10.0, 50.0),
               desktopValue: const EdgeInsets.fromLTRB(25.0, 50.0, 25.0, 20.0)),
