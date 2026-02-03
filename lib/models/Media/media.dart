@@ -132,6 +132,7 @@ class Media {
           .map((character) => Character.fromJson(character))
           .toList(),
       relations: (json['relations']['edges'] as List)
+          .where((relation) => relation['node']?['type'] == 'ANIME')
           .map((relation) => Relation.fromJson(relation))
           .toList(),
       recommendations: (json['recommendations']['edges'] as List)

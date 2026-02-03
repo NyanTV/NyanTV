@@ -49,6 +49,7 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:volume_controller/volume_controller.dart';
 import 'package:nyantv/utils/aniskip.dart' as aniskip;
 import 'package:nyantv/utils/tv_scroll_mixin.dart';
+import 'package:nyantv/main.dart';
 
 class WatchPage extends StatefulWidget {
   final model.Video episodeSrc;
@@ -2160,11 +2161,44 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   }
   
   Widget _buildTVVideoWidget() {
-    // Für Android TV: Einfacherer Fallback oder alternative Implementierung
+    // Prüfe, ob UI-Scale aktiv ist
+    final uiScaleBypass = UIScaleBypass.of(context);
+    final shouldBypassScale = uiScaleBypass?.bypassScale ?? false;
+
+    // Wenn UI-Scale aktiv ist, hole die echte Bildschirmgröße
+    if (shouldBypassScale) {
+      final view = View.of(context);
+      final physicalSize = view.physicalSize;
+      final devicePixelRatio = view.devicePixelRatio;
+      final realScreenSize = physicalSize / devicePixelRatio;
+
+      return MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          size: realScreenSize,
+          padding: EdgeInsets.zero,
+          viewInsets: EdgeInsets.zero,
+          viewPadding: EdgeInsets.zero,
+        ),
+        child: SizedBox(
+          width: realScreenSize.width,
+          height: realScreenSize.height,
+          child: Video(
+            controller: playerController,
+            controls: null,
+            fit: BoxFit.contain,
+            subtitleViewConfiguration: const SubtitleViewConfiguration(
+              visible: false,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Wenn keine UI-Scale aktiv, normales Rendering
     return Video(
       controller: playerController,
       controls: null,
-      fit: BoxFit.contain, // Auf TV verwenden wir contain statt cover
+      fit: BoxFit.contain,
       subtitleViewConfiguration: const SubtitleViewConfiguration(
         visible: false,
       ),
