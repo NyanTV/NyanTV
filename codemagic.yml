@@ -1,0 +1,163 @@
+name: Build & Release Android (NyanTV)
+on:
+  push:
+    tags:
+      - "v*"
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'github_assets/**'
+      - 'repo/**'
+      - 'scripts/**'
+      - '.gitignore'
+      - '.gitattributes'
+      - 'LICENSE.md'
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: "3.32.8"
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          cache-key: flutter-${{ runner.os }}-${{ env.FLUTTER_VERSION }}
+
+      - name: Cache Flutter Dependencies
+        uses: actions/cache@v4
+        id: flutter-cache
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+            build
+          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
+
+      - name: Cache Gradle & External Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.android/build-cache
+            android/.gradle
+            android/app/build
+            android/app/libs
+            android/app/.transforms
+          key: ${{ runner.os }}-gradle-full-${{ hashFiles('android/**/*.gradle*', 'android/gradle.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-full-
+            ${{ runner.os }}-gradle-
+
+      - name: Cache Android SDK Components
+        uses: actions/cache@v4
+        with:
+          path: |
+            /usr/local/lib/android/sdk/ndk
+            /usr/local/lib/android/sdk/cmake
+          key: ${{ runner.os }}-android-sdk-ndk27-cmake322
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
+
+      - name: Setup Android Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          mkdir -p android/app
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/nyantv.jks
+          cat > android/key.properties << EOF
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=nyantv.jks
+          EOF
+
+      - name: Setup App Environment
+        env:
+          AL_CLIENT_ID: ${{ secrets.AL_CLIENT_ID }}
+          AL_CLIENT_SECRET: ${{ secrets.AL_CLIENT_SECRET }}
+          CALLBACK_SCHEME: ${{ secrets.CALLBACK_SCHEME }}
+        run: |
+          cat > .env << EOF
+          AL_CLIENT_ID=$AL_CLIENT_ID
+          AL_CLIENT_SECRET=$AL_CLIENT_SECRET
+          CALLBACK_SCHEME=$CALLBACK_SCHEME
+          EOF
+
+      - name: Install Flutter Dependencies
+        if: steps.flutter-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "📦 Cache miss - installing dependencies..."
+          flutter pub get
+        
+      - name: Restore Dependencies from Cache
+        if: steps.flutter-cache.outputs.cache-hit == 'true'
+        run: echo "✅ Dependencies restored from cache - skipping pub get"
+
+      - name: Generate Native Splash
+        run: dart run flutter_native_splash:create
+
+      - name: Start Build Timer
+        run: echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
+
+      - name: Build Android APK (armeabi-v7a)
+        run: |
+          flutter build apk \
+            --split-per-abi \
+            --target-platform android-arm \
+            --release \
+            --no-tree-shake-icons \
+            --build-number=$GITHUB_RUN_NUMBER
+
+      - name: Rename APK
+        run: |
+          cd build/app/outputs/flutter-apk
+          mv app-armeabi-v7a-release.apk NyanTV-Android-armeabi-v7a.apk
+
+      - name: Calculate Build Stats
+        run: |
+          BUILD_END=$(date +%s)
+          BUILD_TIME=$((BUILD_END - BUILD_START))
+          BUILD_MIN=$((BUILD_TIME / 60))
+          BUILD_SEC=$((BUILD_TIME % 60))
+          APK_SIZE=$(du -h build/app/outputs/flutter-apk/NyanTV-Android-armeabi-v7a.apk | cut -f1)
+          
+          echo "⏱️ Build completed in ${BUILD_MIN}m ${BUILD_SEC}s"
+          echo "📦 APK Size: $APK_SIZE"
+          
+          echo "BUILD_TIME_DISPLAY=${BUILD_MIN}m ${BUILD_SEC}s" >> $GITHUB_ENV
+          echo "APK_SIZE=$APK_SIZE" >> $GITHUB_ENV
+
+      - name: Upload APK to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/app/outputs/flutter-apk/NyanTV-Android-armeabi-v7a.apk
+          generate_release_notes: true
+          body: |
+            ## 🚀 Build Stats
+            - ⏱️ **Build Time:** `${{ env.BUILD_TIME_DISPLAY }}`
+            - 📦 **APK Size:** `${{ env.APK_SIZE }}`
+            - 🏗️ **Build Number:** `${{ github.run_number }}`
+            
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
