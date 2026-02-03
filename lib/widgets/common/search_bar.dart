@@ -59,6 +59,14 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
       _focusNode = FocusNode(
         onKeyEvent: (node, event) {
           if (event is KeyDownEvent) {
+            if (event.logicalKey == LogicalKeyboardKey.escape ||
+                event.logicalKey == LogicalKeyboardKey.goBack) {
+              if (_focusNode.hasFocus) {
+                _focusNode.unfocus();
+                return KeyEventResult.handled;
+              }
+            }
+            
             if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
               _focusNode.focusInDirection(TraversalDirection.left);
               return KeyEventResult.skipRemainingHandlers;
@@ -181,20 +189,6 @@ class TappableSearchBar extends StatelessWidget {
             ),
             child: Row(
               children: [
-                // const SizedBox(width: 12),
-                // Expanded(
-                //   child: NyantvText(
-                //     text: hintText,
-                //     color: Theme.of(context).hintColor,
-                //     size: 16,
-                //   ),
-                // ),
-                // if (suffixWidget != null) suffixWidget!,
-                // if (!disableIcons)
-                //   IconButton(
-                //     icon: suffixIconWidget ?? Icon(suffixIcon),
-                //     onPressed: null,
-                //   ),
                 buildChip(chipLabel),
                 const SizedBox(width: 10),
                 Icon(

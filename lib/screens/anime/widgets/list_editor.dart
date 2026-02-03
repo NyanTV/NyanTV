@@ -32,6 +32,7 @@ class ListEditorModal extends StatefulWidget {
 
 class _ListEditorModalState extends State<ListEditorModal> {
   late TextEditingController _progressController;
+  late FocusNode _progressFocusNode;
 
   late String _localStatus;
   late double _localScore;
@@ -49,11 +50,14 @@ class _ListEditorModalState extends State<ListEditorModal> {
     _progressController = TextEditingController(
       text: _localProgress.toString(),
     );
+    
+    _progressFocusNode = FocusNode();
   }
 
   @override
   void dispose() {
     _progressController.dispose();
+    _progressFocusNode.dispose();
     super.dispose();
   }
 
@@ -254,12 +258,14 @@ class _ListEditorModalState extends State<ListEditorModal> {
                       height: 50,
                       child: TextFormField(
                         controller: _progressController,
+                        focusNode: _progressFocusNode,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                           LengthLimitingTextInputFormatter(6),
                         ],
                         style: Theme.of(context).textTheme.bodyLarge,
+                        textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
                           prefixIcon: Icon(
                             Icons.play_circle_rounded,
@@ -318,6 +324,14 @@ class _ListEditorModalState extends State<ListEditorModal> {
                             _progressController.text =
                                 _localProgress.toString();
                           });
+                          _progressFocusNode.unfocus();
+                        },
+                        onFieldSubmitted: (String value) {
+                          setState(() {
+                            _progressController.text =
+                                _localProgress.toString();
+                          });
+                          _progressFocusNode.unfocus();
                         },
                       ),
                     ),
