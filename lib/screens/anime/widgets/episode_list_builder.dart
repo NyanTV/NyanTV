@@ -113,6 +113,8 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
   void _handleEpisodeSelection(Episode episode) async {
     selectedEpisode.value = episode;
     streamList.clear();
+    FocusScope.of(context).unfocus();
+    await Future.delayed(const Duration(milliseconds: 50));
     fetchServers(episode);
   }
 

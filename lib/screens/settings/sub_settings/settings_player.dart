@@ -439,7 +439,7 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                 max: 5.0,
                                 divisions: 5,
                                 onChanged: (double value) {
-                                  settings.subtitleOutlineWidth = value.toInt();
+                                  settings.subtitleOutlineWidth = value.round();
                                 },
                                 title: 'Subtitle Outline Width',
                                 description: 'Adjust Subtitle Outline Width',
