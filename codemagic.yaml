@@ -58,5 +58,3 @@ workflows:
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/app/outputs/flutter-apk/NyanTV-Android-armeabi-v7a.apk
     artifacts:
       - build/app/outputs/flutter-apk/NyanTV-Android-armeabi-v7a.apk
-    publishing:
-      github_releases: {}
