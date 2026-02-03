@@ -319,7 +319,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                "Tip:0.5 (50%) = Smaller, 1 (100%) = Default, 1.5 (150%) = Larger",
+                                "Tip: 0.5 (50%) = Smaller, 1 (100%) = Default, 1.5 (150%) = Larger",
                                 style: TextStyle(
                                   color: Theme.of(context)
                                       .colorScheme

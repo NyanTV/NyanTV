@@ -112,6 +112,7 @@ app.*.symbols
 .env
 nyantv.jks
 keystore.b64
+nyantv.jks.base64
 .secrets
 
 # Flutter Version Management (fvm)

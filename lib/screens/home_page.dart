@@ -16,9 +16,10 @@ import 'package:nyantv/widgets/common/scroll_aware_app_bar.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_button.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
-import 'package:nyantv/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/utils/tv_scroll_mixin.dart';
 import 'package:nyantv/widgets/history/tap_history_cards.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -29,7 +30,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with TVScrollMixin{
   late ScrollController _scrollController;
   final ValueNotifier<bool> _isAppBarVisibleExternally =
       ValueNotifier<bool>(true);
@@ -42,6 +43,7 @@ class _HomePageState extends State<HomePage> {
       Get.find<Settings>().showWelcomeDialog(context);
     });
     _scrollController = ScrollController();
+    initTVScroll();
   }
 
   ScrollController get scrollController => _scrollController;
@@ -51,6 +53,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _scrollController.dispose();
     _isAppBarVisibleExternally.dispose();
+    disposeTVScroll();
     super.dispose();
   }
 
@@ -83,8 +86,9 @@ class _HomePageState extends State<HomePage> {
         extendBodyBehindAppBar: true,
         body: Stack(
           children: [
-            TVScrollableWrapper(
-              scrollController: _scrollController,
+            SingleChildScrollView(
+              controller: _scrollController,
+              physics: getTVScrollPhysics(),
               child: _buildScrollContent(
                 context,
                 cacheController,

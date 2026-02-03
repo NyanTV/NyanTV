@@ -2078,10 +2078,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
             onTap: () {
               player.playOrPause();
             },
-            bgColor: Colors.white.withOpacity(0.15),
-            focusedBorderColor: Colors.white.withOpacity(0.8),
-            borderWidth: 3.0,
-            scale: 1.1,
+            bgColor: Colors.transparent,
+            focusedBorderColor: Colors.transparent,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 150),
               transitionBuilder: (child, animation) => FadeTransition(

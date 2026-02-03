@@ -114,7 +114,7 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
     selectedEpisode.value = episode;
     streamList.clear();
     FocusScope.of(context).unfocus();
-    await Future.delayed(const Duration(milliseconds: 50));
+    await Future.delayed(const Duration(milliseconds: 10));
     fetchServers(episode);
   }
 

@@ -30,7 +30,7 @@ class AnimeHomePage extends StatefulWidget {
   State<AnimeHomePage> createState() => _AnimeHomePageState();
 }
 
-class _AnimeHomePageState extends State<AnimeHomePage> {
+class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin{
   late ScrollController _scrollController;
   final ValueNotifier<bool> _isAppBarVisibleExternally =
       ValueNotifier<bool>(true);
@@ -43,6 +43,7 @@ class _AnimeHomePageState extends State<AnimeHomePage> {
       Get.find<Settings>().showWelcomeDialog(context);
     });
     _scrollController = ScrollController();
+    initTVScroll();
   }
 
   ScrollController get scrollController => _scrollController;
@@ -51,7 +52,7 @@ class _AnimeHomePageState extends State<AnimeHomePage> {
   void dispose() {
     _scrollController.dispose();
     _isAppBarVisibleExternally.dispose();
-    
+    disposeTVScroll();
     super.dispose();
   }
 
@@ -68,8 +69,9 @@ class _AnimeHomePageState extends State<AnimeHomePage> {
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          TVScrollableWrapper(
-            scrollController: _scrollController,
+          SingleChildScrollView(
+            controller: _scrollController,
+            physics: getTVScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

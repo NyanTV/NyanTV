@@ -146,8 +146,13 @@ class _NyantvOnTapAdvState extends State<NyantvOnTapAdv> {
 
   void _onFocusChange() {
     if (_focusNode.hasFocus && mounted) {
-      // Nur das onFocusChange Callback aufrufen
-      // Kein Auto-Scroll hier - das übernimmt TVScrollableWrapper
+      // Auto-scroll when focused
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        alignment: 0.5,
+      );
       widget.onFocusChange?.call(true);
     } else {
       widget.onFocusChange?.call(false);
@@ -223,6 +228,7 @@ class TVScrollableWrapper extends StatefulWidget {
 
 class _TVScrollableWrapperState extends State<TVScrollableWrapper> {
   late ScrollController _scrollController;
+  FocusNode? _lastFocusedNode;
 
   @override
   void initState() {
@@ -236,6 +242,49 @@ class _TVScrollableWrapperState extends State<TVScrollableWrapper> {
       _scrollController.dispose();
     }
     super.dispose();
+  }
+
+  bool _canScrollInDirection(LogicalKeyboardKey key) {
+    if (!_scrollController.hasClients) return false;
+
+    final currentPosition = _scrollController.position.pixels;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final minScroll = _scrollController.position.minScrollExtent;
+
+    if (key == LogicalKeyboardKey.arrowDown) {
+      return currentPosition < maxScroll;
+    } else if (key == LogicalKeyboardKey.arrowUp) {
+      return currentPosition > minScroll;
+    }
+    return false;
+  }
+
+  void _handleManualScroll(LogicalKeyboardKey key) {
+    if (!_scrollController.hasClients) return;
+
+    final currentPosition = _scrollController.position.pixels;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final minScroll = _scrollController.position.minScrollExtent;
+
+    if (key == LogicalKeyboardKey.arrowDown) {
+      if (currentPosition < maxScroll) {
+        final newPosition = (currentPosition + widget.scrollStep).clamp(minScroll, maxScroll);
+        _scrollController.animateTo(
+          newPosition,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
+      }
+    } else if (key == LogicalKeyboardKey.arrowUp) {
+      if (currentPosition > minScroll) {
+        final newPosition = (currentPosition - widget.scrollStep).clamp(minScroll, maxScroll);
+        _scrollController.animateTo(
+          newPosition,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
   }
 
   @override
@@ -254,80 +303,78 @@ class _TVScrollableWrapperState extends State<TVScrollableWrapper> {
       canRequestFocus: false,
       skipTraversal: true,
       onKeyEvent: (node, event) {
-        if (event is! KeyDownEvent) {
-          return KeyEventResult.ignored;
-        }
+        if (event is KeyDownEvent) {
+          final key = event.logicalKey;
+          
+          if (key != LogicalKeyboardKey.arrowDown && key != LogicalKeyboardKey.arrowUp) {
+            return KeyEventResult.ignored;
+          }
 
-        final key = event.logicalKey;
-        
-        // Nur auf Arrow Up/Down reagieren
-        if (key != LogicalKeyboardKey.arrowDown && 
-            key != LogicalKeyboardKey.arrowUp) {
-          return KeyEventResult.ignored;
-        }
-
-        final currentFocus = FocusManager.instance.primaryFocus;
-        
-        // Wenn kein Fokus existiert, ignorieren (sollte nicht passieren)
-        if (currentFocus == null) {
-          return KeyEventResult.ignored;
-        }
-
-        // WICHTIGER FIX: Lasse Flutter's FocusTraversal den Fokus bewegen
-        // und scrolle NUR wenn der Fokus sich geändert hat
-        
-        // Versuche zu fokussieren - lass Flutter die Arbeit machen
-        bool didFocus = false;
-        if (key == LogicalKeyboardKey.arrowDown) {
-          didFocus = currentFocus.nextFocus();
-        } else if (key == LogicalKeyboardKey.arrowUp) {
-          didFocus = currentFocus.previousFocus();
-        }
-
-        // Wenn der Fokus gewechselt hat, scrolle zum neuen Element
-        if (didFocus) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            final newFocus = FocusManager.instance.primaryFocus;
-            if (newFocus != null && newFocus.context != null && mounted) {
-              Scrollable.ensureVisible(
-                newFocus.context!,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                alignment: 0.5,
-              );
+          final currentFocus = FocusManager.instance.primaryFocus;
+          
+          // Wenn kein Fokus existiert, einfach scrollen wenn möglich
+          if (currentFocus == null) {
+            if (_canScrollInDirection(key)) {
+              _handleManualScroll(key);
+              return KeyEventResult.handled;
             }
-          });
-          return KeyEventResult.handled;
-        }
+            return KeyEventResult.ignored;
+          }
 
-        // Wenn kein neuer Fokus gefunden wurde, versuche manuell zu scrollen
-        // (z.B. am Ende der Liste angekommen)
-        if (!_scrollController.hasClients) {
+          // Speichere den aktuellen Fokus
+          _lastFocusedNode = currentFocus;
+
+          // WICHTIG: Prüfe ZUERST ob wir scrollen können, bevor wir fokussieren
+          // Das verhindert das Springen zur Sidebar wenn noch Content oben/unten ist
+          final canScroll = _canScrollInDirection(key);
+          
+          // Versuche zu fokussieren
+          bool didFocus = false;
+          if (key == LogicalKeyboardKey.arrowDown) {
+            didFocus = currentFocus.nextFocus();
+          } else if (key == LogicalKeyboardKey.arrowUp) {
+            didFocus = currentFocus.previousFocus();
+          }
+
+          // Prüfe ob der Fokus zu einem komplett anderen Widget gesprungen ist
+          // (z.B. zur Sidebar) anstatt zum nächsten Element in der Scroll-Area
+          final newFocus = FocusManager.instance.primaryFocus;
+          
+          if (didFocus && newFocus != null && _lastFocusedNode != null) {
+            // Wenn der neue Fokus außerhalb unseres ScrollView ist (z.B. Sidebar)
+            // UND wir können noch scrollen, dann scrollen wir stattdessen
+            final newContext = newFocus.context;
+            final scrollContext = context;
+            
+            bool isInScrollView = false;
+            if (newContext != null) {
+              // Prüfe ob der neue Fokus ein Kind unseres ScrollView ist
+              newContext.visitAncestorElements((element) {
+                if (element == scrollContext) {
+                  isInScrollView = true;
+                  return false;
+                }
+                return true;
+              });
+            }
+            
+            // Wenn der neue Fokus NICHT in unserem ScrollView ist UND wir können scrollen
+            if (!isInScrollView && canScroll) {
+              // Fokus zurücksetzen
+              _lastFocusedNode?.requestFocus();
+              // Stattdessen scrollen
+              _handleManualScroll(key);
+              return KeyEventResult.handled;
+            }
+          }
+
+          if (!didFocus && canScroll) {
+            _handleManualScroll(key);
+            return KeyEventResult.handled;
+          }
+          
           return KeyEventResult.ignored;
         }
-
-        final currentPosition = _scrollController.position.pixels;
-        final maxScroll = _scrollController.position.maxScrollExtent;
-        final minScroll = _scrollController.position.minScrollExtent;
-
-        if (key == LogicalKeyboardKey.arrowDown && currentPosition < maxScroll) {
-          final newPosition = (currentPosition + widget.scrollStep).clamp(minScroll, maxScroll);
-          _scrollController.animateTo(
-            newPosition,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-          );
-          return KeyEventResult.handled;
-        } else if (key == LogicalKeyboardKey.arrowUp && currentPosition > minScroll) {
-          final newPosition = (currentPosition - widget.scrollStep).clamp(minScroll, maxScroll);
-          _scrollController.animateTo(
-            newPosition,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-          );
-          return KeyEventResult.handled;
-        }
-        
         return KeyEventResult.ignored;
       },
       child: SingleChildScrollView(

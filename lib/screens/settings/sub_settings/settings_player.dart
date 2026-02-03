@@ -179,7 +179,7 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
         backgroundColor: widget.isModal
             ? Theme.of(context).colorScheme.surfaceContainer
             : Colors.transparent,
-        body: TVScrollableWrapper(
+        body: SingleChildScrollView(
           padding: getResponsiveValue(context,
               mobileValue: const EdgeInsets.fromLTRB(10.0, 50.0, 10.0, 50.0),
               desktopValue: const EdgeInsets.fromLTRB(25.0, 50.0, 25.0, 20.0)),
@@ -459,33 +459,49 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                           fontWeight: FontWeight.w600),
                                     ),
                                     const SizedBox(height: 10),
-                                    Container(
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                            color: colorOptions[settings
-                                                .subtitleBackgroundColor],
-                                            borderRadius:
-                                                BorderRadius.circular(12)),
-                                        padding: const EdgeInsets.all(10),
-                                        child: OutlinedText(
-                                          text: Text(
-                                            'Subtitle Preview Text',
-                                            style: TextStyle(
-                                              color: colorOptions[
-                                                  settings.subtitleColor],
-                                              fontSize: settings.subtitleSize
-                                                  .toDouble(),
-                                            ),
-                                          ),
-                                          strokes: [
-                                            OutlinedTextStroke(
-                                                color: fontColorOptions[settings
-                                                    .subtitleOutlineColor]!,
-                                                width: settings
-                                                    .subtitleOutlineWidth
-                                                    .toDouble())
-                                          ],
-                                        )),
+
+                                    Focus(
+                                      child: Builder(
+                                        builder: (context) {
+                                          final isFocused = Focus.of(context).hasFocus;
+                                          return Container(
+                                              alignment: Alignment.center,
+                                              decoration: BoxDecoration(
+                                                  color: colorOptions[settings
+                                                      .subtitleBackgroundColor],
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  border: isFocused
+                                                        ? Border.all(
+                                                            color: Theme.of(context).colorScheme.primary,
+                                                            width: 2.0,
+                                                          )
+                                                        : null,
+                                              ),
+                                              padding: const EdgeInsets.all(10),
+                                              child: OutlinedText(
+                                                text: Text(
+                                                  'Subtitle Preview Text',
+                                                  style: TextStyle(
+                                                    color: colorOptions[
+                                                        settings.subtitleColor],
+                                                    fontSize: settings.subtitleSize
+                                                        .toDouble(),
+                                                  ),
+                                                ),
+                                                strokes: [
+                                                  OutlinedTextStroke(
+                                                      color: fontColorOptions[settings
+                                                          .subtitleOutlineColor]!,
+                                                      width: settings
+                                                          .subtitleOutlineWidth
+                                                          .toDouble())
+                                                ],
+                                              ),
+                                            );
+                                        },
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
