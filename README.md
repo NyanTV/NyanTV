@@ -47,7 +47,7 @@
 <a href="https://trendshift.io/repositories/12529" target="_blank"><img src="https://trendshift.io/api/badge/repositories/12529" alt="NyanTV%2FNyanTV | Trendshift" style="width: 250px; height: 27.99px;" width="250" height="55"/></a>
 </div>
 
-# NyanTV: Multiservice Tracking Client
+# NyanTV: AniList Tracking Client
 
 **NyanTV** is a tracking client designed exclusively for managing and tracking anime progress across [**AniList**](https://anilist.co/) on Android TV.
 
