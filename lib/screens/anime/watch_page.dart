@@ -101,9 +101,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final RxString resizeMode = "Cover".obs;
   late PlayerSettings playerSettings;
   late FocusNode _keyboardListenerFocusNode;
-  late FocusNode _prevEpisodeFocusNode;
-  late FocusNode _playPauseFocusNode;
-  late FocusNode _nextEpisodeFocusNode;
   aniskip.EpisodeSkipTimes? skipTimes;
   final isOPSkippedOnce = false.obs;
   final isEDSkippedOnce = false.obs;
@@ -157,6 +154,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     
     if (settings.isTV.value) {
       resizeMode.value = "Contain";
+      // TV-spezifische Player-Einstellungen
       final tempDir = Directory.systemTemp;
       if (tempDir.existsSync()) {
         final cacheDir = Directory('${tempDir.path}/nyantv_cache');
@@ -164,6 +162,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           cacheDir.createSync(recursive: true);
         }
       }
+      
       settings.preferences.put('shaders_enabled', false);
     }
     _initOrientations();
@@ -191,7 +190,15 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     ever(isBuffering, (buffering) {
       if (showControls.value && !buffering) _startHideControlsTimer();
     });
-    
+    _keyboardListenerFocusNode = FocusNode(
+      canRequestFocus: !settings.isTV.value,
+      skipTraversal: settings.isTV.value,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_keyboardListenerFocusNode.hasFocus) {
+        _keyboardListenerFocusNode.requestFocus();
+      }
+    });
     if (settings.isTV.value) {
       _tvRemoteHandler = TVRemoteHandler(
         player: player,
@@ -224,23 +231,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         onSkipSegments: (isLeft) => _skipSegments(isLeft),
         onMenuInteraction: () => _startHideControlsTimer(),
       );
-    }
-    
-    _keyboardListenerFocusNode = FocusNode(
-      canRequestFocus: !settings.isTV.value,
-      skipTraversal: settings.isTV.value,
-    );
-
-    _prevEpisodeFocusNode = FocusNode();
-    _playPauseFocusNode = FocusNode();
-    _nextEpisodeFocusNode = FocusNode();
-    
-    if (!settings.isTV.value) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_keyboardListenerFocusNode.hasFocus) {
-          _keyboardListenerFocusNode.requestFocus();
-        }
-      });
     }
   }
 
@@ -799,9 +789,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     _tvRemoteHandler?.dispose();
     _tvRemoteHandler = null;
     _keyboardListenerFocusNode.dispose();
-    _prevEpisodeFocusNode.dispose();
-    _playPauseFocusNode.dispose();
-    _nextEpisodeFocusNode.dispose();
     super.dispose();
   }
 
@@ -2008,7 +1995,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           mainAxisSize: MainAxisSize.max,
           children: [
             _buildPlaybackButton(
-              focusNode: _prevEpisodeFocusNode,
               icon: Icons.skip_previous_rounded,
               color: currentEpisode.value.number.toInt() <= 1
                   ? Colors.grey[800]
@@ -2030,13 +2016,11 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                   ? _buildBufferingIndicator()
                   : buildPlayButton(
                       isPlaying: isPlaying,
-                      focusNode: _playPauseFocusNode,
                       color: themeBgColor.value,
                       iconColor: themeFgColor.value,
                     ),
             ),
             _buildPlaybackButton(
-              focusNode: _nextEpisodeFocusNode,
               icon: Icons.skip_next_rounded,
               color: currentEpisode.value.number.toInt() >=
                       episodeList.value.last.number.toInt()
@@ -2063,7 +2047,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   Widget buildPlayButton({
     required RxBool isPlaying,
-    FocusNode? focusNode,
     Color? color,
     Color? iconColor,
   }) {
@@ -2091,13 +2074,12 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         margin: EdgeInsets.symmetric(horizontal: isMobile ? 20 : 50),
         child: BlurWrapper(
           borderRadius: BorderRadius.circular(radius),
-          child: NyantvOnTapAdv(
-            focusNode: focusNode,
+          child: NyantvOnTap(
             onTap: () {
               player.playOrPause();
             },
-            //bgColor: Colors.transparent,
-            focusedBorderColor: settings.isTV.value ? Theme.of(context).colorScheme.primary : Colors.transparent,
+            bgColor: Colors.transparent,
+            focusedBorderColor: Colors.transparent,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 150),
               transitionBuilder: (child, animation) => FadeTransition(
@@ -2191,7 +2173,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   Widget _buildPlaybackButton({
     required Function() onTap,
-    FocusNode? focusNode,
     IconData? icon,
     Color? color,
     Color? iconColor,
@@ -2223,11 +2204,10 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           EdgeInsets.symmetric(horizontal: isPlay ? (isMobile ? 20 : 50) : 0),
       child: BlurWrapper(
         borderRadius: BorderRadius.circular(radius),
-        child: NyantvOnTapAdv(
-          focusNode: focusNode,
+        child: NyantvOnTap(
           onTap: onTap,
-          //bgColor: Colors.transparent,
-          focusedBorderColor: settings.isTV.value ? Theme.of(context).colorScheme.primary : Colors.transparent,
+          bgColor: Colors.transparent,
+          focusedBorderColor: Colors.transparent,
           child: IconButton(
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(

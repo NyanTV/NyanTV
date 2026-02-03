@@ -1,6 +1,7 @@
 import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:nyantv/models/Offline/Hive/offline_media.dart';
+import 'package:nyantv/screens/anime/watch/watch_view.dart';
 import 'package:nyantv/screens/anime/watch_page.dart';
 import 'package:nyantv/utils/extension_utils.dart';
 import 'package:nyantv/utils/function.dart';
@@ -24,24 +25,23 @@ class HistoryModel {
   String? progressText;
   String? date;
 
-  HistoryModel({
-    this.media,
-    this.title,
-    required this.cover,
-    required this.poster,
-    this.formattedEpisodeTitle,
-    this.sourceName,
-    this.progress,
-    this.totalProgress,
-    this.progressTitle,
-    this.calculatedProgress,
-    this.onTap,
-    this.progressText,
-    this.date,
-  });
+  HistoryModel(
+      {this.media,
+      this.title,
+      required this.cover,
+      required this.poster,
+      this.formattedEpisodeTitle,
+      this.sourceName,
+      this.progress,
+      this.totalProgress,
+      this.progressTitle,
+      this.calculatedProgress,
+      this.onTap,
+      this.progressText,
+      this.date});
 
   factory HistoryModel.fromOfflineMedia(OfflineMedia media, ItemType type) {
-    void onTapHandler() {
+    final onTap = () {
       if (media.currentEpisode == null ||
           media.currentEpisode?.currentTrack == null ||
           media.episodes == null ||
@@ -59,40 +59,47 @@ class HistoryModel {
             .getExtensionByName(media.currentEpisode!.source!);
         if (source == null) {
           snackBar(
-            "Install ${media.currentEpisode?.source} First, Then Click",
-          );
+              "Install ${media.currentEpisode?.source} First, Then Click");
         } else {
-          navigate(WatchPage(
-            episodeSrc: media.currentEpisode!.currentTrack!,
-            episodeList: media.episodes!,
-            anilistData: convertOfflineToMedia(media),
-            currentEpisode: media.currentEpisode!,
-            episodeTracks: media.currentEpisode!.videoTracks!,
-          ));
+          navigate(() => settingsController.preferences
+                  .get('useOldPlayer', defaultValue: false)
+              ? WatchPage(
+                  episodeSrc: media.currentEpisode!.currentTrack!,
+                  episodeList: media.episodes!,
+                  anilistData: convertOfflineToMedia(media),
+                  currentEpisode: media.currentEpisode!,
+                  episodeTracks: media.currentEpisode!.videoTracks!,
+                )
+              : WatchScreen(
+                  episodeSrc: media.currentEpisode!.currentTrack!,
+                  episodeList: media.episodes!,
+                  anilistData: convertOfflineToMedia(media),
+                  currentEpisode: media.currentEpisode!,
+                  episodeTracks: media.currentEpisode!.videoTracks!,
+                ));
         }
       }
-    }
+    };
 
     return HistoryModel(
-      media: media,
-      title: media.name,
-      cover: media.currentEpisode?.thumbnail ?? media.cover ?? media.poster!,
-      poster: media.poster!,
-      formattedEpisodeTitle: 'Episode ${media.currentEpisode?.number ?? '??'}',
-      sourceName: media.currentEpisode?.source,
-      progress: media.currentEpisode?.timeStampInMilliseconds,
-      totalProgress: media.currentEpisode?.durationInMilliseconds,
-      progressTitle: media.currentEpisode?.title,
-      calculatedProgress: calculateProgress(
-        media.currentEpisode?.timeStampInMilliseconds,
-        media.currentEpisode?.durationInMilliseconds,
-      ),
-      onTap: onTapHandler,
-      date: formattedDate(media.currentEpisode?.lastWatchedTime ?? 0),
-      progressText: formatProgressText(media),
-    );
+        media: media,
+        title: media.name,
+        cover: media.currentEpisode?.thumbnail ?? media.cover ?? media.poster!,
+        poster: media.poster!,
+        formattedEpisodeTitle: 'Episode ${media.currentEpisode?.number ?? '??'}',
+        sourceName: media.currentEpisode?.source,
+        progress: media.currentEpisode?.timeStampInMilliseconds,
+        totalProgress: media.currentEpisode?.durationInMilliseconds,
+        progressTitle: media.currentEpisode?.title,
+        calculatedProgress: calculateProgress(
+            media.currentEpisode?.timeStampInMilliseconds,
+            media.currentEpisode?.durationInMilliseconds,
+          ),
+        onTap: onTap,
+        date: formattedDate(media.currentEpisode?.lastWatchedTime ?? 0),
+        progressText: formatProgressText(media));
   }
-
+  
   @override
   String toString() {
     return '''
@@ -114,9 +121,10 @@ HistoryModel(
 }
 
 double calculateProgress(int? min, int? max) {
-  if (min == null || max == null || max == 0) {
+  if (min == null || max == null) {
     return 0.0;
   }
+
   return (min / max).clamp(0.0, 1.0);
 }
 
@@ -138,7 +146,7 @@ String formatProgressText(OfflineMedia data) {
 
   final minutes = twoDigits(timeLeft.inMinutes.remainder(60));
   final seconds = twoDigits(timeLeft.inSeconds.remainder(60));
-  final hours = timeLeft.inHours;
+  final hours = (timeLeft.inHours);
 
   if (hours > 0) return '${twoDigits(hours)}:$minutes:$seconds left';
 
