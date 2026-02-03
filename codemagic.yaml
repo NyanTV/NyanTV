@@ -59,7 +59,4 @@ workflows:
     artifacts:
       - build/app/outputs/flutter-apk/NyanTV-Android-armeabi-v7a.apk
     publishing:
-      github_releases:
-        artifact_patterns:
-          - build/app/outputs/flutter-apk/NyanTV-Android-armeabi-v7a.apk
-        release_name: "NyanTV $CM_TAG"
+      github_releases: {}
