@@ -243,7 +243,7 @@ if (PlatformDispatcher.instance.views.length > 1) {
 return child!;
 }
 
-final isDesktop = Platform.isWindows;
+final isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 
             // UI Scale mit GetBuilder (sicherer als Obx)
 Widget finalChild = GetBuilder<Settings>(
@@ -251,6 +251,7 @@ Widget finalChild = GetBuilder<Settings>(
   builder: (settings) {
     final scale = settings.uiScale;
 
+    // Wenn Scale 1.0 ist oder außerhalb des gültigen Bereichs, keine Transformation
     if (scale <= 0.0 || scale > 3.0 || scale == 1.0) {
       return child!;
     }
@@ -261,15 +262,31 @@ Widget finalChild = GetBuilder<Settings>(
       originalSize.height / scale,
     );
 
+    // WICHTIG: Transform.scale statt FittedBox verwenden
+    // FittedBox kann Video-Player-Rendering stören
     return MediaQuery(
-      data: MediaQuery.of(context).copyWith(size: scaledSize),
-      child: FittedBox(
-        fit: BoxFit.contain,
+      data: MediaQuery.of(context).copyWith(
+        size: scaledSize,
+        // Wichtig: Setze alle Paddings auf zero um schwarze Ränder zu vermeiden
+        padding: EdgeInsets.zero,
+        viewInsets: EdgeInsets.zero,
+        viewPadding: EdgeInsets.zero,
+      ),
+      child: Transform.scale(
+        scale: scale,
         alignment: Alignment.topLeft,
-        child: SizedBox(
-          width: scaledSize.width,
-          height: scaledSize.height,
-          child: child!,
+        // Nutze OverflowBox um sicherzustellen, dass der Inhalt nicht beschnitten wird
+        child: OverflowBox(
+          minWidth: 0,
+          maxWidth: double.infinity,
+          minHeight: 0,
+          maxHeight: double.infinity,
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: scaledSize.width,
+            height: scaledSize.height,
+            child: child!,
+          ),
         ),
       ),
     );
@@ -463,8 +480,7 @@ items: [
 NavItem(
 unselectedIcon: IconlyBold.home,
 selectedIcon: IconlyBold.home,
-onTap: _onMobileItemTapped,
-label: 'Home',
+onTap: _onMobileItemTapped,label: 'Home',
 ),
 NavItem(
 unselectedIcon: Icons.movie_filter_rounded,
