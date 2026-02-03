@@ -10,23 +10,19 @@ workflows:
       vars:
         FLUTTER_VERSION: "3.32.8"
         JAVA_VERSION: "17"
-    
     triggering:
       events:
         - tag
       tag_patterns:
         - pattern: 'v*'
-      
     scripts:
       - name: Set up Java
         script: |
           jdk-switch --version $JAVA_VERSION
-      
       - name: Set up Flutter
         script: |
           flutter channel stable
           flutter upgrade $FLUTTER_VERSION
-      
       - name: Setup App Environment (.env)
         script: |
           cat > .env << EOF
@@ -34,7 +30,6 @@ workflows:
           AL_CLIENT_SECRET=$AL_CLIENT_SECRET
           CALLBACK_SCHEME=$CALLBACK_SCHEME
           EOF
-          
       - name: Setup Android Keystore
         script: |
           echo $KEYSTORE_BASE64 | base64 --decode > android/app/nyantv.jks
@@ -44,15 +39,12 @@ workflows:
           keyAlias=$KEY_ALIAS
           storeFile=nyantv.jks
           EOF
-
       - name: Install Dependencies
         script: |
           flutter pub get
-
       - name: Generate Native Splash
         script: |
           dart run flutter_native_splash:create
-
       - name: Build Android APK
         script: |
           flutter build apk \
@@ -61,18 +53,14 @@ workflows:
             --release \
             --no-tree-shake-icons \
             --build-number=$BUILD_NUMBER
-            
       - name: Rename APK
         script: |
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/app/outputs/flutter-apk/NyanTV-Android-armeabi-v7a.apk
-
     artifacts:
       - build/app/outputs/flutter-apk/NyanTV-Android-armeabi-v7a.apk
-
     publishing:
-      github:
-        # Codemagic nutzt deine verknüpfte GitHub-Integration
-        release:
-          prerelease: false
-          # Nimmt den Namen des Git-Tags als Release-Namen
-          release_name: "NyanTV $CM_TAG"
+      github_releases:
+        prerelease: false
+        artifact_patterns:
+          - build/app/outputs/flutter-apk/NyanTV-Android-armeabi-v7a.apk
+        release_name: "NyanTV $CM_TAG"
