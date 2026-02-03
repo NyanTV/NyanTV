@@ -107,7 +107,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
 
       final dio = Dio();
       await dio.download(
-        'https://github.com/RyanYuuki/NyanTV/raw/refs/heads/main/assets/shaders/shaders_new.zip',
+        'https://github.com/NyanTV/NyanTV/raw/refs/heads/main/assets/shaders/shaders_new.zip',
         tempFilePath,
         onReceiveProgress: (received, total) {
           if (total != -1) {

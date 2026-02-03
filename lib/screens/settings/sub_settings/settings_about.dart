@@ -72,18 +72,18 @@ class AboutPage extends StatelessWidget {
                           InfoCard(
                             onTap: () async {
                               await launchUrlHelper(
-                                  'https://github.com/RyanYuuki');
+                                  'https://github.com/hoemotion');
                             },
                             leading: const CircleAvatar(
                               backgroundImage: NetworkImage(
-                                  'https://avatars.githubusercontent.com/u/108048963?s=400&u=7f67531c27c5ebbbcde943f9576a0bfdb98909c8&v=4'),
+                                  'https://avatars.githubusercontent.com/u/86238378?s=400&u=7f67531c27c5ebbbcde943f9576a0bfdb98909c8&v=4'),
                             ),
                             title: "Developer",
-                            subtitle: "RyanYuuki",
+                            subtitle: "hoemotion",
                             trailing: IconButton(
                               onPressed: () async {
                                 await launchUrlHelper(
-                                    'https://github.com/RyanYuuki');
+                                    'https://github.com/hoemotion');
                               },
                               icon: const Icon(Iconsax.code5),
                               color: theme.colorScheme.primary,
@@ -143,25 +143,10 @@ class AboutPage extends StatelessWidget {
                 items: [
                   CustomListTile(
                     onTap: () async {
-                      await launchUrlHelper('https://t.me/NyanTV_Discussion');
+                      await launchUrlHelper('https://t.me/NyanSupport');
                     },
                     leading: const Icon(HugeIcons.strokeRoundedTelegram),
                     title: "Telegram",
-                  ),
-                  CustomListTile(
-                    onTap: () async {
-                      await launchUrlHelper('https://discord.gg/5gAHhMvTcx');
-                    },
-                    leading: const Icon(HugeIcons.strokeRoundedDiscord),
-                    title: "Discord",
-                  ),
-                  CustomListTile(
-                    onTap: () async {
-                      await launchUrlHelper(
-                          'https://www.reddit.com/r/NyanTV_/');
-                    },
-                    leading: const Icon(HugeIcons.strokeRoundedReddit),
-                    title: "Reddit",
                   ),
                 ],
               ),
@@ -181,7 +166,7 @@ class AboutPage extends StatelessWidget {
                   CustomListTile(
                     onTap: () async {
                       await launchUrlHelper(
-                          'https://github.com/RyanYuuki/NyanTV');
+                          'https://github.com/NyanTV/NyanTV');
                     },
                     leading: const Icon(HugeIcons.strokeRoundedGithub),
                     title: "GitHub",
@@ -189,17 +174,8 @@ class AboutPage extends StatelessWidget {
                   ),
                   CustomListTile(
                     onTap: () async {
-                      await launchUrlHelper('https://ko-fi.com/ryanyuuki7');
-                    },
-                    leading: const Icon(HugeIcons.strokeRoundedCoffee01),
-                    title: "Ko-fi",
-                    subtitle:
-                        "Consider donating to support the maintainer of NyanTV",
-                  ),
-                  CustomListTile(
-                    onTap: () async {
                       await launchUrlHelper(
-                          'https://github.com/RyanYuuki/NyanTV/issues');
+                          'https://github.com/NyanTV/NyanTV/issues');
                     },
                     leading: const Icon(Icons.bug_report),
                     title: "Features/Issues",

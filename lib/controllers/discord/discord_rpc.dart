@@ -436,7 +436,7 @@ class DiscordRPCController extends GetxController {
               'metadata': {
                 'button_urls': [
                   anilistUrl,
-                  'https://github.com/RyanYuuki/NyanTV/',
+                  'https://github.com/NyanTV/NyanTV/',
                 ],
               }
             }
@@ -469,7 +469,7 @@ class DiscordRPCController extends GetxController {
               RPCButton(label: 'View Anime', url: anilistUrl),
               const RPCButton(
                 label: 'Watch on NyanTV',
-                url: 'https://github.com/RyanYuuki/NyanTV/',
+                url: 'https://github.com/NyanTV/NyanTV/',
               ),
             ],
           ),
@@ -529,7 +529,7 @@ class DiscordRPCController extends GetxController {
               'metadata': {
                 'button_urls': [
                   anilistUrl,
-                  'https://github.com/RyanYuuki/NyanTV/',
+                  'https://github.com/NyanTV/NyanTV/',
                 ],
               }
             }
@@ -557,7 +557,7 @@ class DiscordRPCController extends GetxController {
               RPCButton(label: 'View Anime', url: anilistUrl),
               const RPCButton(
                 label: 'Watch on NyanTV',
-                url: 'https://github.com/RyanYuuki/NyanTV/',
+                url: 'https://github.com/NyanTV/NyanTV/',
               ),
             ],
           ),
@@ -605,7 +605,7 @@ class DiscordRPCController extends GetxController {
               'metadata': {
                 'button_urls': [
                   anilistUrl,
-                  'https://github.com/RyanYuuki/NyanTV',
+                  'https://github.com/NyanTV/NyanTV',
                 ],
               }
             }
@@ -633,7 +633,7 @@ class DiscordRPCController extends GetxController {
               RPCButton(label: 'View $type', url: anilistUrl),
               const RPCButton(
                 label: 'Watch on NyanTV',
-                url: 'https://github.com/RyanYuuki/NyanTV/',
+                url: 'https://github.com/NyanTV/NyanTV/',
               ),
             ],
           ),
@@ -686,7 +686,7 @@ class DiscordRPCController extends GetxController {
               ],
               'metadata': {
                 'button_urls': [
-                  'https://github.com/RyanYuuki/NyanTV/',
+                  'https://github.com/NyanTV/NyanTV/',
                 ],
               }
             }
@@ -746,7 +746,7 @@ class DiscordRPCController extends GetxController {
   }
 
   String _getAppIconUrl() {
-    return 'https://raw.githubusercontent.com/RyanYuuki/NyanTV/main/assets/images/logo.png';
+    return 'https://raw.githubusercontent.com/NyanTV/NyanTV/main/assets/images/logo.png';
   }
 
   Future<void> pause() async {

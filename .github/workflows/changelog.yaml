@@ -183,7 +183,7 @@ jobs:
           [ -n "$CHORES" ] && echo -e "### 🧹 Chores & Documentation\n$CHORES\n" >> CHANGELOG.md
 
           CURRENT_TAG_SAFE=$(echo "${{ env.current_tag }}" | sed 's/[^a-zA-Z0-9.-]//g')
-          echo "![Total Downloads](https://img.shields.io/github/downloads/RyanYuuki/NyanTV/total?style=for-the-badge&label=TOTAL%20DOWNLOADS&labelColor=black&color=white) ![Current Release](https://img.shields.io/github/downloads/RyanYuuki/NyanTV/${CURRENT_TAG_SAFE}/total?style=for-the-badge&label=CURRENT%20RELEASE&labelColor=black&color=white)" >> CHANGELOG.md
+          echo "![Total Downloads](https://img.shields.io/github/downloads/NyanTV/NyanTV/total?style=for-the-badge&label=TOTAL%20DOWNLOADS&labelColor=black&color=white) ![Current Release](https://img.shields.io/github/downloads/NyanTV/NyanTV/${CURRENT_TAG_SAFE}/total?style=for-the-badge&label=CURRENT%20RELEASE&labelColor=black&color=white)" >> CHANGELOG.md
           rm -f commits.tmp
         shell: /usr/bin/bash -e {0}
 

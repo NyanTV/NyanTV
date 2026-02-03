@@ -17,7 +17,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 
 class UpdateManager {
   static const String _repoUrl =
-      'https://api.github.com/repos/RyanYuuki/NyanTV/releases/latest';
+      'https://api.github.com/repos/NyanTV/NyanTV/releases/latest';
 
   String getDownloadUrlByArch(List<dynamic> assets, String arch) {
     for (var asset in assets) {

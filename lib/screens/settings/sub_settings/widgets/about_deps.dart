@@ -134,7 +134,7 @@ class ProfileSection extends StatelessWidget {
               backgroundImage: AssetImage('assets/images/logo.png'),
             ),
             title: "Developer",
-            subtitle: "RyanYuuki",
+            subtitle: "hoemotion",
             trailing: IconButton(
                 onPressed: () async {
                   await launchUrlHelper('https://github.com/');

@@ -37,10 +37,6 @@ To do so, create a `.env` file with the following content:
 ```env
 AL_CLIENT_ID: 0
 AL_CLIENT_SECRET: 0
-SIMKL_CLIENT_ID: 0
-SIMKL_CLIENT_SECRET: 0
-MAL_CLIENT_ID: 0
-MAL_CLIENT_SECRET: 0
 CALLBACK_SCHEME: nyantv://callback
 ```
 
@@ -52,20 +48,6 @@ You can however create your own API keys and populate the values as necessary.
 | ------------| ----------------- |
 | Name        | *any*             |
 | Redirect URL| nyantv://callback |
-
-### Simlk
-
-| Key         | Value             |
-| ------------| ----------------- |
-| tbd         | *tbd*             |
-| tbd         | tbd               |
-
-### My Anime List
-
-| Key         | Value             |
-| ------------| ----------------- |
-| tbd         | *tbd*             |
-| tbd         | tbd               |
 
 ## Run the App
 
@@ -86,4 +68,4 @@ We'd also recommend reading and parsing the error output, as Flutter is quite ve
 
 ## Community
 
-Feel free to reach out on Discord, we're always happy to assist someone who's trying to contribute to the project.
+Feel free to reach out on [Telegram](https://t.me/NyanSupport), we're always happy to assist someone who's trying to contribute to the project.
