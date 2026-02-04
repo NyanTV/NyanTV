@@ -2118,24 +2118,33 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     });
   }
 
+
   Widget _buildTVPlayer(BuildContext context) {
+    final uiScaleBypass = UIScaleBypass.of(context);
+    final shouldBypassScale = uiScaleBypass?.bypassScale ?? false;
+    
+    double screenWidth = MediaQuery.of(context).size.width;
+    
+    if (shouldBypassScale) {
+      final view = View.of(context);
+      final physicalSize = view.physicalSize;
+      final devicePixelRatio = view.devicePixelRatio;
+      screenWidth = physicalSize.width / devicePixelRatio;
+    }
+    
     return Row(
       children: [
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           width: isEpisodeDialogOpen.value
-              ? Get.width *
-                  getResponsiveSize(context,
-                      mobileSize: 0.6, desktopSize: 0.7, isStrict: true)
-              : Get.width,
+              ? screenWidth * 0.7
+              : screenWidth,
           child: _buildTVVideoWidget(),
         ),
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           width: isEpisodeDialogOpen.value
-              ? Get.width *
-                  getResponsiveSize(context,
-                      mobileSize: 0.4, desktopSize: 0.3, isStrict: true)
+              ? screenWidth * 0.3
               : 0,
           child: Focus(
             focusNode: FocusNode(
@@ -2159,13 +2168,12 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       ],
     );
   }
-  
+
+
   Widget _buildTVVideoWidget() {
-    // Prüfe, ob UI-Scale aktiv ist
     final uiScaleBypass = UIScaleBypass.of(context);
     final shouldBypassScale = uiScaleBypass?.bypassScale ?? false;
 
-    // Wenn UI-Scale aktiv ist, hole die echte Bildschirmgröße
     if (shouldBypassScale) {
       final view = View.of(context);
       final physicalSize = view.physicalSize;
@@ -2194,7 +2202,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       );
     }
 
-    // Wenn keine UI-Scale aktiv, normales Rendering
     return Video(
       controller: playerController,
       controls: null,
