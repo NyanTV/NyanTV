@@ -65,7 +65,7 @@ dependencies:
   smooth_page_indicator: ^1.2.0+3
   super_sliver_list: ^0.4.1
   share_plus: ^11.0.0
-  url_launcher: any
+  url_launcher: 6.1.11
   volume_controller: ^3.4.0
   screen_brightness: ^2.1.7
   window_manager: ^0.4.3
