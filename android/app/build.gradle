@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.mukatos.nyantv"
-    compileSdk = 35
+    compileSdk = 36
 
     ndkVersion = "27.0.12077973"
 
@@ -27,7 +27,7 @@ android {
     defaultConfig {
         applicationId = "com.mukatos.nyantv"
         minSdk = 23
-        targetSdk = 35
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
