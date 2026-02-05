@@ -11,6 +11,7 @@ import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:nyantv/widgets/media_items/media_item.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -54,6 +55,18 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   RxBool isAdult = false.obs;
 
   final FocusNode _searchFocusNode = FocusNode();
+  final FocusNode _backButtonFocusNode = FocusNode();
+  final FocusNode _adultToggleFocusNode = FocusNode();
+  final FocusNode _filterButtonFocusNode = FocusNode();
+  final FocusNode _imageButtonFocusNode = FocusNode();
+  final FocusNode _clearIconFocusNode = FocusNode();
+  final FocusNode _searchBarFilterIconFocusNode = FocusNode();
+  final FocusNode _gridModeFocusNode = FocusNode();
+  final FocusNode _listModeFocusNode = FocusNode();
+  final FocusNode _clearAllHistoryFocusNode = FocusNode();
+  
+  final List<FocusNode> _resultFocusNodes = [];
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -63,9 +76,15 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   }
 
   void _initializeAnimations() {
-    _searchFocusNode.addListener(() {
-      setState(() {});
-    });
+    _searchFocusNode.addListener(() => setState(() {}));
+    _adultToggleFocusNode.addListener(() => setState(() {}));
+    _filterButtonFocusNode.addListener(() => setState(() {}));
+    _imageButtonFocusNode.addListener(() => setState(() {}));
+    _clearIconFocusNode.addListener(() => setState(() {}));
+    _searchBarFilterIconFocusNode.addListener(() => setState(() {}));
+    _gridModeFocusNode.addListener(() => setState(() {}));
+    _listModeFocusNode.addListener(() => setState(() {}));
+    _clearAllHistoryFocusNode.addListener(() => setState(() {}));
   }
 
   void _initializeData() {
@@ -84,6 +103,50 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         _performSearch();
       });
     }
+  }
+
+  void _initializeResultFocusNodes() {
+    for (var node in _resultFocusNodes) {
+      node.dispose();
+    }
+    _resultFocusNodes.clear();
+
+    if (_searchResults != null) {
+      for (int i = 0; i < _searchResults!.length; i++) {
+        final node = FocusNode();
+        node.addListener(() {
+          if (node.hasFocus) {
+            setState(() {});
+            _scrollToIndex(i);
+          }
+        });
+        _resultFocusNodes.add(node);
+      }
+    }
+  }
+
+  void _scrollToIndex(int index) {
+    if (!_scrollController.hasClients) return;
+    
+    final itemHeight = _currentViewMode == ViewMode.list ? 132.0 : 252.0;
+    final crossAxisCount = _getCrossAxisCount();
+    final row = index ~/ crossAxisCount;
+    final position = row * itemHeight;
+    
+    _scrollController.animateTo(
+      position.clamp(0.0, _scrollController.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  int _getCrossAxisCount() {
+    if (_currentViewMode == ViewMode.list) return 1;
+    return getResponsiveValue(context,
+        mobileValue: 3,
+        desktopValue: getResponsiveCrossAxisVal(
+            MediaQuery.of(context).size.width,
+            itemWidth: 108));
   }
 
   void _saveHistory() {
@@ -135,6 +198,8 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         _searchState =
             results.isEmpty ? SearchState.empty : SearchState.success;
       });
+      
+      _initializeResultFocusNodes();
     } catch (e) {
       setState(() {
         _searchState = SearchState.error;
@@ -161,81 +226,186 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _backButtonFocusNode.dispose();
+    _adultToggleFocusNode.dispose();
+    _filterButtonFocusNode.dispose();
+    _imageButtonFocusNode.dispose();
+    _clearIconFocusNode.dispose();
+    _searchBarFilterIconFocusNode.dispose();
+    _gridModeFocusNode.dispose();
+    _listModeFocusNode.dispose();
+    _clearAllHistoryFocusNode.dispose();
+    _scrollController.dispose();
+    for (var node in _resultFocusNodes) {
+      node.dispose();
+    }
     super.dispose();
   }
 
   Widget _buildModernSearchBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: _searchFocusNode.hasFocus
-            ? [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                ),
-              ]
-            : null,
-      ),
-      child: TextField(
-        controller: _searchController,
-        focusNode: _searchFocusNode,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-        decoration: InputDecoration(
-          filled: true,
-          fillColor:
-              Theme.of(context).colorScheme.surfaceContainer.withOpacity(.5),
-          hintText:
-              'Search ${serviceHandler.serviceType.value == false ? 'movie or series' : 'anime'}...',
-          hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-              ),
-          prefixIcon: Icon(
-            Iconsax.search_normal,
-            color: _searchFocusNode.hasFocus
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-          ),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() {
-                      _searchState = SearchState.initial;
-                      _searchResults = null;
-                    });
-                  },
-                  icon: Icon(
-                    Iconsax.close_circle,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withOpacity(0.7),
+    return KeyboardListener(
+      focusNode: FocusNode(),
+      onKeyEvent: (event) {
+        if (event is KeyDownEvent && _searchFocusNode.hasFocus) {
+          if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            // Check if history is visible
+            if (_searchState == SearchState.initial && _searchedTerms.isNotEmpty) {
+              _clearAllHistoryFocusNode.requestFocus();
+            } else if (serviceHandler.serviceType.value == ServicesType.anilist) {
+              _adultToggleFocusNode.requestFocus();
+            }
+            return;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            if (_searchController.text.isNotEmpty) {
+              _clearIconFocusNode.requestFocus();
+            } else if (serviceHandler.serviceType.value == ServicesType.anilist) {
+              _searchBarFilterIconFocusNode.requestFocus();
+            }
+            return;
+          }
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: _searchFocusNode.hasFocus
+              ? [
+                  BoxShadow(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    blurRadius: 20,
+                    spreadRadius: 2,
                   ),
-                )
-              : serviceHandler.serviceType.value != ServicesType.anilist
-                  ? null
-                  : IconButton(
-                      onPressed: _showFilterBottomSheet,
-                      icon: Icon(
-                        Iconsax.setting_4,
-                        color: _activeFilters.isNotEmpty
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.7),
-                      ),
-                    ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                ]
+              : null,
         ),
-        onSubmitted: (query) => _performSearch(query: query),
-        onChanged: (value) => setState(() {}),
+        child: TextField(
+          controller: _searchController,
+          focusNode: _searchFocusNode,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor:
+                Theme.of(context).colorScheme.surfaceContainer.withOpacity(.5),
+            hintText: 'Search anime...',
+            hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                ),
+            prefixIcon: Icon(
+              Iconsax.search_normal,
+              color: _searchFocusNode.hasFocus
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            ),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? _buildClearIcon()
+                : serviceHandler.serviceType.value != ServicesType.anilist
+                    ? null
+                    : _buildSearchBarFilterIcon(),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          ),
+          onSubmitted: (query) => _performSearch(query: query),
+          onChanged: (value) => setState(() {}),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClearIcon() {
+    return Focus(
+      focusNode: _clearIconFocusNode,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.select ||
+              event.logicalKey == LogicalKeyboardKey.enter) {
+            _searchController.clear();
+            setState(() {
+              _searchState = SearchState.initial;
+              _searchResults = null;
+            });
+            _searchFocusNode.requestFocus();
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            _searchFocusNode.requestFocus();
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            if (serviceHandler.serviceType.value == ServicesType.anilist) {
+              _adultToggleFocusNode.requestFocus();
+            }
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Container(
+        decoration: _clearIconFocusNode.hasFocus
+            ? BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
+                ),
+              )
+            : null,
+        child: IconButton(
+          onPressed: () {
+            _searchController.clear();
+            setState(() {
+              _searchState = SearchState.initial;
+              _searchResults = null;
+            });
+            _searchFocusNode.requestFocus();
+          },
+          icon: Icon(
+            Iconsax.close_circle,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBarFilterIcon() {
+    return Focus(
+      focusNode: _searchBarFilterIconFocusNode,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.select ||
+              event.logicalKey == LogicalKeyboardKey.enter) {
+            _showFilterBottomSheet();
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            _searchFocusNode.requestFocus();
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            _adultToggleFocusNode.requestFocus();
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Container(
+        decoration: _searchBarFilterIconFocusNode.hasFocus
+            ? BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
+                ),
+              )
+            : null,
+        child: IconButton(
+          onPressed: _showFilterBottomSheet,
+          icon: Icon(
+            Iconsax.setting_4,
+            color: _activeFilters.isNotEmpty
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+          ),
+        ),
       ),
     );
   }
@@ -246,95 +416,131 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       child: Row(
         children: [
           if (serviceHandler.serviceType.value == ServicesType.anilist) ...[
-            Obx(() {
-              return _buildToggleButton(
-                label: 'Adult',
-                isActive: isAdult.value,
-                onTap: () => isAdult.value = !isAdult.value,
-              );
-            }),
+            _buildToggleButtonObx(),
             const SizedBox(width: 12),
             _buildActionButton(
               icon: Iconsax.setting_4,
               label: 'Filters',
               isActive: _activeFilters.isNotEmpty,
               onTap: _showFilterBottomSheet,
+              focusNode: _filterButtonFocusNode,
             ),
-            if (serviceHandler.serviceType.value == ServicesType.anilist) ...[
-              const SizedBox(width: 12),
-              _buildActionButton(
-                icon: Iconsax.eye,
-                label: 'Image',
-                isActive: false,
-                onTap: () => navigate(() => const SauceFinderView()),
-              ),
-            ],
+            const SizedBox(width: 12),
+            _buildActionButton(
+              icon: Iconsax.eye,
+              label: 'Image',
+              isActive: false,
+              onTap: () => navigate(() => const SauceFinderView()),
+              focusNode: _imageButtonFocusNode,
+            ),
           ],
         ],
       ),
     );
   }
 
+  Widget _buildToggleButtonObx() {
+    return Obx(() {
+      return _buildToggleButton(
+        label: 'Adult',
+        isActive: isAdult.value,
+        onTap: () => isAdult.value = !isAdult.value,
+        focusNode: _adultToggleFocusNode,
+      );
+    });
+  }
+
   Widget _buildToggleButton({
     required String label,
     required bool isActive,
     required VoidCallback onTap,
+    required FocusNode focusNode,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-              : Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
+    return Focus(
+      focusNode: focusNode,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.select ||
+              event.logicalKey == LogicalKeyboardKey.enter) {
+            onTap();
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            _searchFocusNode.requestFocus();
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            _filterButtonFocusNode.requestFocus();
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            // Navigate to history if visible, otherwise to view mode toggle or results
+            if (_searchState == SearchState.initial && _searchedTerms.isNotEmpty) {
+              _clearAllHistoryFocusNode.requestFocus();
+            } else if (_searchState == SearchState.success) {
+              _gridModeFocusNode.requestFocus();
+            }
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      },
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
             color: isActive
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: isActive
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                : Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: focusNode.hasFocus
+                  ? Theme.of(context).colorScheme.primary
+                  : isActive
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+              width: focusNode.hasFocus ? 2 : 1,
             ),
-            const SizedBox(width: 8),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 20,
-              height: 12,
-              decoration: BoxDecoration(
-                color: isActive
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: isActive
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
-              child: AnimatedAlign(
+              const SizedBox(width: 8),
+              AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                alignment:
-                    isActive ? Alignment.centerRight : Alignment.centerLeft,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    shape: BoxShape.circle,
+                width: 20,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: AnimatedAlign(
+                  duration: const Duration(milliseconds: 200),
+                  alignment:
+                      isActive ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -345,44 +551,84 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     required String label,
     required bool isActive,
     required VoidCallback onTap,
+    required FocusNode focusNode,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-              : Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
+    return Focus(
+      focusNode: focusNode,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.select ||
+              event.logicalKey == LogicalKeyboardKey.enter) {
+            onTap();
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            _searchFocusNode.requestFocus();
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            if (focusNode == _filterButtonFocusNode) {
+              _adultToggleFocusNode.requestFocus();
+            } else if (focusNode == _imageButtonFocusNode) {
+              _filterButtonFocusNode.requestFocus();
+            }
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            if (focusNode == _filterButtonFocusNode) {
+              _imageButtonFocusNode.requestFocus();
+            }
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            // Navigate to history if visible, otherwise to view mode toggle or results
+            if (_searchState == SearchState.initial && _searchedTerms.isNotEmpty) {
+              _clearAllHistoryFocusNode.requestFocus();
+            } else if (_searchState == SearchState.success) {
+              _gridModeFocusNode.requestFocus();
+            }
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      },
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
             color: isActive
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isActive
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                : Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: focusNode.hasFocus
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurface,
+                  : isActive
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+              width: focusNode.hasFocus ? 2 : 1,
             ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: isActive
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isActive
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurface,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: isActive
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -400,32 +646,69 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildViewModeButton(ViewMode.grid, Iconsax.grid_1),
-          _buildViewModeButton(ViewMode.list, Iconsax.menu_1),
+          _buildViewModeButton(ViewMode.grid, Iconsax.grid_1, _gridModeFocusNode),
+          _buildViewModeButton(ViewMode.list, Iconsax.menu_1, _listModeFocusNode),
         ],
       ),
     );
   }
 
-  Widget _buildViewModeButton(ViewMode mode, IconData icon) {
+  Widget _buildViewModeButton(ViewMode mode, IconData icon, FocusNode focusNode) {
     final isActive = _currentViewMode == mode;
-    return GestureDetector(
-      onTap: () => setState(() => _currentViewMode = mode),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isActive
-              ? Theme.of(context).colorScheme.primary
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: isActive
-              ? Theme.of(context).colorScheme.onPrimary
-              : Theme.of(context).colorScheme.onSurface,
+    return Focus(
+      focusNode: focusNode,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.select ||
+              event.logicalKey == LogicalKeyboardKey.enter) {
+            setState(() => _currentViewMode = mode);
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            if (mode == ViewMode.list) {
+              _gridModeFocusNode.requestFocus();
+            }
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            if (mode == ViewMode.grid) {
+              _listModeFocusNode.requestFocus();
+            }
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            _adultToggleFocusNode.requestFocus();
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            if (_resultFocusNodes.isNotEmpty) {
+              _resultFocusNodes.first.requestFocus();
+            }
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      },
+      child: GestureDetector(
+        onTap: () => setState(() => _currentViewMode = mode),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isActive
+                ? Theme.of(context).colorScheme.primary
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: focusNode.hasFocus
+                ? Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 2,
+                  )
+                : null,
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: isActive
+                ? Theme.of(context).colorScheme.onPrimary
+                : Theme.of(context).colorScheme.onSurface,
+          ),
         ),
       ),
     );
@@ -517,6 +800,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     return Expanded(
       child: InlineSearchHistory(
         searchTerms: _searchedTerms,
+        clearAllFocusNode: _clearAllHistoryFocusNode,
         onTermSelected: (term) {
           _searchController.text = term;
           _performSearch(query: term);
@@ -526,6 +810,14 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             _searchedTerms.value = updatedTerms;
           });
           _saveHistory();
+        },
+        onNavigateBack: () {
+          // Navigate back to Adult toggle if available, otherwise to search bar
+          if (serviceHandler.serviceType.value == ServicesType.anilist) {
+            _adultToggleFocusNode.requestFocus();
+          } else {
+            _searchFocusNode.requestFocus();
+          }
         },
       ),
     );
@@ -676,7 +968,10 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       return const SizedBox.shrink();
     }
 
+    final crossAxisCount = _getCrossAxisCount();
+
     return GridView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
       gridDelegate: _currentViewMode == ViewMode.list
@@ -685,11 +980,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
               mainAxisExtent: 120,
             )
           : SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: getResponsiveValue(context,
-                  mobileValue: 3,
-                  desktopValue: getResponsiveCrossAxisVal(
-                      MediaQuery.of(context).size.width,
-                      itemWidth: 108)),
+              crossAxisCount: crossAxisCount,
               crossAxisSpacing: 12.0,
               mainAxisSpacing: 12.0,
               mainAxisExtent: 240,
@@ -697,94 +988,160 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       itemCount: _searchResults!.length,
       itemBuilder: (context, index) {
         final media = _searchResults![index];
-        return AnimationConfiguration.staggeredGrid(
-          position: index,
-          columnCount: _currentViewMode == ViewMode.list ? 1 : 3,
-          child: ScaleAnimation(
-            duration: const Duration(milliseconds: 100),
-            child: _currentViewMode == ViewMode.list
-                ? _buildListItem(media)
-                : GridAnimeCard(
-                    data: media,
-                    variant: CardVariant.search),
-          ),
-        );
+        return _buildResultItem(media, index, crossAxisCount);
       },
     );
   }
 
-  Widget _buildListItem(Media media) {
-    return GestureDetector(
-      onTap: () => _navigateToDetails(media),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: Theme.of(context)
-              .colorScheme
-              .surfaceContainerHighest
-              .withOpacity(0.3),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+  Widget _buildResultItem(Media media, int index, int crossAxisCount) {
+    final focusNode = _resultFocusNodes[index];
+    
+    return Focus(
+      focusNode: focusNode,
+      onKeyEvent: (node, event) {
+        if (event is! KeyDownEvent) return KeyEventResult.ignored;
+        
+        if (event.logicalKey == LogicalKeyboardKey.select ||
+            event.logicalKey == LogicalKeyboardKey.enter) {
+          _navigateToDetails(media);
+          return KeyEventResult.handled;
+        }
+        
+        // Calculate navigation targets
+        final currentRow = index ~/ crossAxisCount;
+        final currentCol = index % crossAxisCount;
+        
+        if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+          if (currentRow > 0) {
+            final targetIndex = index - crossAxisCount;
+            _resultFocusNodes[targetIndex].requestFocus();
+          } else {
+            _gridModeFocusNode.requestFocus();
+          }
+          return KeyEventResult.handled;
+        }
+        
+        if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+          final targetIndex = index + crossAxisCount;
+          if (targetIndex < _resultFocusNodes.length) {
+            _resultFocusNodes[targetIndex].requestFocus();
+          }
+          return KeyEventResult.handled;
+        }
+        
+        if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+          if (currentCol > 0) {
+            _resultFocusNodes[index - 1].requestFocus();
+          }
+          return KeyEventResult.handled;
+        }
+        
+        if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+          if (currentCol < crossAxisCount - 1 && index + 1 < _resultFocusNodes.length) {
+            _resultFocusNodes[index + 1].requestFocus();
+          }
+          return KeyEventResult.handled;
+        }
+        
+        return KeyEventResult.ignored;
+      },
+      child: AnimationConfiguration.staggeredGrid(
+        position: index,
+        columnCount: crossAxisCount,
+        child: ScaleAnimation(
+          duration: const Duration(milliseconds: 100),
+          child: InkWell(
+            onTap: () => _navigateToDetails(media),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: focusNode.hasFocus
+                    ? Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 3,
+                      )
+                    : null,
+              ),
+              child: _currentViewMode == ViewMode.list
+                  ? _buildListItem(media)
+                  : GridAnimeCard(data: media, variant: CardVariant.search),
+            ),
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Hero(
-                tag: media.title,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: CachedNetworkImage(
-                    width: 60,
-                    height: 88,
-                    imageUrl: media.poster,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: Theme.of(context).colorScheme.surfaceVariant,
-                      child: Icon(
-                        Iconsax.image,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+      ),
+    );
+  }
+
+  Widget _buildListItem(Media media) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withOpacity(0.3),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Hero(
+              tag: media.title,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: CachedNetworkImage(
+                  width: 60,
+                  height: 88,
+                  imageUrl: media.poster,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: Theme.of(context).colorScheme.surfaceVariant,
+                    child: Icon(
+                      Iconsax.image,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    errorWidget: (context, url, error) => Container(
-                      color: Theme.of(context).colorScheme.surfaceVariant,
-                      child: Icon(
-                        Iconsax.warning_2,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: Theme.of(context).colorScheme.surfaceVariant,
+                    child: Icon(
+                      Iconsax.warning_2,
+                      color: Theme.of(context).colorScheme.error,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      media.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    if (media.rating != "??") ...[
-                      const SizedBox(height: 8),
-                      _buildRatingChip(media.rating),
-                    ],
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    media.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  if (media.rating != "??") ...[
+                    const SizedBox(height: 8),
+                    _buildRatingChip(media.rating),
                   ],
-                ),
+                ],
               ),
-              Icon(
-                Iconsax.arrow_right_3,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-              ),
-            ],
-          ),
+            ),
+            Icon(
+              Iconsax.arrow_right_3,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            ),
+          ],
         ),
       ),
     );
@@ -941,6 +1298,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                         ),
                       ),
                       child: IconButton(
+                        focusNode: _backButtonFocusNode,
                         onPressed: () => Navigator.of(context).pop(),
                         icon: Icon(
                           Iconsax.arrow_left_2,
@@ -991,10 +1349,8 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                               ),
                         ),
                       ),
-                      if (_searchState == SearchState.success) ...[
-                        const Spacer(),
-                        _buildViewModeToggle(),
-                      ],
+                      const Spacer(),
+                      _buildViewModeToggle(),
                     ],
                   ),
                 ),

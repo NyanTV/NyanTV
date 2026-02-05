@@ -148,9 +148,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     super.initState();
     initTVScroll();
     final settings = Get.find<Settings>();
-    bool isTV = Get.find<Settings>().isTV.value;
-    final isDesktop = isTV ? true : MediaQuery.of(context).size.width > 600;
-    final isMobile = isTV ? false : !isDesktop;
     mediaService = widget.anilistData.serviceType;
     
     if (settings.isTV.value) {
@@ -2118,33 +2115,29 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     });
   }
 
-
   Widget _buildTVPlayer(BuildContext context) {
-    final uiScaleBypass = UIScaleBypass.of(context);
-    final shouldBypassScale = uiScaleBypass?.bypassScale ?? false;
+    final view = View.of(context);
+    final physicalSize = view.physicalSize;
+    final devicePixelRatio = view.devicePixelRatio;
+    final realWidth = physicalSize.width / devicePixelRatio;
     
-    double screenWidth = MediaQuery.of(context).size.width;
-    
-    if (shouldBypassScale) {
-      final view = View.of(context);
-      final physicalSize = view.physicalSize;
-      final devicePixelRatio = view.devicePixelRatio;
-      screenWidth = physicalSize.width / devicePixelRatio;
-    }
+    final settings = Get.find<Settings>();
+    final scale = settings.uiScale;
+    final effectiveWidth = scale != 1.0 ? realWidth / scale : realWidth;
     
     return Row(
       children: [
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           width: isEpisodeDialogOpen.value
-              ? screenWidth * 0.7
-              : screenWidth,
+              ? effectiveWidth * 0.7
+              : effectiveWidth,
           child: _buildTVVideoWidget(),
         ),
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           width: isEpisodeDialogOpen.value
-              ? screenWidth * 0.3
+              ? effectiveWidth * 0.3
               : 0,
           child: Focus(
             focusNode: FocusNode(
@@ -2169,7 +2162,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     );
   }
 
-
   Widget _buildTVVideoWidget() {
     final uiScaleBypass = UIScaleBypass.of(context);
     final shouldBypassScale = uiScaleBypass?.bypassScale ?? false;
@@ -2180,37 +2172,34 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       final devicePixelRatio = view.devicePixelRatio;
       final realScreenSize = physicalSize / devicePixelRatio;
 
-      return MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          size: realScreenSize,
-          padding: EdgeInsets.zero,
-          viewInsets: EdgeInsets.zero,
-          viewPadding: EdgeInsets.zero,
-        ),
-        child: SizedBox(
-          width: realScreenSize.width,
-          height: realScreenSize.height,
-          child: Video(
-            controller: playerController,
-            controls: null,
-            fit: BoxFit.contain,
-            subtitleViewConfiguration: const SubtitleViewConfiguration(
-              visible: false,
-            ),
+      return SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: Video(
+          controller: playerController,
+          controls: null,
+          fit: BoxFit.contain,
+          subtitleViewConfiguration: const SubtitleViewConfiguration(
+            visible: false,
           ),
         ),
       );
     }
 
-    return Video(
-      controller: playerController,
-      controls: null,
-      fit: BoxFit.contain,
-      subtitleViewConfiguration: const SubtitleViewConfiguration(
-        visible: false,
+    return SizedBox(
+      width: double.infinity,
+      height: double.infinity,
+      child: Video(
+        controller: playerController,
+        controls: null,
+        fit: BoxFit.contain,
+        subtitleViewConfiguration: const SubtitleViewConfiguration(
+          visible: false,
+        ),
       ),
     );
   }
+
 
   Widget _buildPlaybackButton({
     required Function() onTap,

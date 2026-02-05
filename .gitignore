@@ -76,6 +76,10 @@ linked_*.ds
 unlinked.ds
 unlinked_spec.ds
 
+# MacOS
+
+**/macos/**
+
 # Android related
 **/android/**/gradle-wrapper.jar
 .gradle/
@@ -84,6 +88,7 @@ unlinked_spec.ds
 **/android/gradlew.bat
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
+**/android/app/.env
 *.jks
 local.properties
 **/.cxx/
