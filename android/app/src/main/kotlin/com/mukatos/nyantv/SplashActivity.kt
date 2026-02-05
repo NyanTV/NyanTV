@@ -4,20 +4,20 @@ import android.app.Activity
 import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.widget.ImageView
-import androidx.lifecycle.lifecycleScope
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class SplashActivity : Activity() {
     private var mediaPlayer: MediaPlayer? = null
     private var hasNavigated = false
     private var flutterEngine: FlutterEngine? = null
+    private val handler = Handler(Looper.getMainLooper())
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,7 +31,7 @@ class SplashActivity : Activity() {
         
         setContentView(R.layout.activity_splash)
         
-        // WICHTIG: Flutter Engine SOFORT im Hintergrund starten
+        // Flutter Engine SOFORT im Hintergrund starten
         preloadFlutterEngine()
         
         // Logo Fade-In
@@ -42,38 +42,40 @@ class SplashActivity : Activity() {
         }
         logoView.startAnimation(fadeIn)
         
-        // Sound
         try {
             mediaPlayer = MediaPlayer.create(this, R.raw.splash_sound)
             mediaPlayer?.setOnCompletionListener {
-                lifecycleScope.launch {
-                    delay(500)
+                // Warte noch 500ms nach Sound-Ende
+                handler.postDelayed({
                     navigateToMain()
-                }
+                }, 500)
             }
             mediaPlayer?.start()
         } catch (e: Exception) {
             e.printStackTrace()
-            lifecycleScope.launch {
-                delay(1500)
+            // Fallback ohne Sound
+            handler.postDelayed({
                 navigateToMain()
-            }
+            }, 1500)
         }
     }
     
     private fun preloadFlutterEngine() {
-        // Flutter Engine im Hintergrund vorwärmen
-        flutterEngine = FlutterEngine(this)
-        
-        // Dart Code sofort ausführen
-        flutterEngine?.dartExecutor?.executeDartEntrypoint(
-            DartExecutor.DartEntrypoint.createDefault()
-        )
-        
-        // Engine cachen für MainActivity
-        FlutterEngineCache
-            .getInstance()
-            .put("nyantv_engine", flutterEngine!!)
+        try {
+            flutterEngine = FlutterEngine(this)
+            
+            // Dart Code sofort ausführen
+            flutterEngine?.dartExecutor?.executeDartEntrypoint(
+                DartExecutor.DartEntrypoint.createDefault()
+            )
+            
+            // Engine cachen für MainActivity
+            FlutterEngineCache
+                .getInstance()
+                .put("nyantv_engine", flutterEngine!!)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
     
     private fun navigateToMain() {
@@ -89,8 +91,8 @@ class SplashActivity : Activity() {
     
     override fun onDestroy() {
         super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
         mediaPlayer?.release()
         mediaPlayer = null
-        // Engine NICHT destroyen - wird von MainActivity genutzt
     }
 }
