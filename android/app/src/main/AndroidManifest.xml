@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.mukatos.nyantv">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" 
+    package="com.mukatos.nyantv">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -33,7 +34,28 @@
         android:enableOnBackInvokedCallback="true"
         android:hardwareAccelerated="true"
         android:largeHeap="true" 
-        android:usesCleartextTraffic="true"> <activity android:name=".MainActivity" 
+        android:usesCleartextTraffic="true">
+        
+        <!-- SPLASH ACTIVITY (Launcher) -->
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/SplashTheme"
+            android:screenOrientation="landscape"
+            android:hardwareAccelerated="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <!-- MAIN ACTIVITY (Flutter) -->
+        <activity 
+            android:name=".MainActivity" 
             android:exported="true" 
             android:launchMode="singleTop" 
             android:taskAffinity="" 
@@ -42,18 +64,9 @@
             android:hardwareAccelerated="true" 
             android:windowSoftInputMode="adjustResize">
 
-            <meta-data android:name="io.flutter.embedding.android.NormalTheme" 
+            <meta-data 
+                android:name="io.flutter.embedding.android.NormalTheme" 
                 android:resource="@style/NormalTheme"/>
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
-            </intent-filter>
 
             <intent-filter android:label="NyanTV Repo Importer">
                 <action android:name="android.intent.action.VIEW" />
@@ -69,10 +82,10 @@
                 
                 <data android:host="add-repo" />
             </intent-filter>  
-        
         </activity>
 
-        <activity android:name="com.linusu.flutter_web_auth_2.CallbackActivity" 
+        <activity 
+            android:name="com.linusu.flutter_web_auth_2.CallbackActivity" 
             android:exported="true">
             <intent-filter android:label="Login">
                 <action android:name="android.intent.action.VIEW"/>

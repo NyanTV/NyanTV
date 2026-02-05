@@ -66,6 +66,8 @@ class TVRemoteHandler {
 
     final menuVisible = isMenuVisible();
 
+    print(menuVisible);
+
     if (event is KeyDownEvent) {
       final result = _handleKeyDown(event, menuVisible);
       return result ? KeyEventResult.handled : KeyEventResult.ignored;
@@ -115,8 +117,8 @@ class TVRemoteHandler {
       onMenuInteraction?.call();
       return true;
     }
-
     // Menu hidden state - Playback controls active
+
     
     // Select/Enter opens menu
     if (key == LogicalKeyboardKey.select ||

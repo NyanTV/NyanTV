@@ -102,7 +102,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final RxString resizeMode = "Cover".obs;
   late PlayerSettings playerSettings;
   late FocusNode _keyboardListenerFocusNode;
-  late FocusNode _playButtonFocusNode;
   aniskip.EpisodeSkipTimes? skipTimes;
   final isOPSkippedOnce = false.obs;
   final isEDSkippedOnce = false.obs;
@@ -186,26 +185,16 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       final episodeNum = widget.currentEpisode.number.toInt() - 1;
       trackAnilistAndLocal(episodeNum, widget.currentEpisode);
     }
-    ever(isBuffering, (buffering) {
-      if (showControls.value && !buffering) {
-        _startHideControlsTimer();
-        if (settings.isTV.value && mounted) {
-          Future.delayed(const Duration(milliseconds: 300), () {
-            if (mounted && showControls.value) {
-              _playButtonFocusNode.requestFocus();
-            }
-          });
-        }
-      }
-    });
     _keyboardListenerFocusNode = FocusNode(
       canRequestFocus: !settings.isTV.value,
       skipTraversal: settings.isTV.value,
     );
-    _playButtonFocusNode = FocusNode(
-      canRequestFocus: settings.isTV.value,
-      skipTraversal: !settings.isTV.value,
-    );
+    ever(isBuffering, (buffering) {
+      if (showControls.value && !buffering) {
+        _startHideControlsTimer();
+       _keyboardListenerFocusNode.requestFocus();
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_keyboardListenerFocusNode.hasFocus) {
         _keyboardListenerFocusNode.requestFocus();
@@ -756,14 +745,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       if (isPlaying.value) {
         _startHideControlsTimer();
       }
-      
-      if (settings.isTV.value && mounted && !isBuffering.value) {
-        Future.delayed(const Duration(milliseconds: 200), () {
-          if (mounted && showControls.value) {
-            _playButtonFocusNode.requestFocus();
-          }
-        });
-      }
     }
   }
 
@@ -811,8 +792,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     _tvRemoteHandler?.dispose();
     _tvRemoteHandler = null;
     _keyboardListenerFocusNode.dispose();
-    _playButtonFocusNode.dispose();
-    super.dispose();
     super.dispose();
   }
 
@@ -832,9 +811,10 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   }
 
   KeyEventResult handlePlayerKeyEvent(FocusNode node, KeyEvent e) {
-    if (settings.isTV.value && _tvRemoteHandler != null) {
+    if (settings.isTV.value) {// && _tvRemoteHandler != null) {
      return _tvRemoteHandler!.handleKeyEvent(node, e);
     }
+
 
     // Desktop/Mobile keyboard shortcuts
     if (e is! KeyDownEvent) return KeyEventResult.ignored;
@@ -948,7 +928,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   Obx _buildPlayer(BuildContext context) {
     return Obx(() {
       // Android TV-spezifische Behandlung
-      if (settings.isTV.value || true) {
+      if (settings.isTV.value) {
         return _buildTVPlayer(context);
       }
       
@@ -2099,7 +2079,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         child: BlurWrapper(
           borderRadius: BorderRadius.circular(radius),
           child: NyantvOnTap(
-            focusNode: settings.isTV.value ? _playButtonFocusNode : null,
             onTap: () {
               player.playOrPause();
             },
