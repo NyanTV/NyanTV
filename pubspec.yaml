@@ -42,6 +42,7 @@ dependencies:
   dartotsu_extension_bridge:
     git:
       url: https://github.com/aayush2622/DartotsuExtensionBridge.git
+      ref: d8b6e41
   outlined_text: ^1.0.1
   media_kit:
     git:
