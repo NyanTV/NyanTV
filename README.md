@@ -73,8 +73,6 @@
   
 </div>
 
-<div align="center">
-
 <!--## Screenshots
 
 | Home                                                                                                                                           | Search                                                                                                                                          | Details                                                                                                                      | Library                                                                                                              |

@@ -68,7 +68,7 @@ class Settings extends GetxController {
     selectedProfile =
         preferences.get('selected_profile', defaultValue: 'MID-END');
     isTv().then((e) {
-      isTV.value = e;
+      isTV.value = true;//e;
     });
     PlayerShaders.createMpvConfigFolder();
     PlayerShaders.getMpvPath().then((e) {
