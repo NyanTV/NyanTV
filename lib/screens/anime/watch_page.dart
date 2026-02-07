@@ -79,11 +79,9 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   late Rx<nyantv.Media> anilistData;
   RxList<model.Track?> subtitles = <model.Track>[].obs;
 
-  // Library
   final offlineStorage = Get.find<OfflineStorageController>();
   late ServicesType mediaService;
 
-  // Player Related Stuff
   late Player player;
   late VideoController playerController;
   final isPlaying = true.obs;
@@ -106,7 +104,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final isOPSkippedOnce = false.obs;
   final isEDSkippedOnce = false.obs;
 
-  // Player Seek Related
   final RxBool _volumeIndicator = false.obs;
   final RxBool _brightnessIndicator = false.obs;
   Timer? _volumeTimer;
@@ -120,6 +117,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final isLocked = false.obs;
   RxList<String> subtitleText = [''].obs;
   RxInt subtitleDelay = 0.obs;
+  FocusNode? _lastControlsFocusNode;
 
   final doubleTapLabel = 0.obs;
   Timer? doubleTapTimeout;
@@ -127,14 +125,12 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   Timer? _hideControlsTimer;
   final pressed2x = false.obs;
 
-  // Service Related Handlers and Variables
   final sourceController = Get.find<SourceController>();
   final isEpisodeDialogOpen = false.obs;
   late bool isLoggedIn;
   final leftOriented = true.obs;
   late TVRemoteHandler? _tvRemoteHandler;
 
-  // Video Player Visual Profile
   final currentVisualProfile = 'natural'.obs;
   RxMap<String, int> customSettings = <String, int>{}.obs;
 
@@ -152,7 +148,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     
     if (settings.isTV.value) {
       resizeMode.value = "Contain";
-      // TV-spezifische Player-Einstellungen
       final tempDir = Directory.systemTemp;
       if (tempDir.existsSync()) {
         final cacheDir = Directory('${tempDir.path}/nyantv_cache');
@@ -189,17 +184,59 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       canRequestFocus: !settings.isTV.value,
       skipTraversal: settings.isTV.value,
     );
+    
+  ever(showControls, (controlsVisible) {
+    if (settings.isTV.value) {
+      if (controlsVisible) {
+        if (_keyboardListenerFocusNode.hasFocus) {
+          _keyboardListenerFocusNode.unfocus();
+        }
+        Future.delayed(const Duration(milliseconds: 150), () {
+          if (mounted && _lastControlsFocusNode != null && _lastControlsFocusNode!.canRequestFocus) {
+            _lastControlsFocusNode!.requestFocus();
+          }
+        });
+      } else {
+        final currentFocus = FocusScope.of(context).focusedChild;
+        if (currentFocus != null && currentFocus != _keyboardListenerFocusNode) {
+          _lastControlsFocusNode = currentFocus;
+        }
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (mounted && !_keyboardListenerFocusNode.hasFocus) {
+            FocusScope.of(context).requestFocus(_keyboardListenerFocusNode);
+          }
+        });
+      }
+    }
+  });
+    
     ever(isBuffering, (buffering) {
       if (showControls.value && !buffering) {
         _startHideControlsTimer();
-       _keyboardListenerFocusNode.requestFocus();
+        if (!settings.isTV.value) {
+          _keyboardListenerFocusNode.requestFocus();
+        }
       }
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_keyboardListenerFocusNode.hasFocus) {
-        _keyboardListenerFocusNode.requestFocus();
-      }
-    });
+    
+    if (settings.isTV.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted && !showControls.value) {
+              FocusScope.of(context).requestFocus(_keyboardListenerFocusNode);
+            }
+          });
+        }
+      });
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_keyboardListenerFocusNode.hasFocus) {
+          _keyboardListenerFocusNode.requestFocus();
+        }
+      });
+    }
+    
     if (settings.isTV.value) {
       _tvRemoteHandler = TVRemoteHandler(
         player: player,
@@ -210,7 +247,20 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           currentPosition.value = duration;
           formattedTime.value = formatDuration(duration);
         },
-        onToggleMenu: () => toggleControls(),
+        onToggleMenu: () {
+          toggleControls();
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (mounted) {
+              if (showControls.value) {
+                if (_keyboardListenerFocusNode.hasFocus) {
+                  _keyboardListenerFocusNode.unfocus();
+                }
+              } else {
+                FocusScope.of(context).requestFocus(_keyboardListenerFocusNode);
+              }
+            }
+          });
+        },
         onExitPlayer: () => Get.back(),
         getCurrentPosition: () => currentPosition.value,
         getVideoDuration: () => episodeDuration.value,
@@ -333,8 +383,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       if (settings.isTV.value) {
         playerController = VideoController(player,
             configuration: const VideoControllerConfiguration(
-              androidAttachSurfaceAfterVideoParameters: false, // Changed for TV
-              enableHardwareAcceleration: false, // Disable for TV
+              androidAttachSurfaceAfterVideoParameters: false,
+              enableHardwareAcceleration: false,
             ));
       } else {
         playerController = VideoController(player,
@@ -370,7 +420,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     }
   }
 
-  // Continuous Tracking
   int lastProcessedMinute = 0;
   bool isSwitchingEpisode = false;
   StreamSubscription<Duration>? _positionSubscription;
@@ -666,18 +715,15 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         ? (currentSeconds - skipDuration.value).clamp(0, maxSeconds)
         : (currentSeconds + skipDuration.value).clamp(0, maxSeconds);
 
-    // Batch UI updates
     formattedTime.value = formatDuration(Duration(seconds: newSeekPosition));
     player.seek(Duration(seconds: newSeekPosition));
 
-    // Optimize animations
     if (isLeft) {
       _leftAnimationController.forward(from: 0);
     } else {
       _rightAnimationController.forward(from: 0);
     }
 
-    // Reset after delay
     doubleTapTimeout?.cancel();
     doubleTapTimeout = Timer(const Duration(milliseconds: 800), () {
       _leftAnimationController.reset();
@@ -811,17 +857,14 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   }
 
   KeyEventResult handlePlayerKeyEvent(FocusNode node, KeyEvent e) {
-    if (settings.isTV.value) {// && _tvRemoteHandler != null) {
+    if (settings.isTV.value) {
      return _tvRemoteHandler!.handleKeyEvent(node, e);
     }
 
-
-    // Desktop/Mobile keyboard shortcuts
     if (e is! KeyDownEvent) return KeyEventResult.ignored;
 
     final key = e.logicalKey;
 
-    // Basic playback controls
     if (key == LogicalKeyboardKey.space) {
       player.playOrPause();
     } else if (key == LogicalKeyboardKey.arrowLeft) {
@@ -851,48 +894,53 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   @override
   Widget build(BuildContext context) {
-    return Focus(
-      focusNode: _keyboardListenerFocusNode,
-      autofocus: !settings.isTV.value,
-      onKeyEvent: (node, event) {
-        return handlePlayerKeyEvent(node, event);
-      },
-      child: PopScope(
-        canPop: false,
-        onPopInvoked: (didPop) {
-          if (didPop) return;
-          if (settings.isTV.value && showControls.value) {
-            // TV + Menü offen -> nur das Menü schließen
-            toggleControls(val: false);
-          } else {
-            // Menü geschlossen oder kein TV -> normal zurück zur detail_page
-            Get.back();
-          }
+    return Obx(() {
+      final canFocus = settings.isTV.value 
+          ? !showControls.value
+          : true;
+      
+      return Focus(
+        focusNode: _keyboardListenerFocusNode,
+        autofocus: !settings.isTV.value,
+        canRequestFocus: canFocus,
+        skipTraversal: settings.isTV.value && showControls.value,
+        onKeyEvent: (node, event) {
+          return handlePlayerKeyEvent(node, event);
         },
-        child: Scaffold(
-          body: Stack(
-            alignment: Alignment.center,
-            children: [
-              _buildPlayer(context),
-              _buildOverlay(context),
-              _buildControls(),
-              _buildSubtitle(),
-              _buildRippleEffect(),
-              _build2xThingy(),
-              if (isMobile && settings.enableSwipeControls) ...[
-                _buildBrightnessSlider(),
-                _buildVolumeSlider(),
+        child: PopScope(
+          canPop: false,
+          onPopInvoked: (didPop) {
+            if (didPop) return;
+            if (settings.isTV.value && showControls.value) {
+              toggleControls(val: false);
+            } else {
+              Get.back();
+            }
+          },
+          child: Scaffold(
+            body: Stack(
+              alignment: Alignment.center,
+              children: [
+                _buildPlayer(context),
+                _buildOverlay(context),
+                _buildControls(),
+                _buildSubtitle(),
+                _buildRippleEffect(),
+                _build2xThingy(),
+                if (isMobile && settings.enableSwipeControls) ...[
+                  _buildBrightnessSlider(),
+                  _buildVolumeSlider(),
+                ],
+                Obx(() => isBuffering.value && !showControls.value
+                    ? _buildBufferingIndicator()
+                    : const SizedBox.shrink()),
               ],
-              Obx(() => isBuffering.value && !showControls.value
-                  ? _buildBufferingIndicator()
-                  : const SizedBox.shrink()),
-            ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
-
 
   Obx _build2xThingy() {
     return Obx(() {
@@ -927,7 +975,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   Obx _buildPlayer(BuildContext context) {
     return Obx(() {
-      // Android TV-spezifische Behandlung
       if (settings.isTV.value) {
         return _buildTVPlayer(context);
       }
@@ -1006,13 +1053,14 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                 player.setRate(prevRate.value);
               },
               onTap: () {
-                // TV mode: Only allow toggle when menu is hidden
-                // TVRemoteHandler will handle opening via Enter key
                 if (settings.isTV.value) {
+                  if (!_keyboardListenerFocusNode.hasFocus && !showControls.value) {
+                    FocusScope.of(context).requestFocus(_keyboardListenerFocusNode);
+                  }
+                  
                   if (!showControls.value) {
                     toggleControls(val: true);
                   } else {
-                    // Tapping when open should close it
                     toggleControls(val: false);
                   }
                 } else {
@@ -1408,7 +1456,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // "None" option
                     NyantvOnTap(
                       onTap: () {
                         selectedSubIndex.value = -1;
@@ -1418,7 +1465,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                       child: subtitleTile("None", Iconsax.subtitle5,
                           selectedSubIndex.value == -1),
                     ),
-                    // Existing subtitles
                     ...subtitles.asMap().entries.map((entry) {
                       final index = entry.key;
                       final e = entry.value;
@@ -1432,7 +1478,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                             Iconsax.subtitle5, selectedSubIndex.value == index),
                       );
                     }),
-                    // "Add Subtitle" option
                     NyantvOnTap(
                       onTap: () async {
                         final result = await FilePicker.platform.pickFiles(
@@ -1492,7 +1537,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     );
   }
 
-  // Helper Methods
   Color _getFgColor() {
     return settings.playerStyle == 0
         ? Colors.white
@@ -1526,7 +1570,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                   children: [
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      // curve: Curves.,
                       transform: Matrix4.identity()
                         ..translate(0.0, showControls.value ? 0.0 : -100.0),
                       padding: EdgeInsets.symmetric(
@@ -1969,7 +2012,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     );
   }
 
-  // Helper Methods
   Color _getPlayFgColor() {
     return settings.playerStyle == 0
         ? Colors.white
@@ -2205,7 +2247,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       ),
     );
   }
-
 
   Widget _buildPlaybackButton({
     required Function() onTap,

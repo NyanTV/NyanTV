@@ -66,8 +66,6 @@ class TVRemoteHandler {
 
     final menuVisible = isMenuVisible();
 
-    print(menuVisible);
-
     if (event is KeyDownEvent) {
       final result = _handleKeyDown(event, menuVisible);
       return result ? KeyEventResult.handled : KeyEventResult.ignored;
