@@ -78,8 +78,7 @@ jobs:
             - You may be asked for additional details or clarification if needed.  
             - Once resolved, we'll notify you of the fix or provide a workaround.
             **👥 Connect with Us**  
-            - **[Discord](https://discord.com/invite/azAMuBWd8C)**: Engage with our community and ask questions.  
-            - **[Telegram](https://t.me/NyanTV_Discussion)**: Reach out for real-time discussions and updates.
+            - **[Telegram](https://t.me/NyanSupport)**: Reach out for real-time discussions and updates.
             We're working hard to resolve the issue and appreciate your patience!
             `;
             await github.rest.issues.createComment({

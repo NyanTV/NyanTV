@@ -97,7 +97,7 @@ class DiscordProfile {
 }
 
 class DiscordRPCController extends GetxController {
-  static const String _applicationId = '1435544312296505394';
+  static const String _applicationId = '1470114715978961099';
   static const String _gatewayUrl =
       'wss://gateway.discord.gg/?v=10&encoding=json';
   static const String _apiBaseUrl = 'https://discord.com/api/v10';
@@ -382,7 +382,6 @@ class DiscordRPCController extends GetxController {
     }
   }
 
-// Fixed updateAnimePresence method
   Future<void> updateAnimePresence({
     required Media anime,
     required Episode episode,
@@ -407,6 +406,8 @@ class DiscordRPCController extends GetxController {
     final anilistUrl = 'https://anilist.co/anime/${anime.id}';
     final animeTitle = anime.title;
 
+    final stateText = 'Streaming Episode $episodeNumber ${!episodeName.toLowerCase().contains('episode') ? '– $episodeName' : ''}';
+
     if (isMobile) {
       final presencePayload = jsonEncode({
         'op': 3,
@@ -415,10 +416,10 @@ class DiscordRPCController extends GetxController {
           'activities': [
             {
               'name': 'NyanTV',
-              'type': 3, // Watching
+              'application_id': _applicationId,
+              'type': 3,
               'details': animeTitle,
-              'state':
-                  'Episode $episodeNumber ${!episodeName.toLowerCase().contains('episode') ? '– $episodeName' : ''}',
+              'state': stateText,
               'timestamps': {
                 'start': startTime.millisecondsSinceEpoch,
                 'end': endTime.millisecondsSinceEpoch,
@@ -426,19 +427,11 @@ class DiscordRPCController extends GetxController {
               'assets': {
                 'large_image': await _processImageUrl(coverUrl),
                 'large_text': animeTitle,
-                'small_image': await _processImageUrl(_getAppIconUrl()),
-                'small_text': 'NyanTV',
               },
               'buttons': [
-                'View Anime',
-                'Watch on NyanTV',
+                {'label': 'View on AL', 'url': anilistUrl},
+                {'label': 'Watch on NyanTV', 'url': 'https://github.com/NyanTV/NyanTV/'}
               ],
-              'metadata': {
-                'button_urls': [
-                  anilistUrl,
-                  'https://github.com/NyanTV/NyanTV/',
-                ],
-              }
             }
           ],
           'status': 'online',
@@ -452,8 +445,7 @@ class DiscordRPCController extends GetxController {
         await _discordRPC!.setActivity(
           activity: RPCActivity(
             details: animeTitle,
-            state:
-                'Episode $episodeNumber ${!episodeName.toLowerCase().contains('episode') ? '– $episodeName' : ''} - $totalEpisodes',
+            state: '$stateText - $totalEpisodes',
             activityType: ActivityType.watching,
             timestamps: RPCTimestamps(
               start: startTime.millisecondsSinceEpoch,
@@ -462,11 +454,9 @@ class DiscordRPCController extends GetxController {
             assets: RPCAssets(
               largeImage: await _processImageUrl(coverUrl),
               largeText: animeTitle,
-              smallImage: await _processImageUrl(_getAppIconUrl()),
-              smallText: 'NyanTV',
             ),
             buttons: [
-              RPCButton(label: 'View Anime', url: anilistUrl),
+              RPCButton(label: 'View on AL', url: anilistUrl),
               const RPCButton(
                 label: 'Watch on NyanTV',
                 url: 'https://github.com/NyanTV/NyanTV/',
@@ -481,7 +471,6 @@ class DiscordRPCController extends GetxController {
     }
   }
 
-// Fixed updateAnimePresencePaused method
   Future<void> updateAnimePresencePaused({
     required Media anime,
     required Episode episode,
@@ -513,25 +502,18 @@ class DiscordRPCController extends GetxController {
           'activities': [
             {
               'name': 'NyanTV',
-              'type': 3, // Watching
+              'application_id': _applicationId,
+              'type': 3,
               'details': animeTitle,
-              'state': 'Episode $episodeNumber$timeDisplay (Paused)',
+              'state': 'Paused: Ep $episodeNumber$timeDisplay',
               'assets': {
                 'large_image': await _processImageUrl(coverUrl),
                 'large_text': animeTitle,
-                'small_image': await _processImageUrl(_getAppIconUrl()),
-                'small_text': 'NyanTV',
               },
               'buttons': [
-                'View Anime',
-                'Watch on NyanTV',
+                {'label': 'View on AL', 'url': anilistUrl},
+                {'label': 'Watch on NyanTV', 'url': 'https://github.com/NyanTV/NyanTV/'}
               ],
-              'metadata': {
-                'button_urls': [
-                  anilistUrl,
-                  'https://github.com/NyanTV/NyanTV/',
-                ],
-              }
             }
           ],
           'status': 'online',
@@ -545,16 +527,14 @@ class DiscordRPCController extends GetxController {
         await _discordRPC!.setActivity(
           activity: RPCActivity(
             details: animeTitle,
-            state: 'Episode $episodeNumber$timeDisplay (Paused)',
+            state: 'Paused: Ep $episodeNumber$timeDisplay',
             activityType: ActivityType.watching,
             assets: RPCAssets(
               largeImage: await _processImageUrl(coverUrl),
               largeText: animeTitle,
-              smallImage: await _processImageUrl(_getAppIconUrl()),
-              smallText: 'NyanTV',
             ),
             buttons: [
-              RPCButton(label: 'View Anime', url: anilistUrl),
+              RPCButton(label: 'View on AL', url: anilistUrl),
               const RPCButton(
                 label: 'Watch on NyanTV',
                 url: 'https://github.com/NyanTV/NyanTV/',
@@ -580,6 +560,8 @@ class DiscordRPCController extends GetxController {
     final animeTitle = media.title;
     final type = media.mediaType.name.capitalizeFirst ?? '';
 
+    final stateText = 'Viewing $type Details';
+
     if (isMobile) {
       final presencePayload = jsonEncode({
         'op': 3,
@@ -588,9 +570,10 @@ class DiscordRPCController extends GetxController {
           'activities': [
             {
               'name': 'NyanTV',
+              'application_id': _applicationId,
               'type': 0,
               'details': animeTitle,
-              'state': 'Viewing $type',
+              'state': stateText,
               'assets': {
                 'large_image':
                     await _processImageUrl(media.cover ?? media.poster),
@@ -599,15 +582,9 @@ class DiscordRPCController extends GetxController {
                 'small_text': 'NyanTV',
               },
               'buttons': [
-                'View $type',
-                '${media.mediaType.isAnime ? 'Watch' : 'Read'} on NyanTV',
+                {'label': 'View on AL', 'url': anilistUrl},
+                {'label': '${media.mediaType.isAnime ? 'Watch' : 'Read'} on NyanTV', 'url': 'https://github.com/NyanTV/NyanTV'}
               ],
-              'metadata': {
-                'button_urls': [
-                  anilistUrl,
-                  'https://github.com/NyanTV/NyanTV',
-                ],
-              }
             }
           ],
           'status': 'online',
@@ -621,7 +598,7 @@ class DiscordRPCController extends GetxController {
         await _discordRPC!.setActivity(
           activity: RPCActivity(
             details: animeTitle,
-            state: 'Viewing $type',
+            state: stateText,
             activityType: ActivityType.watching,
             assets: RPCAssets(
               largeImage: await _processImageUrl(media.cover ?? media.poster),
@@ -630,7 +607,7 @@ class DiscordRPCController extends GetxController {
               smallText: 'NyanTV',
             ),
             buttons: [
-              RPCButton(label: 'View $type', url: anilistUrl),
+              RPCButton(label: 'View on AL', url: anilistUrl),
               const RPCButton(
                 label: 'Watch on NyanTV',
                 url: 'https://github.com/NyanTV/NyanTV/',
@@ -674,21 +651,17 @@ class DiscordRPCController extends GetxController {
           'activities': [
             {
               'name': 'NyanTV',
+              'application_id': _applicationId,
               'type': 0,
               'details': activity ?? 'Browsing Stuff',
               'state': details ?? 'Idle',
               'assets': {
                 'large_image': await _processImageUrl(_getAppIconUrl()),
-                'large_text': 'NyanTV - Anime & Manga',
+                'large_text': 'NyanTV - Anime',
               },
               'buttons': [
-                'Download NyanTV',
+                {'label': 'Download NyanTV', 'url': 'https://github.com/NyanTV/NyanTV/'}
               ],
-              'metadata': {
-                'button_urls': [
-                  'https://github.com/NyanTV/NyanTV/',
-                ],
-              }
             }
           ],
           'status': 'online',
@@ -706,7 +679,7 @@ class DiscordRPCController extends GetxController {
             activityType: ActivityType.playing,
             assets: RPCAssets(
               largeImage: await _processImageUrl(_getAppIconUrl()),
-              largeText: 'NyanTV - Anime & Manga',
+              largeText: 'NyanTV - Anime',
             ),
           ),
         );

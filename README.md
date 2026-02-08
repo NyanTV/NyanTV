@@ -91,10 +91,11 @@
 > [!TIP]
 > ⭐ **Star this repository to support the developer & encourage the development of the app!**
 
+<div align="center">
 <details>
   <summary>Star History</summary>
   <a href="https://github.com/NyanTV/NyanTV/stargazers">
-      <img alt="Star History Chart" src="https://starchart.cc/NyanTV/NyanTV.svg?variant=adaptive" width="370" height="235" />
+      <img alt="Star History Chart" src="https://bytecrank.com/nastyox/reporoster/php/stargazersSVG.php?theme=dark&format=notext&user=NyanTV&repo=NyanTV" />
   </a>
 </details>
 
@@ -138,3 +139,5 @@ Your efforts are invaluable.
 ## License
 
 NyanTV is licensed under the MIT License. More info can be found [here](LICENSE.md).
+
+</div>
