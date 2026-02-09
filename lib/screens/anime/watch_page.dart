@@ -469,7 +469,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     return const PlayerConfiguration();
   }
 
-  void _initPlayer(bool firstTime) async {
+void _initPlayer(bool firstTime) async {
     final areShadersEnabled =
         settings.preferences.get('shaders_enabled', defaultValue: false);
     Episode? savedEpisode = offlineStorage.getWatchedEpisode(
@@ -479,6 +479,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         (savedEpisode?.number ?? 0) == currentEpisode.value.number
             ? savedEpisode?.timeStampInMilliseconds ?? 0
             : 0;
+    
+    final bool hasInitialSeek = startTimeMilliseconds > 0;
     
     if (firstTime) {
       player = Player(
@@ -505,7 +507,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         httpHeaders: episode.value.headers ??
             {'Referer': sourceController.activeSource.value?.baseUrl ?? ''}));
     
-    _performInitialSeek(startTimeMilliseconds);
+    await _performInitialSeek(startTimeMilliseconds);
     
     _initSubs();
     player.setRate(prevRate.value);
@@ -527,21 +529,45 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           .indexWhere((e) => e == settings.selectedShader));
       setShaders(key, showMessage: false);
     }
-    
+
     if (firstTime) {
       StreamSubscription? initSub;
+      bool discordUpdateHandled = false;
+      
       initSub = player.stream.duration.listen((duration) {
-        if (duration.inMilliseconds > 0) {
+        if (duration.inMilliseconds > 0 && !discordUpdateHandled) {
+          discordUpdateHandled = true;
           Logger.i('Player ready with duration: ${duration.inSeconds}s');
           initSub?.cancel();
           
           _waitForPlayerReady().then((_) {
             if (mounted) {
-              Logger.i('Player fully ready, performing Discord update...');
-              isSwitchingEpisode = false;
-              _performDiscordUpdate(isPaused: false);
+              if (!hasInitialSeek) {
+                _waitForBufferingAfterSeek().then((_) {
+                  if (mounted && !isSwitchingEpisode) {
+                    Logger.i('Player fully ready (no initial seek), performing Discord update...');
+                    isSwitchingEpisode = false;
+                    _performDiscordUpdate(isPaused: false);
+                  }
+                });
+              } else {
+                isSwitchingEpisode = false;
+                Logger.i('Initial seek completed, Discord already updated');
+              }
             }
           });
+        }
+      });
+      
+      Future.delayed(const Duration(seconds: 10), () {
+        if (!discordUpdateHandled && mounted) {
+          Logger.i('Duration stream timeout, forcing Discord update');
+          discordUpdateHandled = true;
+          initSub?.cancel();
+          isSwitchingEpisode = false;
+          if (!hasInitialSeek) {
+            _performDiscordUpdate(isPaused: false);
+          }
         }
       });
     }
@@ -550,22 +576,25 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   StreamSubscription? _initialSeekSubscription;
   bool _hasPerformedInitialSeek = false;
 
-  void _performInitialSeek(int startTimeMilliseconds) {
+  Future<void> _performInitialSeek(int startTimeMilliseconds) async {
     if (startTimeMilliseconds <= 0) {
+      Logger.i('No initial seek needed, starting from beginning');
       _hasPerformedInitialSeek = true;
       return;
     }
     
+    Logger.i('Setting up initial seek to: ${startTimeMilliseconds}ms');
     _hasPerformedInitialSeek = false;
     _initialSeekSubscription?.cancel();
     
-    Logger.i('Setting up initial seek to: ${startTimeMilliseconds}ms');
+    final completer = Completer<void>();
+    
     StreamSubscription? durationSub;
     StreamSubscription? bufferSub;
     bool durationReady = false;
     bool bufferReady = false;
     
-    void trySeek() {
+    void trySeek() async {
       if (durationReady && bufferReady && !_hasPerformedInitialSeek) {
         _hasPerformedInitialSeek = true;
         durationSub?.cancel();
@@ -573,19 +602,30 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         
         final seekPosition = Duration(milliseconds: startTimeMilliseconds);
         
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (mounted) {
-            Logger.i('Performing initial seek to: ${seekPosition.inSeconds}s');
+        await Future.delayed(const Duration(milliseconds: 300));
+        
+        if (mounted) {
+          Logger.i('Performing initial seek to: ${seekPosition.inSeconds}s');
+          player.seek(seekPosition);
+          
+          await Future.delayed(const Duration(milliseconds: 500));
+          
+          if (mounted && currentPosition.value.inMilliseconds < startTimeMilliseconds - 1000) {
+            Logger.i('Seek verification failed, retrying...');
             player.seek(seekPosition);
-            
-            Future.delayed(const Duration(milliseconds: 500), () {
-              if (mounted && currentPosition.value.inMilliseconds < startTimeMilliseconds - 1000) {
-                Logger.i('Seek verification failed, retrying...');
-                player.seek(seekPosition);
-              }
-            });
+            await Future.delayed(const Duration(milliseconds: 500));
           }
-        });
+          
+          Logger.i('Initial seek completed');
+          
+          if (mounted) {
+            await _waitForBufferingAfterSeek();
+            Logger.i('Initial seek done, triggering Discord update');
+            _performDiscordUpdate(isPaused: false);
+          }
+          
+          completer.complete();
+        }
       }
     }
     
@@ -606,15 +646,23 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       }
     });
     
-    Future.delayed(const Duration(seconds: 5), () {
+    Future.delayed(const Duration(milliseconds: 7500), () {
       if (!_hasPerformedInitialSeek && mounted) {
         Logger.i('Initial seek timeout, forcing seek');
         _hasPerformedInitialSeek = true;
         durationSub?.cancel();
         bufferSub?.cancel();
         player.seek(Duration(milliseconds: startTimeMilliseconds));
+        
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+        });
       }
     });
+
+    return completer.future;
   }
 
   int lastProcessedMinute = 0;
@@ -952,13 +1000,32 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       doubleTapLabel.value = 0;
       skipDuration.value = 0;
       
-      _isManualSeeking = false;
       player.play();
-      
-      if (mounted && !isSwitchingEpisode) {
-        _scheduleDiscordUpdate(isPaused: false);
-      }
+
+      _waitForBufferingAfterSeek().then((_) {
+        _isManualSeeking = false;
+        if (mounted && !isSwitchingEpisode) {
+          Logger.i('DoubleTap skip complete, updating Discord');
+          _scheduleDiscordUpdate(isPaused: false);
+        }
+      });
     });
+  }
+
+  Future<void> _waitForBufferingAfterSeek() async {
+    if (!isPlaying.value) return;
+    
+    int attempts = 0;
+    const maxAttempts = 75;
+    
+    while (isBuffering.value && attempts < maxAttempts) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      attempts++;
+    }
+    
+    await Future.delayed(const Duration(milliseconds: 200));
+    
+    Logger.i('Buffering complete after seek (${attempts * 100}ms)');
   }
 
   void _megaSkip(bool invert) {
@@ -980,10 +1047,11 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       currentPosition.value = duration;
       player.seek(duration);
     }
-    
-    Future.delayed(const Duration(milliseconds: 500), () {
+
+    _waitForBufferingAfterSeek().then((_) {
       _isManualSeeking = false;
       if (mounted && !isSwitchingEpisode && isPlaying.value) {
+        Logger.i('MegaSkip complete, updating Discord');
         _scheduleDiscordUpdate(isPaused: false);
       }
     });
@@ -1059,7 +1127,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         currentPosition.value, episodeDuration.value, currentEpisode.value,
         updateAL: false);
 
-    if (mounted && widget.shouldTrack) {
+    if (mounted) {
       try {
         discordRPC.updateMediaPresence(media: anilistData.value);
       } catch (e) {
@@ -1991,20 +2059,18 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                       _isManualSeeking = true;
                                     },
                                     onChangeEnd: (val) async {
-                                      if (episodeDuration.value.inMilliseconds
-                                              .toDouble() !=
-                                          0.0) {
-                                        final newPosition =
-                                            Duration(milliseconds: val.toInt());
+                                      if (episodeDuration.value.inMilliseconds.toDouble() != 0.0) {
+                                        final newPosition = Duration(milliseconds: val.toInt());
                                         player.seek(newPosition);
                                         endSeeking(newPosition);
                                         
-                                        Future.delayed(const Duration(milliseconds: 300), () {
-                                          _isManualSeeking = false;
-                                          if (mounted && !isSwitchingEpisode && isPlaying.value) {
-                                            _scheduleDiscordUpdate(isPaused: false);
-                                          }
-                                        });
+                                        await _waitForBufferingAfterSeek();
+                                        
+                                        _isManualSeeking = false;
+                                        if (mounted && !isSwitchingEpisode && isPlaying.value) {
+                                          Logger.i('Slider seek complete, updating Discord');
+                                          _scheduleDiscordUpdate(isPaused: false);
+                                        }
                                       }
                                     },
                                     onChanged: (val) {
@@ -2153,7 +2219,9 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         variant: ButtonVariant.simple,
         borderRadius: BorderRadius.circular(20.multiplyRoundness()),
         backgroundColor: Colors.transparent,
-        onTap: () {
+        onTap: () async {
+          _isManualSeeking = true;
+          
           if (invert) {
             final duration = Duration(
                 seconds:
@@ -2171,6 +2239,13 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                     currentPosition.value.inSeconds + settings.skipDuration);
             currentPosition.value = duration;
             player.seek(duration);
+          }
+          
+          await _waitForBufferingAfterSeek();
+          _isManualSeeking = false;
+          if (mounted && !isSwitchingEpisode && isPlaying.value) {
+            Logger.i('Skip button complete, updating Discord');
+            _scheduleDiscordUpdate(isPaused: false);
           }
         },
         child: invert
