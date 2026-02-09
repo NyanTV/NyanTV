@@ -1,33 +1,3 @@
-<div align="right">
-  <details>
-    <summary>🌐</summary>
-    <div>
-      <div align="center">
-        <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=ar">العربية</a>
-        | <a href="https://openaitx.github.io/view.html?user=NyanTV&project=NyanTV&lang=as">অসমীয়া</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=id">Bahasa Indonesia</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=de">Deutsch</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=en">English</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=es">Español</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=fa">فارسی</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=fr">Français</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=hi">हिन्दी</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=it">Italiano</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=ja">日本語</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=ko">한국어</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=nl">Nederlands</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=pl">Polski</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=pt">Português</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=ru">Русский</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=th">ไทย</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=tr">Türkçe</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=vi">Tiếng Việt</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=zh-TW">繁體中文</a>
-        | <a href="https://openaitx.github.io/#/view?user=NyanTV&project=NyanTV&lang=zh-CN">简体中文</a>
-      </div>
-    </div>
-  </details>
-</div>
 <div align="center">
 <img src='assets/images/logo.png' alt='NyanTV Icon' style="border-radius: 50px; height: 150px; width: 150px;">
   

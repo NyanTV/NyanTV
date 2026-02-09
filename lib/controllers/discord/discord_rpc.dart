@@ -451,6 +451,10 @@ class DiscordRPCController extends GetxController {
                 'small_image': smallImage,
                 'small_text': 'NyanTV',
               },
+              'buttons': ['View on AL', 'Watch on NyanTV'],
+              'metadata': {
+                'button_urls': [anilistUrl, 'https://github.com/NyanTV/NyanTV/'],
+              },
             }
           ],
           'status': 'online',
@@ -536,6 +540,10 @@ class DiscordRPCController extends GetxController {
                 'small_image': smallImage,
                 'small_text': 'NyanTV',
               },
+              'buttons': ['View on AL', 'Watch on NyanTV'],
+              'metadata': {
+                'button_urls': [anilistUrl, 'https://github.com/NyanTV/NyanTV/'],
+              },
             }
           ],
           'status': 'online',
@@ -608,6 +616,10 @@ class DiscordRPCController extends GetxController {
                 'small_image': smallImage,
                 'small_text': 'NyanTV',
               },
+              'buttons': ['View on AL', 'Watch on NyanTV'],
+              'metadata': {
+                'button_urls': [anilistUrl, 'https://github.com/NyanTV/NyanTV/'],
+              },
             }
           ],
           'status': 'online',
@@ -671,7 +683,11 @@ class DiscordRPCController extends GetxController {
               'state': details ?? 'Idle',
               'assets': {
                 'large_image': largeImage,
-                'large_text': 'NyanTV - Anime & Manga',
+                'large_text': 'Anime Streaming & Tracking',
+              },
+              'buttons': ['Download NyanTV'],
+              'metadata': {
+                'button_urls': ['https://github.com/NyanTV/NyanTV/'],
               },
             }
           ],
@@ -690,7 +706,7 @@ class DiscordRPCController extends GetxController {
             activityType: ActivityType.playing,
             assets: RPCAssets(
               largeImage: await _processImageUrl(_getAppIconUrl()),
-              largeText: 'NyanTV - Anime & Manga',
+              largeText: 'Anime Streaming & Tracking',
             ),
           ),
         );
