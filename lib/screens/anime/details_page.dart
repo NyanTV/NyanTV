@@ -110,6 +110,12 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
       _checkAnimePresence();
     });
     _fetchAnilistData();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && anilistData != null) {
+        DiscordRPCController.instance.updateMediaPresence(media: anilistData!);
+      }
+    });
   }
 
   Future<void> _syncMediaIds() async {
@@ -128,7 +134,12 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
   @override
   void dispose() {
     controller.dispose();
-    DiscordRPCController.instance.updateBrowsingPresence();
+    
+    DiscordRPCController.instance.updateBrowsingPresence(
+      activity: 'Browsing Anime',
+      details: 'Exploring the library',
+    );
+    
     super.dispose();
   }
 
@@ -237,11 +248,6 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
       episodeError.value = false;
       final episodeFuture = await sourceController.activeSource.value!.methods
           .getDetail(DMedia.withUrl(media.id));
-
-      // if (episodeFuture == null) {
-      //   episodeError.value = true;
-      //   return;
-      // }
 
       final episodes = _convertEpisodes(
         episodeFuture.episodes!.reversed.toList(),
@@ -523,7 +529,6 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
               else
                 const SizedBox.shrink(),
               _buildEpisodeSection(context),
-              // _buildCommentsSection(context)
             ],
           )
         ],
@@ -627,8 +632,6 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
         episodeError: episodeError,
         mapToAnilist: _mapToService,
         getDetailsFromSource: _fetchSourceDetails,
-
-        // getSourcePreference: getSourcePreference,
         isAnify: isAnify,
         showAnify: showAnify,
       );
@@ -636,17 +639,9 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
   }
 
   Widget _buildCommentsSection(BuildContext context) {
-    return
-        // comments.value != null
-        //     ? CommentSection(
-        //         mediaId: widget.media.id,
-        //         currentTag: ('Episode ${currentAnime.value?.episodeCount ?? '0'}'),
-        //       )
-        //     :
-        const SizedBox.shrink();
+    return const SizedBox.shrink();
   }
 
-  // Common Info Section
   Column _buildCommonInfo(BuildContext context) {
     return Column(
       children: [
@@ -680,9 +675,7 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
       ],
     );
   }
-  // Common Info Section
 
-  // Desktop Navigation bar: START
   Widget _buildDesktopNav() {
     return Obx(() => Container(
           margin: const EdgeInsets.all(20),
@@ -739,19 +732,12 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
                           selectedIcon: Iconsax.play5,
                           unselectedIcon: Iconsax.play,
                           label: "Watch"),
-                    // NavItem(
-                    //     onTap: _onPageSelected,
-                    //     selectedIcon: HugeIcons.strokeRoundedComment01,
-                    //     unselectedIcon: HugeIcons.strokeRoundedComment02,
-                    //     label: "Comments"),
                   ]),
             ],
           ),
         ));
   }
-  // Desktop Navigation bar: END
 
-// Mobile Navigation bar: START
   Widget _buildMobiledNav() {
     return Obx(() => ResponsiveNavBar(
             isDesktop: false,

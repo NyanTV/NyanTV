@@ -1,4 +1,4 @@
-// discord_rpc_controller.dart
+// discord_rpc.dart
 import 'dart:async';
 import 'dart:io';
 import 'package:nyantv/controllers/settings/settings.dart';
@@ -333,7 +333,8 @@ class DiscordRPCController extends GetxController {
   Future<String> _processImageUrl(String? url) async {
     try {
       if (Platform.isAndroid || Platform.isIOS) {
-        final processedUrl = await urlToDcAsset(url ?? _getAppIconUrl());
+        final processedUrl = await urlToDcAsset(url ?? _getAppIconUrl())
+            .timeout(const Duration(seconds: 5));
         print('Processed image URL: $processedUrl');
         return processedUrl;
       }
@@ -344,7 +345,7 @@ class DiscordRPCController extends GetxController {
 
       return url;
     } catch (e) {
-      print('Error processing image URL: $e');
+      print('Error processing image URL: $e - using fallback');
       return _getAppIconUrl();
     }
   }
@@ -382,13 +383,30 @@ class DiscordRPCController extends GetxController {
     }
   }
 
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    } else {
+      return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+  }
+
   Future<void> updateAnimePresence({
     required Media anime,
     required Episode episode,
     required String totalEpisodes,
   }) async {
+    print('=== updateAnimePresence called ===');
+    print('Connected: $_isConnected');
+    print('Episode: ${episode.number}');
+    print('Anime: ${anime.title}');
+    
     if (!_isConnected.value) {
-      print('Discord not connected');
+      print('Discord not connected - skipping update');
       return;
     }
 
@@ -406,9 +424,12 @@ class DiscordRPCController extends GetxController {
     final anilistUrl = 'https://anilist.co/anime/${anime.id}';
     final animeTitle = anime.title;
 
-    final stateText = 'Streaming Episode $episodeNumber ${!episodeName.toLowerCase().contains('episode') ? '– $episodeName' : ''}';
+    final stateText = 'Episode $episodeNumber ${!episodeName.toLowerCase().contains('episode') ? '– $episodeName' : ''}';
 
     if (isMobile) {
+      final largeImage = await _processImageUrl(coverUrl);
+      final smallImage = await _processImageUrl(_getAppIconUrl());
+      
       final presencePayload = jsonEncode({
         'op': 3,
         'd': {
@@ -425,13 +446,11 @@ class DiscordRPCController extends GetxController {
                 'end': endTime.millisecondsSinceEpoch,
               },
               'assets': {
-                'large_image': await _processImageUrl(coverUrl),
+                'large_image': largeImage,
                 'large_text': animeTitle,
+                'small_image': smallImage,
+                'small_text': 'NyanTV',
               },
-              'buttons': [
-                {'label': 'View on AL', 'url': anilistUrl},
-                {'label': 'Watch on NyanTV', 'url': 'https://github.com/NyanTV/NyanTV/'}
-              ],
             }
           ],
           'status': 'online',
@@ -454,6 +473,8 @@ class DiscordRPCController extends GetxController {
             assets: RPCAssets(
               largeImage: await _processImageUrl(coverUrl),
               largeText: animeTitle,
+              smallImage: await _processImageUrl(_getAppIconUrl()),
+              smallText: 'NyanTV',
             ),
             buttons: [
               RPCButton(label: 'View on AL', url: anilistUrl),
@@ -464,7 +485,7 @@ class DiscordRPCController extends GetxController {
             ],
           ),
         );
-        print('Anime presence updated successfully');
+        print('Anime presence updated successfully (Desktop)');
       } catch (e) {
         print('Error updating anime presence: $e');
       }
@@ -495,6 +516,9 @@ class DiscordRPCController extends GetxController {
         : '';
 
     if (isMobile) {
+      final largeImage = await _processImageUrl(coverUrl);
+      final smallImage = await _processImageUrl(_getAppIconUrl());
+      
       final presencePayload = jsonEncode({
         'op': 3,
         'd': {
@@ -507,13 +531,11 @@ class DiscordRPCController extends GetxController {
               'details': animeTitle,
               'state': 'Paused: Ep $episodeNumber$timeDisplay',
               'assets': {
-                'large_image': await _processImageUrl(coverUrl),
+                'large_image': largeImage,
                 'large_text': animeTitle,
+                'small_image': smallImage,
+                'small_text': 'NyanTV',
               },
-              'buttons': [
-                {'label': 'View on AL', 'url': anilistUrl},
-                {'label': 'Watch on NyanTV', 'url': 'https://github.com/NyanTV/NyanTV/'}
-              ],
             }
           ],
           'status': 'online',
@@ -532,6 +554,8 @@ class DiscordRPCController extends GetxController {
             assets: RPCAssets(
               largeImage: await _processImageUrl(coverUrl),
               largeText: animeTitle,
+              smallImage: await _processImageUrl(_getAppIconUrl()),
+              smallText: 'NyanTV',
             ),
             buttons: [
               RPCButton(label: 'View on AL', url: anilistUrl),
@@ -542,12 +566,13 @@ class DiscordRPCController extends GetxController {
             ],
           ),
         );
-        print('Paused anime presence updated successfully');
+        print('Paused anime presence updated successfully (Desktop)');
       } catch (e) {
         print('Error updating paused anime presence: $e');
       }
     }
   }
+
 
   Future<void> updateMediaPresence({required Media media}) async {
     if (!_isConnected.value) {
@@ -563,6 +588,9 @@ class DiscordRPCController extends GetxController {
     final stateText = 'Viewing $type Details';
 
     if (isMobile) {
+      final largeImage = await _processImageUrl(media.cover ?? media.poster);
+      final smallImage = await _processImageUrl(_getAppIconUrl());
+      
       final presencePayload = jsonEncode({
         'op': 3,
         'd': {
@@ -575,16 +603,11 @@ class DiscordRPCController extends GetxController {
               'details': animeTitle,
               'state': stateText,
               'assets': {
-                'large_image':
-                    await _processImageUrl(media.cover ?? media.poster),
+                'large_image': largeImage,
                 'large_text': animeTitle,
-                'small_image': await _processImageUrl(_getAppIconUrl()),
+                'small_image': smallImage,
                 'small_text': 'NyanTV',
               },
-              'buttons': [
-                {'label': 'View on AL', 'url': anilistUrl},
-                {'label': '${media.mediaType.isAnime ? 'Watch' : 'Read'} on NyanTV', 'url': 'https://github.com/NyanTV/NyanTV'}
-              ],
             }
           ],
           'status': 'online',
@@ -608,29 +631,17 @@ class DiscordRPCController extends GetxController {
             ),
             buttons: [
               RPCButton(label: 'View on AL', url: anilistUrl),
-              const RPCButton(
-                label: 'Watch on NyanTV',
+              RPCButton(
+                label: '${media.mediaType.isAnime ? 'Watch' : 'Read'} on NyanTV',
                 url: 'https://github.com/NyanTV/NyanTV/',
               ),
             ],
           ),
         );
-        print('Media presence updated successfully');
+        print('Media presence updated successfully (Desktop)');
       } catch (e) {
         print('Error updating media presence: $e');
       }
-    }
-  }
-
-  String _formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-
-    if (hours > 0) {
-      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    } else {
-      return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     }
   }
 
@@ -644,6 +655,9 @@ class DiscordRPCController extends GetxController {
     }
 
     if (isMobile) {
+      // WICHTIG: Images VOR jsonEncode verarbeiten!
+      final largeImage = await _processImageUrl(_getAppIconUrl());
+      
       final presencePayload = jsonEncode({
         'op': 3,
         'd': {
@@ -656,12 +670,9 @@ class DiscordRPCController extends GetxController {
               'details': activity ?? 'Browsing Stuff',
               'state': details ?? 'Idle',
               'assets': {
-                'large_image': await _processImageUrl(_getAppIconUrl()),
-                'large_text': 'NyanTV - Anime',
+                'large_image': largeImage,
+                'large_text': 'NyanTV - Anime & Manga',
               },
-              'buttons': [
-                {'label': 'Download NyanTV', 'url': 'https://github.com/NyanTV/NyanTV/'}
-              ],
             }
           ],
           'status': 'online',
@@ -679,11 +690,11 @@ class DiscordRPCController extends GetxController {
             activityType: ActivityType.playing,
             assets: RPCAssets(
               largeImage: await _processImageUrl(_getAppIconUrl()),
-              largeText: 'NyanTV - Anime',
+              largeText: 'NyanTV - Anime & Manga',
             ),
           ),
         );
-        print('Browsing presence updated successfully');
+        print('Browsing presence updated successfully (Desktop)');
       } catch (e) {
         print('Error updating browsing presence: $e');
       }
@@ -707,11 +718,11 @@ class DiscordRPCController extends GetxController {
         },
       };
       _gatewaySocket?.add(jsonEncode(payload));
-      print('Presence cleared successfully');
+      print('Presence cleared successfully (Mobile)');
     } else {
       try {
         await _discordRPC!.clearActivity();
-        print('Presence cleared successfully');
+        print('Presence cleared successfully (Desktop)');
       } catch (e) {
         print('Error clearing presence: $e');
       }

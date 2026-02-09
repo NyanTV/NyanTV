@@ -49,6 +49,7 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:volume_controller/volume_controller.dart';
 import 'package:nyantv/utils/aniskip.dart' as aniskip;
 import 'package:nyantv/utils/tv_scroll_mixin.dart';
+import 'package:nyantv/controllers/discord/discord_rpc.dart';
 import 'package:nyantv/main.dart';
 
 class WatchPage extends StatefulWidget {
@@ -81,6 +82,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   final offlineStorage = Get.find<OfflineStorageController>();
   late ServicesType mediaService;
+  late DiscordRPCController discordRPC;
 
   late Player player;
   late VideoController playerController;
@@ -131,6 +133,11 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final leftOriented = true.obs;
   late TVRemoteHandler? _tvRemoteHandler;
 
+  Timer? _discordUpdateTimer;
+  bool _isUpdatingDiscord = false;
+  DateTime? _lastDiscordUpdate;
+  final _minUpdateInterval = const Duration(seconds: 2);
+
   final currentVisualProfile = 'natural'.obs;
   RxMap<String, int> customSettings = <String, int>{}.obs;
 
@@ -145,6 +152,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     initTVScroll();
     final settings = Get.find<Settings>();
     mediaService = widget.anilistData.serviceType;
+    discordRPC = DiscordRPCController.instance;
     
     if (settings.isTV.value) {
       resizeMode.value = "Contain";
@@ -285,6 +293,100 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     }
   }
 
+  void _scheduleDiscordUpdate({bool isPaused = false}) {
+    _discordUpdateTimer?.cancel();
+    
+    if (_isUpdatingDiscord) {
+      Logger.i('Discord update already in progress, skipping...');
+      return;
+    }
+    
+    if (_lastDiscordUpdate != null) {
+      final timeSinceLastUpdate = DateTime.now().difference(_lastDiscordUpdate!);
+      if (timeSinceLastUpdate < _minUpdateInterval) {
+        Logger.i('Discord update too soon, waiting...');
+        final waitTime = _minUpdateInterval - timeSinceLastUpdate;
+        _discordUpdateTimer = Timer(waitTime, () {
+          _performDiscordUpdate(isPaused: isPaused);
+        });
+        return;
+      }
+    }
+    
+    _discordUpdateTimer = Timer(const Duration(milliseconds: 300), () {
+      _performDiscordUpdate(isPaused: isPaused);
+    });
+  }
+
+  Future<void> _waitForPlayerReady() async {
+    int attempts = 0;
+    while (attempts < 30) {
+      if (episodeDuration.value.inMilliseconds > 0 && 
+          currentEpisode.value.durationInMilliseconds != null &&
+          currentEpisode.value.durationInMilliseconds! > 0) {
+        await Future.delayed(const Duration(milliseconds: 300));
+        Logger.i('Player ready check passed: Duration=${episodeDuration.value.inSeconds}s, Episode Duration=${currentEpisode.value.durationInMilliseconds}ms');
+        return;
+      }
+      await Future.delayed(const Duration(milliseconds: 200));
+      attempts++;
+    }
+    Logger.i('Warning: Player ready timeout after ${attempts * 200}ms - proceeding anyway');
+  }
+
+  Future<void> _performDiscordUpdate({bool isPaused = false}) async {
+    
+    if (_isUpdatingDiscord) {
+      Logger.i('Skipping Discord update - already updating');
+      return;
+    }
+    
+    if (episodeDuration.value.inMilliseconds == 0) {
+      Logger.i('Skipping Discord update - duration not ready yet (episodeDuration=0)');
+      return;
+    }
+    
+    _isUpdatingDiscord = true;
+    _lastDiscordUpdate = DateTime.now();
+    
+    try {
+      final totalEps = episodeList.isNotEmpty 
+          ? 'Total: ${episodeList.length} Episodes' 
+          : '';
+      
+      Logger.i('=== DISCORD UPDATE START ===');
+      Logger.i('Episode: ${currentEpisode.value.number}, Paused: $isPaused');
+      Logger.i('Position: ${currentPosition.value.inSeconds}s / ${episodeDuration.value.inSeconds}s');
+      Logger.i('Episode Duration (ms): ${currentEpisode.value.durationInMilliseconds}');
+      Logger.i('Episode Position (ms): ${currentEpisode.value.timeStampInMilliseconds}');
+      Logger.i('Discord Connected: ${discordRPC.isConnected}');
+      
+      if (isPaused) {
+        Logger.i('Calling updateAnimePresencePaused...');
+        await discordRPC.updateAnimePresencePaused(
+          anime: anilistData.value,
+          episode: currentEpisode.value,
+          totalEpisodes: totalEps,
+        );
+      } else {
+        Logger.i('Calling updateAnimePresence...');
+        await discordRPC.updateAnimePresence(
+          anime: anilistData.value,
+          episode: currentEpisode.value,
+          totalEpisodes: totalEps,
+        );
+      }
+      
+      Logger.i('=== DISCORD UPDATE SUCCESS ===');
+    } catch (e, stackTrace) {
+      Logger.i('=== DISCORD UPDATE FAILED ===');
+      Logger.i('Error: $e');
+      Logger.i('Stack: $stackTrace');
+    } finally {
+      _isUpdatingDiscord = false;
+    }
+  }
+
   void _initOrientations() async {
     if (!settings.isTV.value) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -372,10 +474,12 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         settings.preferences.get('shaders_enabled', defaultValue: false);
     Episode? savedEpisode = offlineStorage.getWatchedEpisode(
         widget.anilistData.id, currentEpisode.value.number);
+    
     int startTimeMilliseconds =
         (savedEpisode?.number ?? 0) == currentEpisode.value.number
             ? savedEpisode?.timeStampInMilliseconds ?? 0
             : 0;
+    
     if (firstTime) {
       player = Player(
         configuration: getPlayerConfig(areShadersEnabled),
@@ -396,14 +500,17 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       episodeDuration.value = Duration.zero;
       bufferred.value = Duration.zero;
     }
+    
     player.open(Media(episode.value.url,
         httpHeaders: episode.value.headers ??
             {'Referer': sourceController.activeSource.value?.baseUrl ?? ''},
         start: Duration(milliseconds: startTimeMilliseconds)));
+    
     _initSubs();
     player.setRate(prevRate.value);
     isOPSkippedOnce.value = false;
     isEDSkippedOnce.value = false;
+    
     final skipQuery = aniskip.SkipSearchQuery(
         idMAL: widget.anilistData.idMal,
         episodeNumber: currentEpisode.value.number);
@@ -413,10 +520,29 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       debugPrint("An error occurred: $error");
       debugPrint("Stack trace: $stackTrace");
     });
+    
     if (areShadersEnabled) {
       final key = (PlayerShaders.getShaders()
           .indexWhere((e) => e == settings.selectedShader));
       setShaders(key, showMessage: false);
+    }
+    
+    if (firstTime) {
+      StreamSubscription? initSub;
+      initSub = player.stream.duration.listen((duration) {
+        if (duration.inMilliseconds > 0) {
+          Logger.i('Player ready with duration: ${duration.inSeconds}s');
+          initSub?.cancel();
+          
+          _waitForPlayerReady().then((_) {
+            if (mounted) {
+              Logger.i('Player fully ready, performing Discord update...');
+              isSwitchingEpisode = false;
+              _performDiscordUpdate(isPaused: false);
+            }
+          });
+        }
+      });
     }
   }
 
@@ -424,6 +550,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   bool isSwitchingEpisode = false;
   StreamSubscription<Duration>? _positionSubscription;
   bool _isSeeking = false;
+  bool _isManualSeeking = false;
   int lastProcessedSecond = -1;
   Duration _lastPosition = Duration.zero;
   DateTime _lastUIUpdate = DateTime.now();
@@ -467,9 +594,15 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       isPlaying.value = e;
 
       if (e) {
-        Future.delayed(const Duration(seconds: 2), () {
-          isSwitchingEpisode = false;
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (mounted) {
+            isSwitchingEpisode = false;
+          }
         });
+      }
+      
+      if (!_isManualSeeking) {
+        _scheduleDiscordUpdate(isPaused: !e);
       }
     });
 
@@ -606,14 +739,20 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   Future<void> fetchEpisode(bool prev) async {
     trackEpisode(
         currentPosition.value, episodeDuration.value, currentEpisode.value);
+    
+    isSwitchingEpisode = true;
+    
     setState(() {
       player.open(Media(''));
     });
+    
     final episodeToNav = navEpisode(prev);
     if (episodeToNav == null) {
       snackBar("No Streams Found");
+      isSwitchingEpisode = false;
       return;
     }
+    
     currentEpisode.value = episodeToNav;
     final resp = await sourceController.activeSource.value!.methods
         .getVideoList(d.DEpisode(
@@ -632,7 +771,16 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     currentEpisode.value.source = sourceController.activeSource.value!.name;
     currentEpisode.value.currentTrack = preferredStream;
     currentEpisode.value.videoTracks = video;
+    
     _initPlayer(false);
+    
+    _waitForPlayerReady().then((_) {
+      if (mounted) {
+        isSwitchingEpisode = false;
+        Logger.i('Episode switched, updating Discord presence...');
+        _scheduleDiscordUpdate(isPaused: false);
+      }
+    });
   }
 
   Future<void> setVolume(double value) async {
@@ -698,6 +846,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   }
 
   void _skipSegments(bool isLeft) {
+    _isManualSeeking = true;
+    
     player.pause();
     if (isLeftSide.value != isLeft) {
       doubleTapLabel.value = 0;
@@ -730,11 +880,19 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       _rightAnimationController.reset();
       doubleTapLabel.value = 0;
       skipDuration.value = 0;
+      
+      _isManualSeeking = false;
       player.play();
+      
+      if (mounted && !isSwitchingEpisode) {
+        _scheduleDiscordUpdate(isPaused: false);
+      }
     });
   }
 
   void _megaSkip(bool invert) {
+    _isManualSeeking = true;
+    
     if (invert) {
       final duration = Duration(
           seconds: currentPosition.value.inSeconds - settings.skipDuration);
@@ -751,6 +909,13 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       currentPosition.value = duration;
       player.seek(duration);
     }
+    
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _isManualSeeking = false;
+      if (mounted && !isSwitchingEpisode && isPlaying.value) {
+        _scheduleDiscordUpdate(isPaused: false);
+      }
+    });
   }
 
   void _handleAutoSkip() {
@@ -815,11 +980,20 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     _hideControlsTimer?.cancel();
     doubleTapTimeout?.cancel();
     _positionSubscription?.cancel();
+    _discordUpdateTimer?.cancel();
     disposeTVScroll();
 
     trackEpisode(
         currentPosition.value, episodeDuration.value, currentEpisode.value,
         updateAL: false);
+
+    if (mounted && widget.shouldTrack) {
+      try {
+        discordRPC.updateMediaPresence(media: anilistData.value);
+      } catch (e) {
+        Logger.i('Discord update on dispose failed (expected on app close): $e');
+      }
+    }
 
     player.dispose();
     _leftAnimationController.dispose();
@@ -914,6 +1088,9 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
             if (settings.isTV.value && showControls.value) {
               toggleControls(val: false);
             } else {
+              if (widget.shouldTrack) {
+                discordRPC.updateMediaPresence(media: anilistData.value);
+              }
               Get.back();
             }
           },
@@ -1674,7 +1851,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                     icon: isLocked.value
                                         ? Icons.lock
                                         : Icons.lock_open),
-                              ],
+              ],
                             ),
                           ),
                         ],
@@ -1739,6 +1916,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                         .toDouble(),
                                     onChangeStart: (_) {
                                       startSeeking();
+                                      _isManualSeeking = true;
                                     },
                                     onChangeEnd: (val) async {
                                       if (episodeDuration.value.inMilliseconds
@@ -1748,6 +1926,13 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                             Duration(milliseconds: val.toInt());
                                         player.seek(newPosition);
                                         endSeeking(newPosition);
+                                        
+                                        Future.delayed(const Duration(milliseconds: 300), () {
+                                          _isManualSeeking = false;
+                                          if (mounted && !isSwitchingEpisode && isPlaying.value) {
+                                            _scheduleDiscordUpdate(isPaused: false);
+                                          }
+                                        });
                                       }
                                     },
                                     onChanged: (val) {
