@@ -59,6 +59,8 @@
 ## Support Us
 
 > [!TIP]
+> Add your **Discord account** in the **NyanTV settings** to help spread it
+>
 > ⭐ **Star this repository to support the developer & encourage the development of the app!**
 
 <div align="center">
