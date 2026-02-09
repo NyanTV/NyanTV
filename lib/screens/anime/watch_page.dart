@@ -503,8 +503,9 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     
     player.open(Media(episode.value.url,
         httpHeaders: episode.value.headers ??
-            {'Referer': sourceController.activeSource.value?.baseUrl ?? ''},
-        start: Duration(milliseconds: startTimeMilliseconds)));
+            {'Referer': sourceController.activeSource.value?.baseUrl ?? ''}));
+    
+    _performInitialSeek(startTimeMilliseconds);
     
     _initSubs();
     player.setRate(prevRate.value);
@@ -544,6 +545,76 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         }
       });
     }
+  }
+
+  StreamSubscription? _initialSeekSubscription;
+  bool _hasPerformedInitialSeek = false;
+
+  void _performInitialSeek(int startTimeMilliseconds) {
+    if (startTimeMilliseconds <= 0) {
+      _hasPerformedInitialSeek = true;
+      return;
+    }
+    
+    _hasPerformedInitialSeek = false;
+    _initialSeekSubscription?.cancel();
+    
+    Logger.i('Setting up initial seek to: ${startTimeMilliseconds}ms');
+    StreamSubscription? durationSub;
+    StreamSubscription? bufferSub;
+    bool durationReady = false;
+    bool bufferReady = false;
+    
+    void trySeek() {
+      if (durationReady && bufferReady && !_hasPerformedInitialSeek) {
+        _hasPerformedInitialSeek = true;
+        durationSub?.cancel();
+        bufferSub?.cancel();
+        
+        final seekPosition = Duration(milliseconds: startTimeMilliseconds);
+        
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            Logger.i('Performing initial seek to: ${seekPosition.inSeconds}s');
+            player.seek(seekPosition);
+            
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted && currentPosition.value.inMilliseconds < startTimeMilliseconds - 1000) {
+                Logger.i('Seek verification failed, retrying...');
+                player.seek(seekPosition);
+              }
+            });
+          }
+        });
+      }
+    }
+    
+    durationSub = player.stream.duration.listen((duration) {
+      if (duration.inMilliseconds > 0) {
+        durationReady = true;
+        Logger.i('Duration ready: ${duration.inSeconds}s');
+        trySeek();
+      }
+    });
+    
+    bufferSub = player.stream.buffer.listen((buffer) {
+      if (buffer.inMilliseconds > startTimeMilliseconds || 
+          buffer.inMilliseconds > 3000) {
+        bufferReady = true;
+        Logger.i('Buffer ready: ${buffer.inSeconds}s');
+        trySeek();
+      }
+    });
+    
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!_hasPerformedInitialSeek && mounted) {
+        Logger.i('Initial seek timeout, forcing seek');
+        _hasPerformedInitialSeek = true;
+        durationSub?.cancel();
+        bufferSub?.cancel();
+        player.seek(Duration(milliseconds: startTimeMilliseconds));
+      }
+    });
   }
 
   int lastProcessedMinute = 0;
@@ -981,6 +1052,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     doubleTapTimeout?.cancel();
     _positionSubscription?.cancel();
     _discordUpdateTimer?.cancel();
+    _initialSeekSubscription?.cancel();
     disposeTVScroll();
 
     trackEpisode(
