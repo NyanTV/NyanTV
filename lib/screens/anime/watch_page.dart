@@ -20,6 +20,7 @@ import 'package:nyantv/screens/anime/widgets/episode_watch_screen.dart';
 import 'package:nyantv/screens/anime/widgets/video_slider.dart';
 import 'package:nyantv/screens/settings/sub_settings/settings_player.dart';
 import 'package:nyantv/utils/color_profiler.dart';
+import 'package:nyantv/utils/device_ram.dart';
 import 'package:nyantv/utils/shaders.dart';
 import 'package:nyantv/utils/string_extensions.dart';
 import 'package:nyantv/widgets/common/checkmark_tile.dart';
@@ -532,16 +533,26 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   PlayerConfiguration getPlayerConfig(bool shadersEnabled) {
     final settings = Get.find<Settings>();
+    
     if (settings.isTV.value) {
-      return const PlayerConfiguration(
+      // Get the buffer configuration based on selected profile
+      final profile = settings.tvBufferProfile.value;
+      final config = DeviceRamHelper.getConfig(profile);
+      
+      Logger.i('Using TV buffer profile: ${DeviceRamHelper.getProfileName(profile)}');
+      Logger.i('Buffer: ${config.bufferMB}MB, Cache: ${config.cacheSecs}s');
+      
+      return PlayerConfiguration(
         options: {
           "vo": "gpu",
           "hwdec": "no",
           "gpu-context": "android",
           "cache": "yes",
-          "cache-secs": "30",
+          "cache-secs": "${config.cacheSecs}",
+          "demuxer-max-bytes": config.demuxerMax,
+          "demuxer-max-back-bytes": config.demuxerBack,
         },
-        bufferSize: 32 * 1024 * 1024,
+        bufferSize: config.bufferBytes,
       );
     }
     
@@ -552,7 +563,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     return const PlayerConfiguration();
   }
 
-void _initPlayer(bool firstTime) async {
+  void _initPlayer(bool firstTime) async {
     final areShadersEnabled =
         settings.preferences.get('shaders_enabled', defaultValue: false);
     Episode? savedEpisode = offlineStorage.getWatchedEpisode(
@@ -566,10 +577,23 @@ void _initPlayer(bool firstTime) async {
     final bool hasInitialSeek = startTimeMilliseconds > 0;
     
     if (firstTime) {
+      // IMPORTANT: Use the buffer profile configuration
       player = Player(
         configuration: getPlayerConfig(areShadersEnabled),
       );
+      
       if (settings.isTV.value) {
+        // Log the active buffer configuration
+        final profile = settings.tvBufferProfile.value;
+        final config = DeviceRamHelper.getConfig(profile);
+        Logger.i('=== TV PLAYER INITIALIZED ===');
+        Logger.i('Profile: ${DeviceRamHelper.getProfileName(profile)}');
+        Logger.i('Buffer Size: ${config.bufferMB}MB (${config.bufferBytes} bytes)');
+        Logger.i('Cache Duration: ${config.cacheSecs}s');
+        Logger.i('Demuxer Max: ${config.demuxerMax}');
+        Logger.i('Demuxer Back: ${config.demuxerBack}');
+        Logger.i('=============================');
+        
         playerController = VideoController(player,
             configuration: const VideoControllerConfiguration(
               androidAttachSurfaceAfterVideoParameters: false,
@@ -653,7 +677,7 @@ void _initPlayer(bool firstTime) async {
       });
     }
   }
-
+    
   StreamSubscription? _initialSeekSubscription;
   bool _hasPerformedInitialSeek = false;
 

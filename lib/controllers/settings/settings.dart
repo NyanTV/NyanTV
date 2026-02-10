@@ -4,6 +4,7 @@ import 'package:nyantv/screens/onboarding/welcome_dialog.dart';
 import 'package:nyantv/utils/function.dart';
 import 'package:nyantv/utils/shaders.dart';
 import 'package:nyantv/utils/updater.dart';
+import 'package:nyantv/utils/device_ram.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
@@ -27,49 +28,87 @@ class Settings extends GetxController {
   RxBool isTV = false.obs;
   final _selectedShader = ''.obs;
   final _selectedProfile = 'MID-END'.obs;
+  final Rx<BufferProfile> tvBufferProfile = BufferProfile.medium.obs;
   final mpvPath = ''.obs;
+
+  // Flag to track initialization
+  bool _isInitialized = false;
 
   String get selectedShader => _selectedShader.value;
 
   set selectedShader(String value) {
     _selectedShader.value = value;
-    preferences.put('selected_shader', value);
+    if (_isInitialized) {
+      preferences.put('selected_shader', value);
+    }
   }
 
   String get selectedProfile => _selectedProfile.value;
 
   set selectedProfile(String value) {
     _selectedProfile.value = value;
-    preferences.put('selected_profile', value);
+    if (_isInitialized) {
+      preferences.put('selected_profile', value);
+    }
+  }
+
+  void saveTVBufferProfile(BufferProfile profile) {
+    tvBufferProfile.value = profile;
+    if (_isInitialized) {
+      preferences.put('tv_buffer_profile', profile.index);
+    }
   }
 
   double get uiScale {
-  final value = preferences.get('ui_scale', defaultValue: 1.0);
-  if (value <= 0.0 || value > 3.0) {
-    return 1.0;
+    if (!_isInitialized) return 1.0;
+    final value = preferences.get('ui_scale', defaultValue: 1.0);
+    if (value <= 0.0 || value > 3.0) {
+      return 1.0;
+    }
+    return value;
   }
-  return value;
-  }
+
   set uiScale(double value) {
-    preferences.put('ui_scale', value);
-    update();
+    if (_isInitialized) {
+      preferences.put('ui_scale', value);
+      update();
+    }
   }
 
   @override
   void onInit() {
     super.onInit();
+    
+    // Initialize Hive box
+    try {
+      preferences = Hive.box('preferences');
+      _isInitialized = true;
+    } catch (e) {
+      print('Error initializing preferences box: $e');
+      rethrow;
+    }
+
+    final savedProfile = preferences.get('tv_buffer_profile', defaultValue: BufferProfile.medium.index);
+    if (savedProfile >= 0 && savedProfile < BufferProfile.values.length) {
+      tvBufferProfile.value = BufferProfile.values[savedProfile];
+    } else {
+      tvBufferProfile.value = BufferProfile.medium;
+    }
+
     var uiBox = Hive.box<UISettings>("UiSettings");
     var playerBox = Hive.box<PlayerSettings>("PlayerSettings");
     uiSettings = Rx<UISettings>(uiBox.get('settings') ?? UISettings());
     playerSettings =
         Rx<PlayerSettings>(playerBox.get('settings') ?? PlayerSettings());
-    preferences = Hive.box('preferences');
-    selectedShader = preferences.get('selected_shader', defaultValue: '');
-    selectedProfile =
-        preferences.get('selected_profile', defaultValue: 'MID-END');
+
+    _selectedShader.value = preferences.get('selected_shader', defaultValue: '');
+    _selectedProfile.value = preferences.get('selected_profile', defaultValue: 'MID-END');
+
     isTv().then((e) {
       isTV.value = e;
     });
+
+    // Initialize player shaders
     PlayerShaders.createMpvConfigFolder();
     PlayerShaders.getMpvPath().then((e) {
       mpvPath.value = e;
@@ -270,7 +309,7 @@ class Settings extends GetxController {
 
   int get markAsCompleted => _getPlayerSetting((s) => s.markAsCompleted);
   set markAsCompleted(int value) =>
-      _getPlayerSetting((s) => s.markAsCompleted = value);
+      _setPlayerSetting((s) => s?.markAsCompleted = value);
 
   void updateHomePageCard(String key, bool value) {
     final currentCards = Map<String, bool>.from(uiSettings.value.homePageCards);

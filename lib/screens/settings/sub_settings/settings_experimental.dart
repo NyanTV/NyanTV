@@ -7,6 +7,7 @@ import 'package:nyantv/widgets/common/glow.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_dropdown.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_expansion_tile.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
+import 'package:nyantv/utils/device_ram.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -25,6 +26,8 @@ class SettingsExperimental extends StatefulWidget {
 class _SettingsExperimentalState extends State<SettingsExperimental>
     with TickerProviderStateMixin {
   final settings = Get.find<Settings>();
+  final _detectedRamMB = 0.obs;
+  final _recommendedProfile = BufferProfile.medium.obs;
 
   final _shadersDownloaded = false.obs;
   final _isDownloading = false.obs;
@@ -43,7 +46,13 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
     super.initState();
     _initializeAnimations();
     _checkShadersAvailability();
+    _detectDeviceRam();
     getSavedSettings();
+  }
+
+  void _detectDeviceRam() {
+    _detectedRamMB.value = DeviceRamHelper.getDeviceRamMB();
+    _recommendedProfile.value = DeviceRamHelper.getRecommendedProfile();
   }
 
   void getSavedSettings() {
@@ -169,6 +178,57 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
     _progressController.animateTo(progress);
   }
 
+  Widget _buildBufferDetail(BuildContext context, BufferProfile profile) {
+    final config = DeviceRamHelper.getConfig(profile);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildDetailRow(
+          context,
+          'Buffer Size',
+          '${config.bufferMB}MB',
+        ),
+        _buildDetailRow(
+          context,
+          'Cache Duration',
+          '${config.cacheSecs}s',
+        ),
+        _buildDetailRow(
+          context,
+          'Max Skip',
+          '~${config.cacheSecs - 10}s',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailRow(BuildContext context, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              fontSize: 11,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildKeybindingItem(String key, String description) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -287,53 +347,239 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                     ),
                   )),
               
-                  GetBuilder<Settings>(
-                    builder: (settings) {
-                      return NyantvExpansionTile(
-                        title: "UI Scaling",
-                        initialExpanded: true,
-                        content: Column(
-                          children: [
-                            CustomSliderTile(
-                              icon: Icons.zoom_in_outlined,
-                              title: "UI Scale Factor",
-                              label: "${(settings.uiScale * 100).toInt()}%",
-                              description:
-                                  "Adjust the overall UI scale (like browser zoom)",
-                              sliderValue: settings.uiScale,
-                              divisions: 15,
-                              onChanged: (double value) {
-                                settings.uiScale = value;
-                              },
-                              min: 0.5,
-                              max: 2.0,
+              GetBuilder<Settings>(
+                builder: (settings) {
+                  return NyantvExpansionTile(
+                    title: "UI Scaling",
+                    initialExpanded: true,
+                    content: Column(
+                      children: [
+                        CustomSliderTile(
+                          icon: Icons.zoom_in_outlined,
+                          title: "UI Scale Factor",
+                          label: "${(settings.uiScale * 100).toInt()}%",
+                          description:
+                              "Adjust the overall UI scale (like browser zoom)",
+                          sliderValue: settings.uiScale,
+                          divisions: 15,
+                          onChanged: (double value) {
+                            settings.uiScale = value;
+                          },
+                          min: 0.5,
+                          max: 2.0,
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            "Tip: 0.5 (50%) = Smaller, 1 (100%) = Default, 1.5 (150%) = Larger",
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.6),
+                              fontSize: 12,
                             ),
-                            const SizedBox(height: 8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+              Obx(() {
+                final currentProfile = settings.tvBufferProfile.value;
+                
+                return NyantvExpansionTile(
+                  title: "TV Player Buffer",
+                  initialExpanded: false,
+                  content: Column(
+                    children: [
+                      // RAM Detection Info
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primaryContainer
+                              .withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.memory,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Pick Your Buffer Profile',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Choosing more than available MIGHT crash the player!',
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withOpacity(0.7),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Buffer Profile Selector
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.tune,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Buffer Profile',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            // Profile Dropdown
+                            NyantvDropdown(
+                              items: BufferProfile.values.map((profile) {
+                                return DropdownItem(
+                                  text: DeviceRamHelper.getProfileName(profile),
+                                  value: DeviceRamHelper.profileToString(profile),
+                                );
+                              }).toList(),
+                              selectedItem: DropdownItem(
+                                text: DeviceRamHelper.getProfileName(currentProfile),
+                                value: DeviceRamHelper.profileToString(currentProfile),
+                              ),
+                              label: "SELECT BUFFER PROFILE",
+                              icon: Icons.memory,
+                              onChanged: (item) {
+                                final profile = DeviceRamHelper.stringToProfile(item.value);
+                                settings.saveTVBufferProfile(profile);
+                              },
+                            ),
+                            
+                            const SizedBox(height: 12),
+                            
+                            // Current Profile Info
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: Theme.of(context)
                                     .colorScheme
-                                    .surfaceContainerHighest
-                                    .withOpacity(0.3),
+                                    .primaryContainer
+                                    .withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    DeviceRamHelper.getProfileDescription(currentProfile),
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withOpacity(0.8),
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  if (currentProfile != BufferProfile.medium) ...[
+                                    const SizedBox(height: 8),
+                                    _buildBufferDetail(context, currentProfile),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 12),
+                      
+                      // Info Box
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
                               child: Text(
-                                "Tip: 0.5 (50%) = Smaller, 1 (100%) = Default, 1.5 (150%) = Larger",
+                                'Higher buffer = better skip performance but uses more RAM. '
+                                'Only affects Android TV devices.',
                                 style: TextStyle(
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onSurface
                                       .withOpacity(0.6),
-                                  fontSize: 12,
+                                  fontSize: 11,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      );
-                    },
-                  ),             
+                      ),
+                    ],
+                  ),
+                );
+              }),
 
 
               Obx(() {
