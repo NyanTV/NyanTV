@@ -146,6 +146,89 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   void applySavedProfile() => ColorProfileManager()
       .applyColorProfile(currentVisualProfile.value, player);
 
+
+  void navigateToNextEpisode() {
+    if (playerSettings.autoSkipFiller) {
+      final targetEpisode = _getNextNonFillerEpisode();
+      if (targetEpisode != null) {
+        _switchToEpisode(targetEpisode);
+      } else if (_hasNextEpisode()) {
+        _switchToEpisode(_getNextEpisode()!);
+      }
+    } else {
+      if (_hasNextEpisode()) {
+        _switchToEpisode(_getNextEpisode()!);
+      }
+    }
+  }
+
+  bool _hasNextEpisode() {
+    return currentEpisode.value.number.toInt() < episodeList.value.last.number.toInt();
+  }
+
+  Episode? _getNextEpisode() {
+    final currentIndex = episodeList.value.indexOf(currentEpisode.value);
+    return currentIndex < episodeList.value.length - 1 
+        ? episodeList.value[currentIndex + 1] 
+        : null;
+  }
+
+  Episode? _getNextNonFillerEpisode() {
+    final currentIndex = episodeList.value.indexOf(currentEpisode.value);
+    int skippedCount = 0;
+    
+    for (int i = currentIndex + 1; i < episodeList.value.length; i++) {
+      final episode = episodeList.value[i];
+      if (episode.filler != true) {
+        if (skippedCount > 0) {
+          snackBar('Skipped $skippedCount filler episode${skippedCount > 1 ? 's' : ''}');
+        }
+        return episode;
+      }
+      skippedCount++;
+    }
+    return _getNextEpisode();
+  }
+
+  Future<void> _switchToEpisode(Episode episode) async {
+    isSwitchingEpisode = true;
+    
+    trackEpisode(currentPosition.value, episodeDuration.value, currentEpisode.value);
+    
+    setState(() {
+      player.open(Media(''));
+    });
+    
+    currentEpisode.value = episode;
+    final resp = await sourceController.activeSource.value!.methods
+        .getVideoList(d.DEpisode(
+            episodeNumber: episode.number, url: episode.link));
+    final video = resp.map((e) => model.Video.fromVideo(e)).toList();
+    final preferredStream = video.firstWhere(
+      (e) => e.quality == this.episode.value.quality,
+      orElse: () {
+        snackBar("Preferred Stream Not Found, Selecting ${video[0].quality}");
+        return video[0];
+      },
+    );
+
+    this.episode.value = preferredStream;
+    episodeTracks.value = video;
+    currentEpisode.value.source = sourceController.activeSource.value!.name;
+    currentEpisode.value.currentTrack = preferredStream;
+    currentEpisode.value.videoTracks = video;
+    
+    _initPlayer(false);
+    
+    _waitForPlayerReady().then((_) {
+      if (mounted) {
+        isSwitchingEpisode = false;
+        Logger.i('Episode switched, updating Discord presence...');
+        _scheduleDiscordUpdate(isPaused: false);
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -703,7 +786,7 @@ void _initPlayer(bool firstTime) async {
         if (!isSwitchingEpisode && episodeDuration.value.inMinutes >= 1) {
           isSwitchingEpisode = true;
           Future.delayed(const Duration(milliseconds: 500), () {
-            fetchEpisode(false);
+            navigateToNextEpisode();
           });
         }
       }

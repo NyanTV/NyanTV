@@ -1194,11 +1194,36 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
 
   void navigator(bool forward) {
     if (forward) {
-      changeEpisode(nextEpisode!);
-    } else if (hasNextEpisode) {
+      if (playerSettings.autoSkipFiller) {
+        final targetEpisode = _getNextNonFillerEpisode();
+        if (targetEpisode != null) {
+          changeEpisode(targetEpisode);
+        } else if (hasNextEpisode) {
+          changeEpisode(nextEpisode!);
+        }
+      } else {
+        changeEpisode(nextEpisode!);
+      }
+    } else if (hasPreviousEpisode) {
       changeEpisode(previousEpisode!);
     }
     onUserInteraction();
+  }
+
+  Episode? _getNextNonFillerEpisode() {
+    final currentIndex = currentEpisodeIndex;
+    int skippedCount = 0;
+    for (int i = currentIndex + 1; i < episodeList.length; i++) {
+      final episode = episodeList[i];
+      if (episode.filler != true) {
+        if (skippedCount > 0) {
+          snackBar('Skipped $skippedCount filler episode${skippedCount > 1 ? 's' : ''}');
+        }
+        return episode;
+      }
+      skippedCount++;
+    }
+    return nextEpisode;
   }
 
   void updateNavigatorState() {

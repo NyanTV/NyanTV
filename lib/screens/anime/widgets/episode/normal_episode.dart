@@ -91,15 +91,34 @@ class BetterEpisode extends StatelessWidget {
       decoration: BoxDecoration(
         color: _getBackgroundColor(context, isFiller),
         borderRadius: BorderRadius.circular(12),
+        border: isFiller ? Border.all(color: Colors.orange.withOpacity(0.3)) : null,
       ),
       child: Row(
         children: [
           _buildImageSection(context, progress, hasProgress, isCompact: true),
           const SizedBox(width: 10),
           Expanded(
-            child: NyantvText(
-              text: episode.title ?? '?',
-              variant: TextVariant.bold,
+            child: Column(
+               mainAxisAlignment: MainAxisAlignment.center,
+               crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+                  if (isFiller)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 2.0),
+                      child: NyantvText(
+                        text: "[Filler]",
+                        size: 10,
+                        color: Colors.orange,
+                        variant: TextVariant.bold,
+                      ),
+                    ),
+                  NyantvText(
+                    text: episode.title ?? '?',
+                    variant: TextVariant.bold,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+               ],
             ),
           ),
         ],
@@ -119,6 +138,7 @@ class BetterEpisode extends StatelessWidget {
       decoration: BoxDecoration(
         color: _getBackgroundColor(context, isFiller),
         borderRadius: BorderRadius.circular(12),
+        border: isFiller ? Border.all(color: Colors.orange.withOpacity(0.3)) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,11 +153,35 @@ class BetterEpisode extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: NyantvText(
-                  text: episode.title ?? 'Unknown Title',
-                  variant: TextVariant.bold,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                     if (isFiller)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4.0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                               color: Colors.orange.withOpacity(0.2),
+                               borderRadius: BorderRadius.circular(4),
+                               border: Border.all(color: Colors.orange.withOpacity(0.5))
+                            ),
+                            child: const NyantvText(
+                              text: "FILLER",
+                              size: 10,
+                              color: Colors.orange,
+                              variant: TextVariant.bold,
+                            ),
+                          ),
+                        ),
+                     NyantvText(
+                      text: episode.title ?? 'Unknown Title',
+                      variant: TextVariant.bold,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
             ],
