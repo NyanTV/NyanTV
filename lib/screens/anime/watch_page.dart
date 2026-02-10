@@ -648,9 +648,7 @@ void _initPlayer(bool firstTime) async {
           discordUpdateHandled = true;
           initSub?.cancel();
           isSwitchingEpisode = false;
-          if (!hasInitialSeek) {
-            _performDiscordUpdate(isPaused: false);
-          }
+          _performDiscordUpdate(isPaused: false);
         }
       });
     }
@@ -816,6 +814,15 @@ void _initPlayer(bool firstTime) async {
 
     playerController.player.stream.buffering.listen((e) {
       isBuffering.value = e;
+
+      if (!e && isPlaying.value && !isSwitchingEpisode && !_isManualSeeking) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted && !isSwitchingEpisode) {
+            Logger.i('Buffering ended, re-syncing Discord presence');
+            _scheduleDiscordUpdate(isPaused: false);
+          }
+        });
+       }
     });
 
     player.stream.buffer.listen((e) {

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:nyantv/models/Media/media.dart';
-import 'package:nyantv/models/Offline/Hive/chapter.dart';
 import 'package:nyantv/models/Offline/Hive/episode.dart';
 import 'package:nyantv/utils/extension_utils.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
@@ -11,6 +10,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_discord_rpc_fork/flutter_discord_rpc.dart';
 import 'package:get/get.dart';
 import 'dart:convert';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 
 enum DiscordKeys { token, profile }
@@ -96,7 +96,7 @@ class DiscordProfile {
   }
 }
 
-class DiscordRPCController extends GetxController {
+class DiscordRPCController extends GetxController with WidgetsBindingObserver{
   static const String _applicationId = '1470114715978961099';
   static const String _gatewayUrl =
       'wss://gateway.discord.gg/?v=10&encoding=json';
@@ -121,16 +121,76 @@ class DiscordRPCController extends GetxController {
   bool get isLoading => _isLoading.value;
   DiscordProfile? get userProfile => profile.value;
 
+  Timer? _reconnectTimer;
+  int _missedHeartbeats = 0;
+  static const int _maxMissedHeartbeats = 3;
+  bool _isReconnecting = false;
+
   static DiscordRPCController get instance => Get.find<DiscordRPCController>();
 
   @override
   Future<void> onInit() async {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     await _loadToken();
     if (_token.value.isNotEmpty) {
       await _loadProfile();
       await connect();
     }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    switch (state) {
+      case AppLifecycleState.resumed:
+        print('App resumed - checking Discord connection');
+        _checkAndReconnect();
+        break;
+        
+      case AppLifecycleState.paused:
+        print('App paused - clearing presence');
+        _missedHeartbeats = 0;
+        // Optional: Presence clearen wenn App in Hintergrund geht
+        clearPresence();
+        break;
+        
+      case AppLifecycleState.inactive:
+        print('App inactive');
+        break;
+        
+      case AppLifecycleState.detached:
+        print('App detached - disconnecting Discord');
+        _disconnect();
+        break;
+        
+      case AppLifecycleState.hidden:
+        print('App hidden');
+        break;
+    }
+  }
+
+  Future<void> _checkAndReconnect() async {
+    if (!_isConnected.value && _token.value.isNotEmpty && !_isReconnecting) {
+      // attempting reconnect
+      await _reconnect();
+    }
+  }
+
+  Future<void> _reconnect() async {
+    if (_isReconnecting) {
+      // Already reconnecting
+      return;
+    }
+
+    _isReconnecting = true;
+    await _disconnect();
+    
+    await Future.delayed(const Duration(seconds: 2));
+    
+    await connect();
+    _isReconnecting = false;
   }
 
   Future<void> _loadToken() async {
@@ -259,8 +319,19 @@ class DiscordRPCController extends GetxController {
     } catch (e) {
       print('Failed to connect to Discord Gateway: $e');
       _isConnected.value = false;
-      snackBar('Failed to connect to Discord');
+      snackBar('Failed to connect to Discord, reconnecting..');
+      _scheduleReconnect();
     }
+  }
+
+  void _scheduleReconnect() {
+    if (_token.value.isEmpty || _isReconnecting) return;
+    
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!_isConnected.value && _token.value.isNotEmpty) {
+        _reconnect();
+      }
+    });
   }
 
   void _handleGatewayMessage(dynamic message) {
@@ -274,11 +345,13 @@ class DiscordRPCController extends GetxController {
         _heartbeatInterval = data['d']['heartbeat_interval'];
         _identify();
         _startHeartbeat();
+        _startConnectionMonitor();
         break;
       case 0: // Dispatch
         final event = data['t'];
         if (event == 'READY') {
           _isConnected.value = true;
+          _missedHeartbeats = 0;
           print('Discord Gateway Ready (Mobile)');
           updateBrowsingPresence(
             activity: 'Browsing Stuff',
@@ -288,6 +361,7 @@ class DiscordRPCController extends GetxController {
         break;
       case 11: // Heartbeat ACK
         print('Heartbeat acknowledged');
+        _missedHeartbeats = 0;
         break;
     }
   }
@@ -317,9 +391,28 @@ class DiscordRPCController extends GetxController {
     if (_heartbeatInterval != null) {
       _heartbeatTimer = Timer.periodic(
         Duration(milliseconds: _heartbeatInterval!),
-        (_) => _sendHeartbeat(),
+        (_) {
+          _sendHeartbeat();
+          _missedHeartbeats++;
+          
+          if (_missedHeartbeats >= _maxMissedHeartbeats) {
+            _reconnect();
+          }
+        },
       );
     }
+  }
+
+  void _startConnectionMonitor() {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) async {
+        if (!_isConnected.value && _token.value.isNotEmpty) {
+          await _reconnect();
+        }
+      },
+    );
   }
 
   void _sendHeartbeat() {
@@ -757,9 +850,11 @@ class DiscordRPCController extends GetxController {
   Future<void> _disconnect() async {
     if (isMobile) {
       _heartbeatTimer?.cancel();
+      _reconnectTimer?.cancel();
       await _gatewaySocket?.close();
       _gatewaySocket = null;
       _sequenceNumber = null;
+      _missedHeartbeats = 0;
     } else {
       if (_discordRPC != null) {
         try {
@@ -787,6 +882,9 @@ class DiscordRPCController extends GetxController {
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _reconnectTimer?.cancel();
+    _heartbeatTimer?.cancel();
     _disconnect();
     super.onClose();
   }
