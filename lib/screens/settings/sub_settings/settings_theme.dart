@@ -118,15 +118,18 @@ class _SettingsThemeState extends State<SettingsTheme> {
   }
 
   void handleCustomThemeSwitch(bool value) {
-    if (value) {
-      setState(() {
-        customTheme = true;
+    setState(() {
+      customTheme = value;
+      if (value) {
         defaultTheme = false;
         materialTheme = false;
-      });
-      Provider.of<ThemeProvider>(context, listen: false)
-          .setCustomSeedColor(selectedColorIndex);
-    }
+        Provider.of<ThemeProvider>(context, listen: false)
+            .setCustomSeedColor(selectedColorIndex);
+      } else {
+        defaultTheme = true;
+        Provider.of<ThemeProvider>(context, listen: false).setDefaultTheme();
+      }
+    });
   }
 
   void handlePaletteChange(int index) {
@@ -157,188 +160,192 @@ class _SettingsThemeState extends State<SettingsTheme> {
     return Glow(
       child: Scaffold(
         body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(10.0, 50.0, 10.0, 20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          padding: const EdgeInsets.fromLTRB(10.0, 50.0, 10.0, 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  IconButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainer
+                              .withOpacity(0.5)),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded)),
+                  const SizedBox(width: 10),
+                  const Text("Theme",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 20)),
+                ],
+              ),
+              const SizedBox(height: 30),
+              
+              // Appearance Section
+              NyantvExpansionTile(
+                title: 'Appearance',
+                content: Column(
                   children: [
-                    IconButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainer
-                                .withOpacity(0.5)),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded)),
-                    const SizedBox(width: 10),
-                    const Text("Theme",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 20)),
+                    _buildModeTemplates(),
+                    const SizedBox(height: 30),
+                    CustomSwitchTile(
+                      icon: HugeIcons.strokeRoundedPaintBrush01,
+                      title: "Default Theme",
+                      description: "Play around with App theme",
+                      switchValue: defaultTheme,
+                      onChanged: handleDefaultSwitch,
+                    ),
+                    const SizedBox(height: 10),
+                    CustomSwitchTile(
+                      icon: HugeIcons.strokeRoundedImage01,
+                      title: "Material You",
+                      description: "Take color from your wallpaper (A12+)",
+                      switchValue: materialTheme,
+                      onChanged: handleMaterialSwitch,
+                    ),
+                    const SizedBox(height: 10),
+                    Obx(() {
+                      return Column(
+                        children: [
+                          CustomSwitchTile(
+                            icon: HugeIcons.strokeRoundedBlur,
+                            title: "Liquid Mode",
+                            description:
+                                "Make everything glassy & liquidy...",
+                            switchValue: settings.liquidMode,
+                            onChanged: (e) {
+                              settings.disableGradient = false;
+                              settings.liquidMode = e;
+                            },
+                          ),
+                          settings.liquidMode
+                              ? Column(
+                                  children: [
+                                    const SizedBox(height: 10),
+                                    CustomTile(
+                                      icon: HugeIcons.strokeRoundedImageAdd01,
+                                      title: "Liquid Background",
+                                      description:
+                                          "Choose a custom background for liquid mode.",
+                                      onTap: () async {
+                                        await Liquid.pickLiquidBackground(
+                                            context);
+                                      },
+                                    ),
+                                    const SizedBox(height: 10),
+                                    CustomSwitchTile(
+                                      switchValue:
+                                          settings.retainOriginalColor,
+                                      icon: HugeIcons
+                                          .strokeRoundedImageComposition,
+                                      title: "Retain Original Color",
+                                      description:
+                                          "Enable this if you want to retain the original color of your wallpaper",
+                                      onChanged: (e) =>
+                                          settings.retainOriginalColor = e,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    CustomSwitchTile(
+                                      switchValue: settings.usePosterColor,
+                                      icon: HugeIcons
+                                          .strokeRoundedImageDownload,
+                                      title: "Use Poster Color",
+                                      description:
+                                          "Applies anime/manga poster color on details page",
+                                      onChanged: (e) =>
+                                          settings.usePosterColor = e,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    CustomTile(
+                                      icon: HugeIcons.strokeRoundedRefresh,
+                                      title: "Reset to Default Picture",
+                                      postFix: 0.width(),
+                                      description:
+                                          "Reset to default wallpaper!",
+                                      onTap: () =>
+                                          settings.liquidBackgroundPath = "",
+                                    ),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        ],
+                      );
+                    }),
                   ],
                 ),
-                const SizedBox(height: 30),
-                NyantvExpansionTile(
-                  title: 'Appearance',
+                initialExpanded: true,
+              ),
+              const SizedBox(height: 10),
+              
+              // Extras Section
+              NyantvExpansionTile(
+                  initialExpanded: true,
+                  title: 'Extras',
                   content: Column(
                     children: [
-                      _buildModeTemplates(),
-                      const SizedBox(height: 30),
-                      CustomSwitchTile(
-                        icon: HugeIcons.strokeRoundedPaintBrush01,
-                        title: "Default Theme",
-                        description: "Play around with App theme",
-                        switchValue: defaultTheme,
-                        onChanged: handleDefaultSwitch,
-                      ),
-                      const SizedBox(height: 10),
-                      CustomSwitchTile(
-                        icon: HugeIcons.strokeRoundedImage01,
-                        title: "Material You",
-                        description: "Take color from your wallpaper (A12+)",
-                        switchValue: materialTheme,
-                        onChanged: handleMaterialSwitch,
-                      ),
-                      const SizedBox(height: 10),
                       Obx(() {
-                        return Column(
-                          children: [
-                            CustomSwitchTile(
-                              icon: HugeIcons.strokeRoundedBlur,
-                              title: "Liquid Mode",
-                              description:
-                                  "Make everything glassy & liquidy...",
-                              switchValue: settings.liquidMode,
-                              onChanged: (e) {
-                                settings.disableGradient = false;
-                                settings.liquidMode = e;
-                              },
-                            ),
-                            settings.liquidMode
-                                ? Column(
-                                    children: [
-                                      const SizedBox(height: 10),
-                                      CustomTile(
-                                        icon: HugeIcons.strokeRoundedImageAdd01,
-                                        title: "Liquid Background",
-                                        description:
-                                            "Choose a custom background for liquid mode.",
-                                        onTap: () async {
-                                          await Liquid.pickLiquidBackground(
-                                              context);
-                                        },
-                                      ),
-                                      const SizedBox(height: 10),
-                                      CustomSwitchTile(
-                                        switchValue:
-                                            settings.retainOriginalColor,
-                                        icon: HugeIcons
-                                            .strokeRoundedImageComposition,
-                                        title: "Retain Original Color",
-                                        description:
-                                            "Enable this if you want to retain the original color of your wallpaper",
-                                        onChanged: (e) =>
-                                            settings.retainOriginalColor = e,
-                                      ),
-                                      const SizedBox(height: 10),
-                                      CustomSwitchTile(
-                                        switchValue: settings.usePosterColor,
-                                        icon: HugeIcons
-                                            .strokeRoundedImageDownload,
-                                        title: "Use Poster Color",
-                                        description:
-                                            "Applies anime/manga poster color on details page",
-                                        onChanged: (e) =>
-                                            settings.usePosterColor = e,
-                                      ),
-                                      const SizedBox(height: 10),
-                                      CustomTile(
-                                        icon: HugeIcons.strokeRoundedRefresh,
-                                        title: "Reset to Default Picture",
-                                        postFix: 0.width(),
-                                        description:
-                                            "Reset to default wallpaper!",
-                                        onTap: () =>
-                                            settings.liquidBackgroundPath = "",
-                                      ),
-                                    ],
-                                  )
-                                : const SizedBox.shrink(),
-                          ],
-                        );
+                        return CustomSwitchTile(
+                            disabled: settings.liquidMode,
+                            icon: HugeIcons.strokeRoundedFlower,
+                            title: "Bloom",
+                            description:
+                                "Enables a soft, glowing gradient effect.",
+                            switchValue: !settings.disableGradient,
+                            onChanged: (val) =>
+                                settings.disableGradient = !val);
                       }),
+                      CustomTile(
+                        icon: HugeIcons.strokeRoundedPaintBoard,
+                        title: "Palette",
+                        description: "Choose your favourite palette!",
+                        onTap: () {
+                          showPaletteSelectionDialog(context);
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      CustomSwitchTile(
+                        icon: HugeIcons.strokeRoundedMoon,
+                        title: "Oled Mode",
+                        description: "Go Super Dark Mode!",
+                        switchValue: isOled,
+                        onChanged: handleOledSwitch,
+                      ),
+                      const SizedBox(height: 10),
+                      CustomSwitchTile(
+                        icon: HugeIcons.strokeRoundedColors,
+                        title: "Custom Theme",
+                        description: "Choose your favourite color!",
+                        switchValue: customTheme,
+                        onChanged: handleCustomThemeSwitch,
+                      ),
+                    ],
+                  )),
+              const SizedBox(height: 10),
+              
+              // Custom Theme Colors
+              if (customTheme) ...[
+                NyantvCard(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      NyantvText(
+                        text: "Custom Themes",
+                        size: 16,
+                        variant: TextVariant.semiBold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildColorTemplates(),
                     ],
                   ),
-                  initialExpanded: true,
                 ),
-                const SizedBox(height: 10),
-                NyantvExpansionTile(
-                    initialExpanded: true,
-                    title: 'Extras',
-                    content: Column(
-                      children: [
-                        Obx(() {
-                          return CustomSwitchTile(
-                              disabled: settings.liquidMode,
-                              icon: HugeIcons.strokeRoundedFlower,
-                              title: "Bloom",
-                              description:
-                                  "Enables a soft, glowing gradient effect.",
-                              switchValue: !settings.disableGradient,
-                              onChanged: (val) =>
-                                  settings.disableGradient = !val);
-                        }),
-                        CustomTile(
-                          icon: HugeIcons.strokeRoundedPaintBoard,
-                          title: "Palette",
-                          description: "Choose your favourite palette!",
-                          onTap: () {
-                            showPaletteSelectionDialog(context);
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        CustomSwitchTile(
-                          icon: HugeIcons.strokeRoundedMoon,
-                          title: "Oled Mode",
-                          description: "Go Super Dark Mode!",
-                          switchValue: isOled,
-                          onChanged: handleOledSwitch,
-                        ),
-                        const SizedBox(height: 10),
-                        // ExpansionTile(title: NyantvText(text: "Custom Theme")),
-                        CustomSwitchTile(
-                          icon: HugeIcons.strokeRoundedColors,
-                          title: "Custom Theme",
-                          description: "Choose your favourite color!",
-                          switchValue: customTheme,
-                          onChanged: handleCustomThemeSwitch,
-                        ),
-                      ],
-                    )),
-                const SizedBox(height: 10),
-                if (customTheme) ...[
-                  NyantvCard(
-                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        NyantvText(
-                          text: "Custom Themes",
-                          size: 16,
-                          variant: TextVariant.semiBold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(height: 10),
-                        SingleChildScrollView(child: _buildColorTemplates())
-                      ],
-                    ),
-                  ),
-                ],
               ],
-            ),
+            ],
           ),
         ),
       ),
@@ -444,10 +451,13 @@ class _SettingsThemeState extends State<SettingsTheme> {
   }
 
   Widget _buildModeTemplates() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: themeModes.map<Widget>((theme) {
+    return SizedBox(
+      height: 190,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: themeModes.length,
+        itemBuilder: (context, index) {
+          final theme = themeModes[index];
           final ColorScheme colorScheme = ColorScheme.fromSeed(
               seedColor: Theme.of(context).colorScheme.primary,
               brightness: theme['label'] == "Dark"
@@ -461,6 +471,7 @@ class _SettingsThemeState extends State<SettingsTheme> {
               brightness: Brightness.dark);
           bool isSelected = themeMode == theme['label'];
           bool isSystem = theme['label'] == "System";
+          
           return NyantvOnTap(
             onTap: () {
               handleThemeMode(theme['label']);
@@ -482,8 +493,7 @@ class _SettingsThemeState extends State<SettingsTheme> {
                           ? Theme.of(context).colorScheme.primary
                           : Colors.transparent,
                     ),
-                    color:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: ClipRRect(
@@ -699,7 +709,7 @@ class _SettingsThemeState extends State<SettingsTheme> {
               ],
             ),
           );
-        }).toList(),
+        },
       ),
     );
   }
@@ -707,7 +717,6 @@ class _SettingsThemeState extends State<SettingsTheme> {
   Widget _buildColorTemplates() {
     return GridView.builder(
       shrinkWrap: true,
-      scrollDirection: Axis.vertical,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: colorMap.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -721,7 +730,7 @@ class _SettingsThemeState extends State<SettingsTheme> {
         final ColorScheme colorScheme = ColorScheme.fromSeed(
             seedColor: theme.value, brightness: Theme.of(context).brightness);
 
-        return GestureDetector(
+        return NyantvOnTap(
           onTap: () {
             handleColorSelection(index);
           },
@@ -918,4 +927,5 @@ class _SettingsThemeState extends State<SettingsTheme> {
       },
     );
   }
+
 }
