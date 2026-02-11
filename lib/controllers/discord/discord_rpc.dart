@@ -513,14 +513,14 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver{
         DateTime.now().add(Duration(seconds: totalSeconds - currentSeconds));
     final episodeNumber = episode.number.toString();
     final episodeName = episode.title ?? 'Episode $episodeNumber';
-    final coverUrl = anime.cover ?? anime.poster;
+    final posterUrl = anime.poster;
     final anilistUrl = 'https://anilist.co/anime/${anime.id}';
     final animeTitle = anime.title;
 
     final stateText = 'Episode $episodeNumber ${!episodeName.toLowerCase().contains('episode') ? '– $episodeName' : ''}';
 
     if (isMobile) {
-      final largeImage = await _processImageUrl(coverUrl);
+      final largeImage = await _processImageUrl(posterUrl);
       final smallImage = await _processImageUrl(_getAppIconUrl());
       
       final presencePayload = jsonEncode({
@@ -568,7 +568,7 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver{
               end: endTime.millisecondsSinceEpoch,
             ),
             assets: RPCAssets(
-              largeImage: await _processImageUrl(coverUrl),
+              largeImage: await _processImageUrl(posterUrl),
               largeText: animeTitle,
               smallImage: await _processImageUrl(_getAppIconUrl()),
               smallText: 'NyanTV',
@@ -600,7 +600,7 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver{
     }
 
     final episodeNumber = episode.number.toString();
-    final coverUrl = anime.cover ?? anime.poster;
+    final posterUrl = anime.poster;
     final anilistUrl = 'https://anilist.co/anime/${anime.id}';
     final animeTitle = anime.title;
 
@@ -613,7 +613,7 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver{
         : '';
 
     if (isMobile) {
-      final largeImage = await _processImageUrl(coverUrl);
+      final largeImage = await _processImageUrl(posterUrl);
       final smallImage = await _processImageUrl(_getAppIconUrl());
       
       final presencePayload = jsonEncode({
@@ -653,7 +653,7 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver{
             state: 'Paused: Ep $episodeNumber$timeDisplay',
             activityType: ActivityType.watching,
             assets: RPCAssets(
-              largeImage: await _processImageUrl(coverUrl),
+              largeImage: await _processImageUrl(posterUrl),
               largeText: animeTitle,
               smallImage: await _processImageUrl(_getAppIconUrl()),
               smallText: 'NyanTV',
@@ -689,7 +689,7 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver{
     final stateText = 'Viewing $type Details';
 
     if (isMobile) {
-      final largeImage = await _processImageUrl(media.cover ?? media.poster);
+      final largeImage = await _processImageUrl(media.poster);
       final smallImage = await _processImageUrl(_getAppIconUrl());
       
       final presencePayload = jsonEncode({
@@ -729,7 +729,7 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver{
             state: stateText,
             activityType: ActivityType.watching,
             assets: RPCAssets(
-              largeImage: await _processImageUrl(media.cover ?? media.poster),
+              largeImage: await _processImageUrl(media.poster),
               largeText: animeTitle,
               smallImage: await _processImageUrl(_getAppIconUrl()),
               smallText: 'NyanTV',
