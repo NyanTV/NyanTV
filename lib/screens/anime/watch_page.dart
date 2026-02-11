@@ -135,9 +135,11 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   late TVRemoteHandler? _tvRemoteHandler;
 
   Timer? _discordUpdateTimer;
+  Timer? _periodicDiscordUpdateTimer;
   bool _isUpdatingDiscord = false;
   DateTime? _lastDiscordUpdate;
   final _minUpdateInterval = const Duration(seconds: 2);
+  final _periodicUpdateInterval = const Duration(seconds: 20);
 
   final currentVisualProfile = 'natural'.obs;
   RxMap<String, int> customSettings = <String, int>{}.obs;
@@ -226,6 +228,9 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         isSwitchingEpisode = false;
         Logger.i('Episode switched, updating Discord presence...');
         _scheduleDiscordUpdate(isPaused: false);
+        if (isPlaying.value) {
+          _startPeriodicDiscordUpdates();
+        }
       }
     });
   }
@@ -438,13 +443,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           ? 'Total: ${episodeList.length} Episodes' 
           : '';
       
-      Logger.i('=== DISCORD UPDATE START ===');
-      Logger.i('Episode: ${currentEpisode.value.number}, Paused: $isPaused');
-      Logger.i('Position: ${currentPosition.value.inSeconds}s / ${episodeDuration.value.inSeconds}s');
-      Logger.i('Episode Duration (ms): ${currentEpisode.value.durationInMilliseconds}');
-      Logger.i('Episode Position (ms): ${currentEpisode.value.timeStampInMilliseconds}');
-      Logger.i('Discord Connected: ${discordRPC.isConnected}');
-      
       if (isPaused) {
         Logger.i('Calling updateAnimePresencePaused...');
         await discordRPC.updateAnimePresencePaused(
@@ -461,13 +459,46 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         );
       }
       
-      Logger.i('=== DISCORD UPDATE SUCCESS ===');
     } catch (e, stackTrace) {
-      Logger.i('=== DISCORD UPDATE FAILED ===');
       Logger.i('Error: $e');
       Logger.i('Stack: $stackTrace');
     } finally {
       _isUpdatingDiscord = false;
+    }
+  }
+
+  void _startPeriodicDiscordUpdates() {
+    _stopPeriodicDiscordUpdates();
+    
+    if (!isPlaying.value || isSwitchingEpisode) {
+      return;
+    }
+    
+    
+    _periodicDiscordUpdateTimer = Timer.periodic(_periodicUpdateInterval, (timer) {
+      if (!mounted || !isPlaying.value || isSwitchingEpisode) {
+        _stopPeriodicDiscordUpdates();
+        return;
+      }
+      
+      if (_lastDiscordUpdate != null) {
+        final timeSinceLastUpdate = DateTime.now().difference(_lastDiscordUpdate!);
+        if (timeSinceLastUpdate >= _periodicUpdateInterval && !_isManualSeeking) {
+          _scheduleDiscordUpdate(isPaused: false);
+        } else {
+        }
+      } else {
+        if (!_isManualSeeking) {
+          _scheduleDiscordUpdate(isPaused: false);
+        }
+      }
+    });
+  }
+
+  void _stopPeriodicDiscordUpdates() {
+    if (_periodicDiscordUpdateTimer != null) {
+      _periodicDiscordUpdateTimer?.cancel();
+      _periodicDiscordUpdateTimer = null;
     }
   }
 
@@ -823,6 +854,10 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
             isSwitchingEpisode = false;
           }
         });
+        
+        _startPeriodicDiscordUpdates();
+      } else {
+        _stopPeriodicDiscordUpdates();
       }
       
       if (!_isManualSeeking) {
@@ -1012,6 +1047,9 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         isSwitchingEpisode = false;
         Logger.i('Episode switched, updating Discord presence...');
         _scheduleDiscordUpdate(isPaused: false);
+        if (isPlaying.value) {
+          _startPeriodicDiscordUpdates();
+        }
       }
     });
   }
@@ -1234,6 +1272,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     doubleTapTimeout?.cancel();
     _positionSubscription?.cancel();
     _discordUpdateTimer?.cancel();
+    _periodicDiscordUpdateTimer?.cancel();
     _initialSeekSubscription?.cancel();
     disposeTVScroll();
 
