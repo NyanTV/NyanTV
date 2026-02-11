@@ -29,6 +29,10 @@ class OfflineStorageController extends GetxController {
       _loadLibraries();
     } catch (e) {
       Logger.i('Error opening Hive box: $e');
+      await Hive.deleteBoxFromDisk('offlineStorage');
+      _offlineStorageBox = await Hive.openBox<OfflineStorage>('offlineStorage');
+      storage = await Hive.openBox('storage');
+      _loadLibraries();
     }
   }
 

@@ -25,7 +25,7 @@ class OfflineStorageAdapter extends TypeAdapter<OfflineStorage> {
   @override
   void write(BinaryWriter writer, OfflineStorage obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(2)
       ..writeByte(0)
       ..write(obj.animeLibrary)
       ..writeByte(1)
