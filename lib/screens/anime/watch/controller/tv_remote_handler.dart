@@ -44,9 +44,13 @@ class TVRemoteHandler {
 
   // Seek configuration
   int get shortPressSeekSeconds => seekDuration;
+  Timer? _holdTimer;
+  Timer? _accelerationTimer;
+  int _accumulatedSeekSeconds = 0;
+  SeekDirection? _currentHoldDirection;
 
   void dispose() {
-    // Cleanup if needed
+    _cancelHoldTimers();
   }
 
   /// Main key event handler
@@ -134,13 +138,13 @@ class TVRemoteHandler {
 
     // Arrow Left - Seek backward
     if (key == LogicalKeyboardKey.arrowLeft) {
-      _handleSeek(SeekDirection.backward);
+      _startHoldSeek(SeekDirection.backward);
       return true;
     }
 
     // Arrow Right - Seek forward
     if (key == LogicalKeyboardKey.arrowRight) {
-      _handleSeek(SeekDirection.forward);
+      _startHoldSeek(SeekDirection.forward);
       return true;
     }
 
@@ -180,10 +184,10 @@ class TVRemoteHandler {
   bool _handleKeyUp(KeyUpEvent event, bool menuVisible) {
     final key = event.logicalKey;
 
-    // Only handle directional releases when menu is hidden
     if (!menuVisible) {
       if (key == LogicalKeyboardKey.arrowLeft ||
           key == LogicalKeyboardKey.arrowRight) {
+        _executeAccumulatedSeek();
         return true;
       }
     }
@@ -238,6 +242,58 @@ class TVRemoteHandler {
   int _clampPosition(int targetSeconds, int maxSeconds) {
     return targetSeconds.clamp(0, maxSeconds);
   }
+
+  void _startHoldSeek(SeekDirection direction) {
+    _cancelHoldTimers();
+    _currentHoldDirection = direction;
+    _accumulatedSeekSeconds = shortPressSeekSeconds;
+    
+    // Initial seek feedback
+    if (onSkipSegments != null) {
+      onSkipSegments!(direction == SeekDirection.backward);
+    }
+    
+    // Start acceleration after 1 second
+    _holdTimer = Timer(const Duration(seconds: 1), () {
+      _accelerationTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+        _accumulatedSeekSeconds += shortPressSeekSeconds;
+        if (onSkipSegments != null) {
+          onSkipSegments!(direction == SeekDirection.backward);
+        }
+      });
+    });
+  }
+
+  void _executeAccumulatedSeek() {
+    _cancelHoldTimers();
+    
+    if (_currentHoldDirection != null && _accumulatedSeekSeconds > 0) {
+      final currentPos = getCurrentPosition();
+      final duration = getVideoDuration();
+      
+      int seekSeconds = _currentHoldDirection == SeekDirection.backward
+          ? -_accumulatedSeekSeconds
+          : _accumulatedSeekSeconds;
+      
+      final targetPosition = _clampPosition(
+        currentPos.inSeconds + seekSeconds,
+        duration.inSeconds,
+      );
+      
+      onSeek(Duration(seconds: targetPosition));
+    }
+    
+    _accumulatedSeekSeconds = 0;
+    _currentHoldDirection = null;
+  }
+
+  void _cancelHoldTimers() {
+    _holdTimer?.cancel();
+    _holdTimer = null;
+    _accelerationTimer?.cancel();
+    _accelerationTimer = null;
+  }
+
 }
 
 enum SeekDirection {
