@@ -237,8 +237,8 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
   double _vy = 1.5;
   double _maxX = 0.0;
   double _maxY = 0.0;
+  late final double _logoSize;
 
-  static const double _logoSize = 95.0;
   static const double _speed = 3.1;
 
   static const List<Color> _bounceColors = [
@@ -267,6 +267,12 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
   void initState() {
     super.initState();
     final rng = Random();
+    if (widget.dvdMode){
+      _logoSize = 95.0;
+    }
+    else {
+      _logoSize = 200.0;
+    }
     _vx = _speed * (rng.nextBool() ? 1.0 : -1.0);
     _vy = _speed * (rng.nextBool() ? 1.0 : -1.0) * 0.85;
 

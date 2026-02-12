@@ -20,6 +20,8 @@ import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
 import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/gestures.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
@@ -59,6 +61,9 @@ class _EpisodeSectionState extends State<EpisodeSection> {
       Rx<Future<List<Episode>>?>(null);
   Worker? _episodeListListener;
   bool _fillerFetched = false;
+  final FocusNode _sourceDropdownFocusNode = FocusNode();
+  final FocusNode _sourceSettingsFocusNode = FocusNode();
+  final GlobalKey _sourceDropdownKey = GlobalKey();
 
   @override
   void initState() {
@@ -75,11 +80,17 @@ class _EpisodeSectionState extends State<EpisodeSection> {
         }
       });      
     }
+
+    _sourceDropdownFocusNode.addListener(() => setState(() {}));
+    _sourceSettingsFocusNode.addListener(() => setState(() {}));
+
   }
 
   @override
   void dispose() {
     _episodeListListener?.dispose();
+    _sourceDropdownFocusNode.dispose();
+    _sourceSettingsFocusNode.dispose();
     super.dispose();
   }
 
@@ -214,14 +225,110 @@ class _EpisodeSectionState extends State<EpisodeSection> {
       }
     }
 
-    return NyantvDropdown(
-      items: items,
-      selectedItem: selectedItem,
-      label: "SELECT SOURCE",
-      icon: Icons.extension_rounded,
-      onChanged: (DropdownItem item) => handleSourceChange(item.value),
-      actionIcon: Icons.settings_outlined,
-      onActionPressed: () => openSourcePreferences(context),
+    return Row(
+      children: [
+        Expanded(
+          child: Focus(
+            focusNode: _sourceDropdownFocusNode,
+            onKeyEvent: (node, event) {
+              if (event is KeyDownEvent) {
+                if (event.logicalKey == LogicalKeyboardKey.select ||
+                    event.logicalKey == LogicalKeyboardKey.enter) {
+                  final ctx = _sourceDropdownKey.currentContext;
+                  if (ctx != null) {
+                    final RenderBox box =
+                        ctx.findRenderObject() as RenderBox;
+                    final Offset pos =
+                        box.localToGlobal(box.size.center(Offset.zero));
+                    GestureBinding.instance.handlePointerEvent(
+                        PointerDownEvent(position: pos));
+                    Future.delayed(const Duration(milliseconds: 50), () {
+                      GestureBinding.instance.handlePointerEvent(
+                          PointerUpEvent(position: pos));
+                    });
+                  }
+                  return KeyEventResult.handled;
+                } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+                  _sourceSettingsFocusNode.requestFocus();
+                  return KeyEventResult.handled;
+                }
+              }
+              return KeyEventResult.ignored;
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: _sourceDropdownFocusNode.hasFocus
+                    ? Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      )
+                    : Border.all(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outline
+                            .withOpacity(0.3),
+                        width: 1,
+                      ),
+              ),
+              child: NyantvDropdown(
+                key: _sourceDropdownKey,
+                items: items,
+                selectedItem: selectedItem,
+                label: "SELECT SOURCE",
+                icon: Icons.extension_rounded,
+                onChanged: (DropdownItem item) =>
+                    handleSourceChange(item.value),
+              ),
+            ),
+          ),
+        ),
+
+        if (sourceController.installedExtensions.isNotEmpty) ...[
+          const SizedBox(width: 8),
+
+          Focus(
+            focusNode: _sourceSettingsFocusNode,
+            onKeyEvent: (node, event) {
+              if (event is KeyDownEvent) {
+                if (event.logicalKey == LogicalKeyboardKey.select ||
+                    event.logicalKey == LogicalKeyboardKey.enter) {
+                  openSourcePreferences(context);
+                  return KeyEventResult.handled;
+                } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                  _sourceDropdownFocusNode.requestFocus();
+                  return KeyEventResult.handled;
+                }
+              }
+              return KeyEventResult.ignored;
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest
+                    .withOpacity(0.4),
+                border: _sourceSettingsFocusNode.hasFocus
+                    ? Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      )
+                    : null,
+              ),
+              child: IconButton(
+                onPressed: () => openSourcePreferences(context),
+                icon: Icon(
+                  Icons.settings_outlined,
+                  color: _sourceSettingsFocusNode.hasFocus
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -287,7 +394,6 @@ class _EpisodeSectionState extends State<EpisodeSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (serviceHandler.serviceType.value != ServicesType.extensions) ...[
-            // Title Section
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
@@ -400,7 +506,6 @@ class _EpisodeSectionState extends State<EpisodeSection> {
               ),
             ),
             const SizedBox(height: 20),
-            // Source Selector
             Obx(() => Row(
                   children: [
                     Expanded(child: buildSourceDropdown()),
@@ -408,7 +513,6 @@ class _EpisodeSectionState extends State<EpisodeSection> {
                 )),
           ],
           const SizedBox(height: 20),
-          // Episode List
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
