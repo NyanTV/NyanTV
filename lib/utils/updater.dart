@@ -5,6 +5,7 @@ import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dio/dio.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:install_plugin/install_plugin.dart';
@@ -29,7 +30,7 @@ class UpdateManager {
   }
 
   Future<void> checkForUpdates(
-      BuildContext context, RxBool canShowUpdate) async {
+      BuildContext context, RxBool canShowUpdate, {bool manualCheck = false}) async {
     if (canShowUpdate.value) {
       canShowUpdate.value = false;
 
@@ -57,7 +58,9 @@ class UpdateManager {
           _showUpdateBottomSheet(context, currentVersion,
               latestRelease['tag_name'], latestRelease['body'], downloadUrls);
         } else {
-          debugPrint("You're already using the latest version");
+          if (manualCheck) {
+            snackBar("You're already using the latest version");
+          }
         }
       } catch (e) {
         debugPrint('Error checking for updates: $e');
@@ -204,6 +207,9 @@ class _UpdateBottomSheetState extends State<UpdateBottomSheet>
   bool _isDownloading = false;
   double _downloadProgress = 0.0;
   String _downloadStatus = '';
+  bool _changelogFocused = false;
+  bool _changelogScrollMode = false;
+  final FocusNode _changelogFocusNode = FocusNode();
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -225,6 +231,7 @@ class _UpdateBottomSheetState extends State<UpdateBottomSheet>
 
   @override
   void dispose() {
+    _changelogFocusNode.dispose();
     _pulseController.dispose();
     super.dispose();
   }
@@ -416,7 +423,6 @@ class _UpdateBottomSheetState extends State<UpdateBottomSheet>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header with gradient
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
@@ -472,8 +478,6 @@ class _UpdateBottomSheetState extends State<UpdateBottomSheet>
               ],
             ),
           ),
-
-          // Content
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -498,44 +502,152 @@ class _UpdateBottomSheetState extends State<UpdateBottomSheet>
                     ],
                   ),
                   const SizedBox(height: 16),
-
-                  // Changelog container
-                  Expanded(
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: colorScheme.outline.withOpacity(0.2),
-                        ),
+                  Flexible(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: (theme.textTheme.bodyMedium?.fontSize ?? 14) * 1.5 * 5 + 32,
                       ),
-                      child: Markdown(
-                        controller: widget.scrollController,
-                        data: widget.changelog,
-                        selectable: true,
-                        styleSheet: MarkdownStyleSheet(
-                          p: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurface,
-                            height: 1.5,
-                          ),
-                          h1: theme.textTheme.headlineSmall?.copyWith(
-                            color: colorScheme.onSurface,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          h2: theme.textTheme.titleLarge?.copyWith(
-                            color: colorScheme.onSurface,
-                            fontWeight: FontWeight.bold,
+                      child: Focus(
+                        focusNode: _changelogFocusNode,
+                        onFocusChange: (focused) {
+                          setState(() {
+                            _changelogFocused = focused;
+                            if (!focused) _changelogScrollMode = false;
+                          });
+                        },
+                        onKeyEvent: (node, event) {
+                          if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+                          if (!_changelogScrollMode &&
+                              (event.logicalKey == LogicalKeyboardKey.select ||
+                              event.logicalKey == LogicalKeyboardKey.enter)) {
+                            setState(() => _changelogScrollMode = true);
+                            return KeyEventResult.handled;
+                          }
+
+                          if (_changelogScrollMode &&
+                              (event.logicalKey == LogicalKeyboardKey.escape ||
+                              event.logicalKey == LogicalKeyboardKey.goBack)) {
+                            setState(() => _changelogScrollMode = false);
+                            return KeyEventResult.handled;
+                          }
+
+                          if (_changelogScrollMode) {
+                            const double scrollAmount = 80.0;
+                            if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                              widget.scrollController.animateTo(
+                                (widget.scrollController.offset + scrollAmount).clamp(
+                                    0, widget.scrollController.position.maxScrollExtent),
+                                duration: const Duration(milliseconds: 150),
+                                curve: Curves.easeOut,
+                              );
+                              return KeyEventResult.handled;
+                            }
+                            if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                              widget.scrollController.animateTo(
+                                (widget.scrollController.offset - scrollAmount).clamp(
+                                    0, widget.scrollController.position.maxScrollExtent),
+                                duration: const Duration(milliseconds: 150),
+                                curve: Curves.easeOut,
+                              );
+                              return KeyEventResult.handled;
+                            }
+                          }
+
+                          return KeyEventResult.ignored;
+                        },
+                        child: GestureDetector(
+                          onTap: () {
+                            if (_changelogFocused) {
+                              setState(() => _changelogScrollMode = !_changelogScrollMode);
+                            }
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: _changelogScrollMode
+                                    ? colorScheme.primary
+                                    : _changelogFocused
+                                        ? colorScheme.primary.withOpacity(0.5)
+                                        : colorScheme.outline.withOpacity(0.2),
+                                width: _changelogScrollMode ? 2 : 1,
+                              ),
+                            ),
+                            child: Stack(
+                              children: [
+                                Markdown(
+                                  controller: widget.scrollController,
+                                  data: widget.changelog,
+                                  selectable: false,
+                                  physics: _changelogScrollMode
+                                      ? const ClampingScrollPhysics()
+                                      : const NeverScrollableScrollPhysics(),
+                                  styleSheet: MarkdownStyleSheet(
+                                    p: theme.textTheme.bodyMedium?.copyWith(
+                                      color: colorScheme.onSurface,
+                                      height: 1.5,
+                                    ),
+                                    h1: theme.textTheme.headlineSmall?.copyWith(
+                                      color: colorScheme.onSurface,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    h2: theme.textTheme.titleLarge?.copyWith(
+                                      color: colorScheme.onSurface,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                if (_changelogFocused && !_changelogScrollMode)
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primary.withOpacity(0.85),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        'OK to scroll',
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: colorScheme.onPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                if (_changelogScrollMode)
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primary,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        '↑↓  Back to exit',
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: colorScheme.onPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 24),
-
-                  // Download progress
                   if (_isDownloading) ...[
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -587,8 +699,6 @@ class _UpdateBottomSheetState extends State<UpdateBottomSheet>
                     ),
                     const SizedBox(height: 16),
                   ],
-
-                  // Action buttons
                   Row(
                     children: [
                       Expanded(
@@ -617,8 +727,7 @@ class _UpdateBottomSheetState extends State<UpdateBottomSheet>
                       Expanded(
                         flex: 2,
                         child: FilledButton(
-                          onPressed:
-                              _isDownloading ? null : _downloadAndInstall,
+                          onPressed: _isDownloading ? null : _downloadAndInstall,
                           style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             backgroundColor: colorScheme.primary,
@@ -664,4 +773,5 @@ class _UpdateBottomSheetState extends State<UpdateBottomSheet>
       ),
     );
   }
+
 }

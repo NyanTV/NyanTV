@@ -105,7 +105,7 @@ class Settings extends GetxController {
     _selectedProfile.value = preferences.get('selected_profile', defaultValue: 'MID-END');
 
     isTv().then((e) {
-      isTV.value = true;//e;
+      isTV.value = e;
     });
 
     // Initialize player shaders
@@ -115,10 +115,9 @@ class Settings extends GetxController {
     });
   }
 
-  void checkForUpdates(BuildContext context) {
-    canShowUpdate.value
-        ? UpdateManager().checkForUpdates(context, canShowUpdate)
-        : null;
+  void checkForUpdates(BuildContext context, {bool manualCheck = false}) {
+    canShowUpdate.value = true;
+    UpdateManager().checkForUpdates(context, canShowUpdate, manualCheck: manualCheck);
   }
 
   void showWelcomeDialog(BuildContext context) {

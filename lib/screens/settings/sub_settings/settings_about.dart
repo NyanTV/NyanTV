@@ -202,7 +202,7 @@ class AboutPage extends StatelessWidget {
                   CustomListTile(
                     onTap: () async {
                       snackBar('Checking for updates!');
-                      Get.find<Settings>().checkForUpdates(context);
+                      Get.find<Settings>().checkForUpdates(context, manualCheck: true);
                     },
                     leading: const Icon(Icons.system_update),
                     title: "Check for Updates",
