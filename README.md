@@ -21,7 +21,7 @@
 
 **NyanTV** is a tracking client designed exclusively for managing and tracking anime progress across [**AniList**](https://anilist.co/) on Android TV.
 
-**NyanTV** is a fork of [**AnymeX**](https://github.com/NyanTV/AnymeX), if you are using a platform other than Android TV, use their repo.
+**NyanTV** is a fork of [**AnymeX**](https://github.com/RyanYuuki/AnymeX), if you are using a platform other than Android TV, use their repo.
 
 > [!IMPORTANT]  
 > **NyanTV is a tracking tool only.** It does not host, provide, distribute, or endorse any streaming content, media, or third-party extensions.  
