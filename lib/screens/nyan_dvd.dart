@@ -68,7 +68,7 @@ class _InitialisingScreenState extends State<InitialisingScreen>
 
   Future<void> _waitForInit() async {
     final serviceHandler = Get.find<ServiceHandler>();
-    const minWait = Duration(milliseconds: 1500);
+    const minWait = Duration(milliseconds: 4000);
     const maxWait = Duration(seconds: 10);
     final start = DateTime.now();
 
@@ -231,12 +231,14 @@ class _DVDBounceLayer extends StatefulWidget {
 
 class _DVDBounceLayerState extends State<_DVDBounceLayer>
     with TickerProviderStateMixin {
+  static const double _verticalCollisionInset = -20.0;
   double _x = 120.0;
-  double _y = 140.0;
+  double _y = 140.0 + (_verticalCollisionInset / 2);
   double _vx = 1.8;
   double _vy = 1.5;
   double _maxX = 0.0;
   double _maxY = 0.0;
+  double _minY = 0.0;
   late final double _logoSize;
 
   static const double _speed = 3.1;
@@ -271,7 +273,7 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
       _logoSize = 95.0;
     }
     else {
-      _logoSize = 200.0;
+      _logoSize = 300.0;
     }
     _vx = _speed * (rng.nextBool() ? 1.0 : -1.0);
     _vy = _speed * (rng.nextBool() ? 1.0 : -1.0) * 0.85;
@@ -320,9 +322,9 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
       nx = nx.clamp(0.0, _maxX);
       bounced = true;
     }
-    if (ny <= 0.0 || ny >= _maxY) {
+    if (ny <= _minY || ny >= _maxY) {
       _vy = -_vy;
-      ny = ny.clamp(0.0, _maxY);
+      ny = ny.clamp(_minY, _maxY);
       bounced = true;
     }
 
@@ -358,7 +360,8 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       _maxX = constraints.maxWidth - _logoSize;
-      _maxY = constraints.maxHeight - _logoSize;
+      _maxY = constraints.maxHeight - _logoSize - _verticalCollisionInset;
+      _minY = 1.4 * _verticalCollisionInset;
 
       if (!widget.dvdMode) {
         final centerX = (constraints.maxWidth - _logoSize) / 2;
@@ -370,7 +373,7 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
             left: centerX,
             top: centerY,
             child: RepaintBoundary(
-              child: _BouncingLogo(size: _logoSize, color: rgbColor),
+              child: _BouncingLogo(size: _logoSize, color: rgbColor, dvdMode: false),//widget.dvdMode),
             ),
           ),
         ]);
@@ -384,7 +387,7 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
             child: AnimatedBuilder(
               animation: _colorAnim,
               builder: (context, child) => _BouncingLogo(
-                  size: _logoSize, color: _colorAnim.value ?? Colors.white),
+                  size: _logoSize, color: _colorAnim.value ?? Colors.white, dvdMode: false),//widget.dvdMode),
             ),
           ),
         ),
@@ -396,35 +399,66 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
 class _BouncingLogo extends StatelessWidget {
   final double size;
   final Color color;
-  const _BouncingLogo({required this.size, required this.color});
+  final bool dvdMode;
+  const _BouncingLogo({required this.size, required this.color, required this.dvdMode});
 
   @override
   Widget build(BuildContext context) {
+    final cacheW = (size * MediaQuery.of(context).devicePixelRatio).round();
+
+    final tintedLogo = ColorFiltered(
+      colorFilter: ColorFilter.mode(color, BlendMode.modulate),
+      child: Image.asset(
+        'assets/images/logo_transparent.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        cacheWidth: cacheW,
+        filterQuality: FilterQuality.medium,
+      ),
+    );
+
+    if (dvdMode) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(size / 2),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.5),
+                blurRadius: 30,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: tintedLogo,
+        ),
+      );
+    }
+
     return SizedBox(
       width: size,
       height: size,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(size / 2),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.5),
-              blurRadius: 30,
-              spreadRadius: 2,
+      child: Stack(
+        children: [
+          ImageFiltered(
+            imageFilter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: ColorFiltered(
+              colorFilter: ColorFilter.mode(color.withOpacity(0.55), BlendMode.modulate),
+              child: Image.asset(
+                'assets/images/logo_transparent.png',
+                width: size,
+                height: size,
+                fit: BoxFit.contain,
+                cacheWidth: cacheW,
+                filterQuality: FilterQuality.low,
+              ),
             ),
-          ],
-        ),
-        child: ColorFiltered(
-          colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-          child: Image.asset(
-            'assets/images/logo_transparent.png',
-            width: size,
-            height: size,
-            fit: BoxFit.contain,
-            cacheWidth: (size * MediaQuery.of(context).devicePixelRatio).round(),
-            filterQuality: FilterQuality.medium,
           ),
-        ),
+          tintedLogo,
+        ],
       ),
     );
   }
