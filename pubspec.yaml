@@ -70,6 +70,7 @@ dependencies:
   volume_controller: ^3.4.0
   screen_brightness: ^2.1.7
   window_manager: ^0.4.3
+  wakelock_plus: ^1.2.8
   app_links: ^6.4.0
   preload_page_view: ^0.2.0
   archive: any

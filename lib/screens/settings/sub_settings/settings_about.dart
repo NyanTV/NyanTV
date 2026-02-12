@@ -9,6 +9,8 @@ import 'package:iconsax/iconsax.dart';
 import 'package:package_info_plus/package_info_plus.dart' show PackageInfo;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
+import 'package:nyantv/controllers/discord/discord_rpc.dart';
+import 'package:nyantv/screens/nyan_dvd.dart';
 
 Future<void> launchUrlHelper(String link) async {
   final url = Uri.parse(link);
@@ -205,6 +207,29 @@ class AboutPage extends StatelessWidget {
                     leading: const Icon(Icons.system_update),
                     title: "Check for Updates",
                   ),
+                    CustomListTile(
+                      onTap: () {
+                        DiscordRPCController.instance.updateBrowsingPresence(
+                          activity: 'NyanDVD',
+                          details: 'Idle',
+                        );
+                        Get.to(
+                          () => const InitialisingScreen(
+                            dvdMode: true,
+                            child: SizedBox.shrink(),
+                          ),
+                          transition: Transition.fadeIn,
+                        )?.then((_) {
+                        DiscordRPCController.instance.updateBrowsingPresence(
+                          activity: 'Browsing Stuff',
+                          details: 'Idle',
+                        );
+                      });
+                      },
+                      leading: const Icon(Icons.tv_rounded),
+                      title: 'NyanDVD',
+                      subtitle: 'The most important feature.',
+                    ),
                 ],
               ),
             ),

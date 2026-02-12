@@ -25,6 +25,7 @@ import 'package:nyantv/screens/extensions/ExtensionScreen.dart';
 import 'package:nyantv/screens/library/my_library.dart';
 import 'package:nyantv/controllers/services/anilist/anilist_data.dart';
 import 'package:nyantv/screens/home_page.dart';
+import 'package:nyantv/screens/nyan_dvd.dart';
 import 'package:nyantv/utils/deeplink.dart';
 import 'package:nyantv/utils/logger.dart';
 import 'package:nyantv/utils/register_protocol/register_protocol.dart';
@@ -250,7 +251,7 @@ class MainApp extends StatelessWidget {
               : theme.isLightMode
                   ? ThemeMode.light
                   : ThemeMode.dark,
-          home: const FilterScreen(),
+          home: const InitialisingScreen(child: FilterScreen()),
           builder: (context, child) {
             if (PlatformDispatcher.instance.views.length > 1) {
               return child!;
