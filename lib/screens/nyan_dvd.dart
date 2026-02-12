@@ -9,6 +9,7 @@ import 'package:nyantv/controllers/discord/discord_rpc.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:nyantv/main.dart';
+import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 
 class InitialisingScreen extends StatefulWidget {
   final Widget child;
@@ -67,7 +68,7 @@ class _InitialisingScreenState extends State<InitialisingScreen>
 
   Future<void> _waitForInit() async {
     final serviceHandler = Get.find<ServiceHandler>();
-    const minWait = Duration(milliseconds: 900);
+    const minWait = Duration(milliseconds: 8000);
     const maxWait = Duration(seconds: 10);
     final start = DateTime.now();
 
@@ -163,13 +164,10 @@ class _InitialisingScreenState extends State<InitialisingScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (!widget.dvdMode)
-                    SizedBox(
+                    const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: primary.withOpacity(0.7),
-                      ),
+                      child: ExpressiveLoadingIndicator()
                     ),
                   const SizedBox(height: 14),
                   Text(
@@ -241,7 +239,7 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
   double _maxY = 0.0;
 
   static const double _logoSize = 95.0;
-  static const double _speed = 4.2;
+  static const double _speed = 3.1;
 
   static const List<Color> _bounceColors = [
     Colors.white,

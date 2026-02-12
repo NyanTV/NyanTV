@@ -453,11 +453,11 @@ class _SettingsThemeState extends State<SettingsTheme> {
   Widget _buildModeTemplates() {
     return SizedBox(
       height: 190,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: themeModes.length,
-        itemBuilder: (context, index) {
-          final theme = themeModes[index];
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: themeModes.asMap().entries.map((entry) {
+          final index = entry.key;
+          final theme = entry.value;
           final ColorScheme colorScheme = ColorScheme.fromSeed(
               seedColor: Theme.of(context).colorScheme.primary,
               brightness: theme['label'] == "Dark"
@@ -709,11 +709,11 @@ class _SettingsThemeState extends State<SettingsTheme> {
               ],
             ),
           );
-        },
+        }).toList(),
       ),
     );
   }
-
+    
   Widget _buildColorTemplates() {
     return GridView.builder(
       shrinkWrap: true,
