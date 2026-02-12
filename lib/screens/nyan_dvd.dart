@@ -68,7 +68,7 @@ class _InitialisingScreenState extends State<InitialisingScreen>
 
   Future<void> _waitForInit() async {
     final serviceHandler = Get.find<ServiceHandler>();
-    const minWait = Duration(milliseconds: 8000);
+    const minWait = Duration(milliseconds: 1500);
     const maxWait = Duration(seconds: 10);
     final start = DateTime.now();
 

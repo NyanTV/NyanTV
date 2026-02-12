@@ -5,6 +5,7 @@ import 'package:nyantv/widgets/custom_widgets/nyantv_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:flutter/gestures.dart';
 
 class ListEditorModal extends StatefulWidget {
   final RxString animeStatus;
@@ -40,6 +41,7 @@ class _ListEditorModalState extends State<ListEditorModal> {
   final FocusNode _sliderFocusNode = FocusNode();
   final FocusNode _deleteButtonFocusNode = FocusNode();
   final FocusNode _saveButtonFocusNode = FocusNode();
+  final GlobalKey _dropdownKey = GlobalKey();
 
   late String _localStatus;
   late double _localScore;
@@ -60,7 +62,6 @@ class _ListEditorModalState extends State<ListEditorModal> {
     
     _progressFocusNode = FocusNode();
     
-    // Add listeners for visual feedback
     _closeButtonFocusNode.addListener(() => setState(() {}));
     _statusDropdownFocusNode.addListener(() => setState(() {}));
     _decrementButtonFocusNode.addListener(() => setState(() {}));
@@ -178,6 +179,7 @@ class _ListEditorModalState extends State<ListEditorModal> {
 
   Widget _buildStatusSection(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final GlobalKey<State<StatefulWidget>> dropdownKey = GlobalKey();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,7 +198,23 @@ class _ListEditorModalState extends State<ListEditorModal> {
           focusNode: _statusDropdownFocusNode,
           onKeyEvent: (node, event) {
             if (event is KeyDownEvent) {
-              if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+              if (event.logicalKey == LogicalKeyboardKey.select ||
+                  event.logicalKey == LogicalKeyboardKey.enter) {
+                final context = _dropdownKey.currentContext;
+                if (context != null) {
+                  final RenderBox box = context.findRenderObject() as RenderBox;
+                  final Offset position = box.localToGlobal(box.size.center(Offset.zero));
+                  
+                  final PointerDownEvent down = PointerDownEvent(position: position);
+                  final PointerUpEvent up = PointerUpEvent(position: position);
+                  
+                  GestureBinding.instance.handlePointerEvent(down);
+                  Future.delayed(const Duration(milliseconds: 50), () {
+                    GestureBinding.instance.handlePointerEvent(up);
+                  });
+                }
+                return KeyEventResult.handled;
+              } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
                 _closeButtonFocusNode.requestFocus();
                 return KeyEventResult.handled;
               } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
@@ -217,6 +235,7 @@ class _ListEditorModalState extends State<ListEditorModal> {
               ),
             ),
             child: NyantvDropdown(
+              key: _dropdownKey,
               label: 'Status',
               icon: Icons.info_rounded,
               onChanged: (e) {
@@ -236,10 +255,7 @@ class _ListEditorModalState extends State<ListEditorModal> {
                 ('PAUSED', 'Paused', Icons.pause_circle_rounded),
                 ('DROPPED', 'Dropped', Icons.cancel_rounded),
               ].map((item) {
-                return DropdownItem(
-                  value: item.$1,
-                  text: item.$2,
-                );
+                return DropdownItem(value: item.$1, text: item.$2);
               }).toList(),
             ),
           ),
@@ -247,7 +263,6 @@ class _ListEditorModalState extends State<ListEditorModal> {
       ],
     );
   }
-
   String _getStatusDisplayText(String status) {
     switch (status) {
       case 'PLANNING':
@@ -322,26 +337,11 @@ class _ListEditorModalState extends State<ListEditorModal> {
                       height: 50,
                       child: Focus(
                         focusNode: _progressFocusNode,
-                        onKeyEvent: (node, event) {
-                          if (event is KeyDownEvent) {
-                            if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-                              _statusDropdownFocusNode.requestFocus();
-                              return KeyEventResult.handled;
-                            } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-                              _sliderFocusNode.requestFocus();
-                              return KeyEventResult.handled;
-                            } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-                              _decrementButtonFocusNode.requestFocus();
-                              return KeyEventResult.handled;
-                            } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-                              _incrementButtonFocusNode.requestFocus();
-                              return KeyEventResult.handled;
-                            }
-                          }
-                          return KeyEventResult.ignored;
-                        },
+                        canRequestFocus: false,
+                        skipTraversal: true,
                         child: TextFormField(
                           controller: _progressController,
+                          enabled: false,
                           keyboardType: TextInputType.number,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
@@ -368,11 +368,10 @@ class _ListEditorModalState extends State<ListEditorModal> {
                                 color: colorScheme.outline.withOpacity(0.5),
                               ),
                             ),
-                            focusedBorder: OutlineInputBorder(
+                            disabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                color: colorScheme.primary,
-                                width: 2,
+                                color: colorScheme.outline.withOpacity(0.5),
                               ),
                             ),
                             labelText: 'Episodes Watched',
@@ -385,37 +384,6 @@ class _ListEditorModalState extends State<ListEditorModal> {
                               vertical: 16,
                             ),
                           ),
-                          onChanged: (String value) {
-                            final int? newProgress = int.tryParse(value);
-
-                            if (newProgress == null || newProgress < 0) {
-                              return;
-                            }
-
-                            setState(() {
-                              if (hasKnownLimit) {
-                                _localProgress = newProgress <= maxTotal
-                                    ? newProgress
-                                    : maxTotal;
-                              } else {
-                                _localProgress = newProgress;
-                              }
-                            });
-                          },
-                          onEditingComplete: () {
-                            setState(() {
-                              _progressController.text =
-                                  _localProgress.toString();
-                            });
-                            _progressFocusNode.unfocus();
-                          },
-                          onFieldSubmitted: (String value) {
-                            setState(() {
-                              _progressController.text =
-                                  _localProgress.toString();
-                            });
-                            _progressFocusNode.unfocus();
-                          },
                         ),
                       ),
                     ),
@@ -458,7 +426,7 @@ class _ListEditorModalState extends State<ListEditorModal> {
             _sliderFocusNode.requestFocus();
             return KeyEventResult.handled;
           } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-            _progressFocusNode.requestFocus();
+            _incrementButtonFocusNode.requestFocus();
             return KeyEventResult.handled;
           }
         }
@@ -505,8 +473,7 @@ class _ListEditorModalState extends State<ListEditorModal> {
     );
   }
 
-  Widget _buildIncrementButton(
-      BuildContext context, bool hasKnownLimit, int? maxTotal) {
+  Widget _buildIncrementButton(BuildContext context, bool hasKnownLimit, int? maxTotal) {
     final colorScheme = Theme.of(context).colorScheme;
     final bool canIncrement =
         !hasKnownLimit || (hasKnownLimit && _localProgress < maxTotal!);
@@ -531,7 +498,7 @@ class _ListEditorModalState extends State<ListEditorModal> {
             _sliderFocusNode.requestFocus();
             return KeyEventResult.handled;
           } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-            _progressFocusNode.requestFocus();
+            _decrementButtonFocusNode.requestFocus();
             return KeyEventResult.handled;
           }
         }

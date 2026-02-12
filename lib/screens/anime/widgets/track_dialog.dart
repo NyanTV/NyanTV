@@ -13,7 +13,7 @@ class TrackingDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(28),
@@ -71,6 +71,26 @@ class TrackingDialog extends StatelessWidget {
                             bottomRight: Radius.circular(5),
                           ),
                         ),
+                      ).copyWith(
+                        elevation: MaterialStateProperty.resolveWith<double>(
+                          (states) => states.contains(MaterialState.focused) ? 8.0 : 2.0,
+                        ),
+                        side: MaterialStateProperty.resolveWith<BorderSide>(
+                          (states) {
+                            if (states.contains(MaterialState.focused)) {
+                              return BorderSide(
+                                color: theme.colorScheme.tertiary,
+                                width: 3.0,
+                              );
+                            }
+                            return BorderSide.none;
+                          },
+                        ),
+                        overlayColor: MaterialStateProperty.resolveWith<Color>(
+                          (states) => theme.colorScheme.onTertiary.withOpacity(
+                            states.contains(MaterialState.focused) ? 0.2 : 0.1
+                          ),
+                        ),
                       ),
                       child: const Text('Not now'),
                     ),
@@ -79,6 +99,7 @@ class TrackingDialog extends StatelessWidget {
                   Expanded(
                     child: FilledButton(
                       onPressed: () => Navigator.of(context).pop(true),
+                      autofocus: true,
                       style: FilledButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
                         foregroundColor: theme.colorScheme.onPrimary,
@@ -89,6 +110,26 @@ class TrackingDialog extends StatelessWidget {
                             bottomLeft: Radius.circular(5),
                             topRight: Radius.circular(100),
                             bottomRight: Radius.circular(100),
+                          ),
+                        ),
+                      ).copyWith(
+                        elevation: MaterialStateProperty.resolveWith<double>(
+                          (states) => states.contains(MaterialState.focused) ? 8.0 : 2.0,
+                        ),
+                        side: MaterialStateProperty.resolveWith<BorderSide>(
+                          (states) {
+                            if (states.contains(MaterialState.focused)) {
+                              return BorderSide(
+                                color: theme.colorScheme.primary,
+                                width: 3.0,
+                              );
+                            }
+                            return BorderSide.none;
+                          },
+                        ),
+                        overlayColor: MaterialStateProperty.resolveWith<Color>(
+                          (states) => theme.colorScheme.onPrimary.withOpacity(
+                            states.contains(MaterialState.focused) ? 0.2 : 0.1
                           ),
                         ),
                       ),

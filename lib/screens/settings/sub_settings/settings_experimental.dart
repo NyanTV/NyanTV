@@ -15,6 +15,8 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 
 class SettingsExperimental extends StatefulWidget {
   const SettingsExperimental({super.key});
@@ -34,6 +36,8 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
   final _downloadProgress = 0.0.obs;
   final _currentStatus = ''.obs;
   final _enableShaders = false.obs;
+  final FocusNode _bufferProfileFocusNode = FocusNode();
+  final GlobalKey _bufferProfileDropdownKey = GlobalKey();
 
   final _cacheDays = 7.obs;
 
@@ -48,6 +52,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
     _checkShadersAvailability();
     _detectDeviceRam();
     getSavedSettings();
+    _bufferProfileFocusNode.addListener(() => setState(() {}));
   }
 
   void _detectDeviceRam() {
@@ -288,6 +293,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
   void dispose() {
     _pulseController.dispose();
     _progressController.dispose();
+    _bufferProfileFocusNode.dispose();
     super.dispose();
   }
 
@@ -346,7 +352,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                       ],
                     ),
                   )),
-              
+
               GetBuilder<Settings>(
                 builder: (settings) {
                   return NyantvExpansionTile(
@@ -397,13 +403,12 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
 
               Obx(() {
                 final currentProfile = settings.tvBufferProfile.value;
-                
+
                 return NyantvExpansionTile(
                   title: "TV Player Buffer",
                   initialExpanded: false,
                   content: Column(
                     children: [
-                      // RAM Detection Info
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -429,7 +434,9 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                     'Pick Your Buffer Profile',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      color: Theme.of(context).colorScheme.onSurface,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                     ),
                                   ),
                                   Text(
@@ -448,10 +455,9 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 16),
-                      
-                      // Buffer Profile Selector
+
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -468,7 +474,8 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                               children: [
                                 Icon(
                                   Icons.tune,
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color:
+                                      Theme.of(context).colorScheme.primary,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 12),
@@ -477,36 +484,94 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 16,
-                                    color: Theme.of(context).colorScheme.onSurface,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface,
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 16),
-                            
-                            // Profile Dropdown
-                            NyantvDropdown(
-                              items: BufferProfile.values.map((profile) {
-                                return DropdownItem(
-                                  text: DeviceRamHelper.getProfileName(profile),
-                                  value: DeviceRamHelper.profileToString(profile),
-                                );
-                              }).toList(),
-                              selectedItem: DropdownItem(
-                                text: DeviceRamHelper.getProfileName(currentProfile),
-                                value: DeviceRamHelper.profileToString(currentProfile),
-                              ),
-                              label: "SELECT BUFFER PROFILE",
-                              icon: Icons.memory,
-                              onChanged: (item) {
-                                final profile = DeviceRamHelper.stringToProfile(item.value);
-                                settings.saveTVBufferProfile(profile);
+
+                            Focus(
+                              focusNode: _bufferProfileFocusNode,
+                              onKeyEvent: (node, event) {
+                                if (event is KeyDownEvent) {
+                                  if (event.logicalKey ==
+                                          LogicalKeyboardKey.select ||
+                                      event.logicalKey ==
+                                          LogicalKeyboardKey.enter) {
+                                    final ctx = _bufferProfileDropdownKey
+                                        .currentContext;
+                                    if (ctx != null) {
+                                      final RenderBox box = ctx
+                                          .findRenderObject() as RenderBox;
+                                      final Offset pos = box.localToGlobal(
+                                          box.size.center(Offset.zero));
+                                      GestureBinding.instance
+                                          .handlePointerEvent(
+                                              PointerDownEvent(position: pos));
+                                      Future.delayed(
+                                          const Duration(milliseconds: 50),
+                                          () {
+                                        GestureBinding.instance
+                                            .handlePointerEvent(
+                                                PointerUpEvent(position: pos));
+                                      });
+                                    }
+                                    return KeyEventResult.handled;
+                                  }
+                                }
+                                return KeyEventResult.ignored;
                               },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: _bufferProfileFocusNode.hasFocus
+                                      ? Border.all(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          width: 2,
+                                        )
+                                      : Border.all(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .outline
+                                              .withOpacity(0.3),
+                                          width: 1,
+                                        ),
+                                ),
+                                child: NyantvDropdown(
+                                  key: _bufferProfileDropdownKey,
+                                  items: BufferProfile.values.map((profile) {
+                                    return DropdownItem(
+                                      text: DeviceRamHelper.getProfileName(
+                                          profile),
+                                      value: DeviceRamHelper.profileToString(
+                                          profile),
+                                    );
+                                  }).toList(),
+                                  selectedItem: DropdownItem(
+                                    text: DeviceRamHelper.getProfileName(
+                                        currentProfile),
+                                    value: DeviceRamHelper.profileToString(
+                                        currentProfile),
+                                  ),
+                                  label: "SELECT BUFFER PROFILE",
+                                  icon: Icons.memory,
+                                  onChanged: (item) {
+                                    final profile =
+                                        DeviceRamHelper.stringToProfile(
+                                            item.value);
+                                    settings.saveTVBufferProfile(profile);
+                                  },
+                                ),
+                              ),
                             ),
-                            
+
                             const SizedBox(height: 12),
-                            
-                            // Current Profile Info
+
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
@@ -520,7 +585,8 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    DeviceRamHelper.getProfileDescription(currentProfile),
+                                    DeviceRamHelper.getProfileDescription(
+                                        currentProfile),
                                     style: TextStyle(
                                       color: Theme.of(context)
                                           .colorScheme
@@ -529,7 +595,8 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                       fontSize: 13,
                                     ),
                                   ),
-                                  if (currentProfile != BufferProfile.medium) ...[
+                                  if (currentProfile !=
+                                      BufferProfile.medium) ...[
                                     const SizedBox(height: 8),
                                     _buildBufferDetail(context, currentProfile),
                                   ],
@@ -539,10 +606,9 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
-                      // Info Box
+
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -581,7 +647,6 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                 );
               }),
 
-
               Obx(() {
                 settings.animationDuration;
                 return NyantvExpansionTile(
@@ -619,7 +684,8 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                 ),
                                 child: Icon(
                                   Iconsax.eye,
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color:
+                                      Theme.of(context).colorScheme.primary,
                                   size: 20,
                                 ),
                               ),
@@ -666,7 +732,8 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                             .colorScheme
                                             .primaryContainer
                                             .withValues(alpha: 0.3),
-                                        borderRadius: BorderRadius.circular(12),
+                                        borderRadius:
+                                            BorderRadius.circular(12),
                                       ),
                                       child: Column(
                                         children: [
@@ -676,8 +743,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                                 animation: _pulseAnimation,
                                                 builder: (context, child) {
                                                   return Transform.scale(
-                                                    scale:
-                                                        _pulseAnimation.value,
+                                                    scale: _pulseAnimation.value,
                                                     child: Icon(
                                                       Iconsax.document_download,
                                                       color: Theme.of(context)
@@ -797,8 +863,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                                 return Switch(
                                                   value: _enableShaders.value,
                                                   onChanged: (value) {
-                                                    _enableShaders.value =
-                                                        value;
+                                                    _enableShaders.value = value;
                                                     saveSettings();
                                                   },
                                                 );
@@ -846,21 +911,22 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                                           style: TextStyle(
                                                             fontWeight:
                                                                 FontWeight.w600,
-                                                            color: Theme.of(
-                                                                    context)
-                                                                .colorScheme
-                                                                .onSurface,
+                                                            color:
+                                                                Theme.of(context)
+                                                                    .colorScheme
+                                                                    .onSurface,
                                                           ),
                                                         ),
                                                         Text(
                                                           'Choose accordingly to your system specs.\nMid End = Eg. GTX 980, GTX 1060, RX 570\nHigh End = Eg. GTX 1080, RTX 2070, RTX 3060, RX 590, Vega 56',
                                                           style: TextStyle(
-                                                            color: Theme.of(
-                                                                    context)
-                                                                .colorScheme
-                                                                .onSurface
-                                                                .withValues(
-                                                                    alpha: 0.7),
+                                                            color:
+                                                                Theme.of(context)
+                                                                    .colorScheme
+                                                                    .onSurface
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.7),
                                                             fontSize: 12,
                                                           ),
                                                         ),
@@ -880,10 +946,8 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                                       top: 20.0),
                                                   child: NyantvDropdown(
                                                       items: availProfiles
-                                                          .map((e) =>
-                                                              DropdownItem(
-                                                                  text: e,
-                                                                  value: e))
+                                                          .map((e) => DropdownItem(
+                                                              text: e, value: e))
                                                           .toList(),
                                                       selectedItem: DropdownItem(
                                                           text: settingsController
@@ -903,8 +967,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                         ),
                                         const SizedBox(height: 8),
                                         AnimatedContainer(
-                                          width:
-                                              _enableShaders.value ? null : 0,
+                                          width: _enableShaders.value ? null : 0,
                                           curve: Curves.easeInOut,
                                           height:
                                               _enableShaders.value ? null : 0,
@@ -981,9 +1044,8 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                           strictMode: true,
                                           desktopValue: Obx(() {
                                             return AnimatedOpacity(
-                                              opacity: _enableShaders.value
-                                                  ? 1
-                                                  : 0.3,
+                                              opacity:
+                                                  _enableShaders.value ? 1 : 0.3,
                                               duration: const Duration(
                                                   milliseconds: 300),
                                               child: Container(
@@ -1011,14 +1073,12 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                                       children: [
                                                         Icon(
                                                           Iconsax.keyboard,
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .primary,
+                                                          color: Theme.of(context)
+                                                              .colorScheme
+                                                              .primary,
                                                           size: 20,
                                                         ),
-                                                        const SizedBox(
-                                                            width: 12),
+                                                        const SizedBox(width: 12),
                                                         Expanded(
                                                           child: Column(
                                                             crossAxisAlignment:
@@ -1027,8 +1087,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                                             children: [
                                                               Text(
                                                                 'Shader Profiles Initialized',
-                                                                style:
-                                                                    TextStyle(
+                                                                style: TextStyle(
                                                                   fontWeight:
                                                                       FontWeight
                                                                           .w600,
@@ -1040,8 +1099,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                                                               ),
                                                               Text(
                                                                 'Use keyboard shortcuts during playback to switch profiles',
-                                                                style:
-                                                                    TextStyle(
+                                                                style: TextStyle(
                                                                   color: Theme.of(
                                                                           context)
                                                                       .colorScheme
@@ -1148,4 +1206,5 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
       ),
     );
   }
+
 }
