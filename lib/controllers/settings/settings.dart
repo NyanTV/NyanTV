@@ -75,6 +75,18 @@ class Settings extends GetxController {
     }
   }
 
+  int get autoIdleMinutes {
+    if (!_isInitialized) return 0;
+    return preferences.get('auto_idle_minutes', defaultValue: 0);
+  }
+
+  set autoIdleMinutes(int value) {
+    if (_isInitialized) {
+      preferences.put('auto_idle_minutes', value);
+      update();
+    }
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -105,7 +117,7 @@ class Settings extends GetxController {
     _selectedProfile.value = preferences.get('selected_profile', defaultValue: 'MID-END');
 
     isTv().then((e) {
-      isTV.value = e;
+      isTV.value = true;//e;
     });
 
     // Initialize player shaders

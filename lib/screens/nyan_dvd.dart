@@ -31,9 +31,11 @@ class _InitialisingScreenState extends State<InitialisingScreen>
   @override
   void initState() {
     super.initState();
+    setExcludedScreen(true);
     WidgetsBinding.instance.addObserver(this);
 
     if (widget.dvdMode) {
+      setDVDMode(true);
       WakelockPlus.enable();
       _rpcUpdateTimer = Timer.periodic(const Duration(seconds: 20), (_) {
         DiscordRPCController.instance.updateBrowsingPresence(
@@ -81,7 +83,12 @@ class _InitialisingScreenState extends State<InitialisingScreen>
     if (!mounted) return;
     setState(() => _opacity = 0.0);
     await Future.delayed(const Duration(milliseconds: 400));
-    if (mounted) setState(() => _isReady = true);
+    if (mounted) {
+      setState(() => _isReady = true);
+      if (!widget.dvdMode) {
+        setExcludedScreen(false);
+      }
+    }
   }
 
   bool _isServiceReady(ServiceHandler handler) =>
@@ -92,7 +99,11 @@ class _InitialisingScreenState extends State<InitialisingScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _rpcUpdateTimer?.cancel();
-    if (widget.dvdMode) WakelockPlus.disable();
+    if (widget.dvdMode) {
+      WakelockPlus.disable();
+      setDVDMode(false);
+    }
+    setExcludedScreen(false);
     super.dispose();
   }
 

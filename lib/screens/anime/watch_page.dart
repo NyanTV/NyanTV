@@ -239,6 +239,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   void initState() {
     super.initState();
     initTVScroll();
+    setExcludedScreen(true);
     final settings = Get.find<Settings>();
     mediaService = widget.anilistData.serviceType;
     discordRPC = DiscordRPCController.instance;
@@ -849,6 +850,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       isPlaying.value = e;
 
       if (e) {
+        setExcludedScreen(true);
         Future.delayed(const Duration(milliseconds: 1500), () {
           if (mounted) {
             isSwitchingEpisode = false;
@@ -857,10 +859,11 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         
         _startPeriodicDiscordUpdates();
       } else {
+        setExcludedScreen(false);
         _stopPeriodicDiscordUpdates();
       }
       
-      if (!_isManualSeeking) {
+      if (!_isManualSeeking && !isInDVDMode) {
         _scheduleDiscordUpdate(isPaused: !e);
       }
     });
@@ -1275,12 +1278,13 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     _periodicDiscordUpdateTimer?.cancel();
     _initialSeekSubscription?.cancel();
     disposeTVScroll();
+    setExcludedScreen(false);
 
     trackEpisode(
         currentPosition.value, episodeDuration.value, currentEpisode.value,
         updateAL: false);
 
-    if (mounted) {
+    if (mounted && !isInDVDMode) {
       try {
         discordRPC.updateMediaPresence(media: anilistData.value);
       } catch (e) {

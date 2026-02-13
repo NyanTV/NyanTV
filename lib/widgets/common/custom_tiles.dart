@@ -235,6 +235,7 @@ class CustomSliderTile extends StatefulWidget {
   final double? divisions;
   final Function(double value) onChanged;
   final Function(double value)? onChangedEnd;
+  final bool showOffWhenZero;
 
   const CustomSliderTile({
     super.key,
@@ -248,6 +249,7 @@ class CustomSliderTile extends StatefulWidget {
     required this.max,
     this.divisions,
     this.min = 0.0,
+    this.showOffWhenZero = false,
   });
 
   @override
@@ -319,9 +321,11 @@ class _CustomSliderTileState extends State<CustomSliderTile> {
               child: Row(
                 children: [
                   NyantvText(
-                    text: widget.sliderValue % 1 == 0
-                        ? widget.sliderValue.toInt().toString()
-                        : widget.sliderValue.toStringAsFixed(1),
+                    text: widget.showOffWhenZero && widget.sliderValue == 0
+                        ? "Off"
+                        : (widget.sliderValue % 1 == 0
+                            ? widget.sliderValue.toInt().toString()
+                            : widget.sliderValue.toStringAsFixed(1)),
                     variant: TextVariant.semiBold,
                   ),
                   const SizedBox(width: 10),

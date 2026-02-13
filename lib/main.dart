@@ -59,6 +59,47 @@ WebViewEnvironment? webViewEnvironment;
 late Isar isar;
 bool isAndroidTV = false;
 
+final _isInExcludedScreen = false.obs;
+final _isInDVDMode = false.obs;
+Timer? _autoIdleTimer;
+
+bool get isInDVDMode => _isInDVDMode.value;
+
+void setExcludedScreen(bool excluded) {
+  _isInExcludedScreen.value = excluded;
+}
+
+void setDVDMode(bool enabled) {
+  _isInDVDMode.value = enabled;
+}
+
+void _resetAutoIdleTimer() {
+  _autoIdleTimer?.cancel();
+  
+  try {
+    final settings = Get.find<Settings>();
+    final idleMinutes = settings.autoIdleMinutes;
+    
+    Logger.i('Auto-idle timer reset. Minutes: $idleMinutes, Excluded: ${_isInExcludedScreen.value}');
+    
+    if (idleMinutes <= 0) return;
+    if (_isInExcludedScreen.value) return;
+    
+    _autoIdleTimer = Timer(Duration(minutes: idleMinutes), () {
+      Logger.i('Auto-idle timer triggered! Going to DVD mode...');
+      if (!_isInExcludedScreen.value) {
+        setDVDMode(true);
+        Get.to(() => const InitialisingScreen(
+          child: FilterScreen(),
+          dvdMode: true,
+        ));
+      }
+    });
+  } catch (e) {
+    Logger.e('Auto-idle error: $e');
+  }
+}
+
 class MyHttpoverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(context) {
@@ -216,120 +257,124 @@ class MainApp extends StatelessWidget {
       shortcuts: <LogicalKeySet, Intent>{
         LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent(),
       },
-      child: KeyboardListener(
-        focusNode: FocusNode(),
-        onKeyEvent: (KeyEvent event) async {
-          if (event is KeyDownEvent) {
-            if (event.logicalKey == LogicalKeyboardKey.escape) {
-              if (Get.currentRoute == '/' || Get.currentRoute == '') {
-              } else {
-                Navigator.pop(Get.context!);
-              }
-            } else if (event.logicalKey == LogicalKeyboardKey.f11) {
-              bool isFullScreen = await windowManager.isFullScreen();
-              NyantvTitleBar.setFullScreen(!isFullScreen);
-            } else if (event.logicalKey == LogicalKeyboardKey.enter) {
-              final isAltPressed = HardwareKeyboard.instance.logicalKeysPressed
-                      .contains(LogicalKeyboardKey.altLeft) ||
-                  HardwareKeyboard.instance.logicalKeysPressed
-                      .contains(LogicalKeyboardKey.altRight);
-              if (isAltPressed) {
+      child: Listener(
+        onPointerDown: (_) => _resetAutoIdleTimer(),
+        onPointerMove: (_) => _resetAutoIdleTimer(),
+        onPointerHover: (_) => _resetAutoIdleTimer(),
+        child: KeyboardListener(
+          focusNode: FocusNode(),
+          onKeyEvent: (KeyEvent event) async {
+            _resetAutoIdleTimer();
+            
+            if (event is KeyDownEvent) {
+              if (event.logicalKey == LogicalKeyboardKey.escape) {
+                Get.back();
+              } else if (event.logicalKey == LogicalKeyboardKey.f11) {
                 bool isFullScreen = await windowManager.isFullScreen();
                 NyantvTitleBar.setFullScreen(!isFullScreen);
+              } else if (event.logicalKey == LogicalKeyboardKey.enter) {
+                final isAltPressed = HardwareKeyboard.instance.logicalKeysPressed
+                        .contains(LogicalKeyboardKey.altLeft) ||
+                    HardwareKeyboard.instance.logicalKeysPressed
+                        .contains(LogicalKeyboardKey.altRight);
+                if (isAltPressed) {
+                  bool isFullScreen = await windowManager.isFullScreen();
+                  NyantvTitleBar.setFullScreen(!isFullScreen);
+                }
               }
             }
-          }
-        },
-        child: GetMaterialApp(
-          scrollBehavior: MyCustomScrollBehavior(),
-          debugShowCheckedModeBanner: false,
-          title: "NyanTV",
-          theme: theme.lightTheme,
-          darkTheme: theme.darkTheme,
-          themeMode: theme.isSystemMode
-              ? ThemeMode.system
-              : theme.isLightMode
-                  ? ThemeMode.light
-                  : ThemeMode.dark,
-          home: const InitialisingScreen(child: FilterScreen()),
-          builder: (context, child) {
-            if (PlatformDispatcher.instance.views.length > 1) {
-              return child!;
-            }
+          },
+          child: GetMaterialApp(
+            scrollBehavior: MyCustomScrollBehavior(),
+            debugShowCheckedModeBanner: false,
+            title: "NyanTV",
+            theme: theme.lightTheme,
+            darkTheme: theme.darkTheme,
+            themeMode: theme.isSystemMode
+                ? ThemeMode.system
+                : theme.isLightMode
+                    ? ThemeMode.light
+                    : ThemeMode.dark,
+            home: const InitialisingScreen(child: FilterScreen()),
+            builder: (context, child) {
+              if (PlatformDispatcher.instance.views.length > 1) {
+                return child!;
+              }
 
-            final isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+              final isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 
-            Widget finalChild = GetBuilder<Settings>(
-              init: Get.find<Settings>(),
-              builder: (settings) {
-                final scale = settings.uiScale;
+              Widget finalChild = GetBuilder<Settings>(
+                init: Get.find<Settings>(),
+                builder: (settings) {
+                  final scale = settings.uiScale;
 
-                if (scale <= 0.0 || scale > 3.0 || scale == 1.0) {
-                  return UIScaleBypass(
-                    bypassScale: false,
-                    child: child!,
+                  if (scale <= 0.0 || scale > 3.0 || scale == 1.0) {
+                    return UIScaleBypass(
+                      bypassScale: false,
+                      child: child!,
+                    );
+                  }
+
+                  final originalSize = MediaQuery.of(context).size;
+                  final scaledSize = Size(
+                    originalSize.width / scale,
+                    originalSize.height / scale,
                   );
-                }
 
-                final originalSize = MediaQuery.of(context).size;
-                final scaledSize = Size(
-                  originalSize.width / scale,
-                  originalSize.height / scale,
-                );
-
-                return UIScaleBypass(
-                  bypassScale: true,
-                  child: MediaQuery(
-                    data: MediaQuery.of(context).copyWith(
-                      size: scaledSize,
-                      padding: EdgeInsets.zero,
-                      viewInsets: EdgeInsets.zero,
-                      viewPadding: EdgeInsets.zero,
-                    ),
-                    child: Transform.scale(
-                      scale: scale,
-                      alignment: Alignment.topLeft,
-                      child: OverflowBox(
-                        minWidth: 0,
-                        maxWidth: double.infinity,
-                        minHeight: 0,
-                        maxHeight: double.infinity,
+                  return UIScaleBypass(
+                    bypassScale: true,
+                    child: MediaQuery(
+                      data: MediaQuery.of(context).copyWith(
+                        size: scaledSize,
+                        padding: EdgeInsets.zero,
+                        viewInsets: EdgeInsets.zero,
+                        viewPadding: EdgeInsets.zero,
+                      ),
+                      child: Transform.scale(
+                        scale: scale,
                         alignment: Alignment.topLeft,
-                        child: SizedBox(
-                          width: scaledSize.width,
-                          height: scaledSize.height,
-                          child: child!,
+                        child: OverflowBox(
+                          minWidth: 0,
+                          maxWidth: double.infinity,
+                          minHeight: 0,
+                          maxHeight: double.infinity,
+                          alignment: Alignment.topLeft,
+                          child: SizedBox(
+                            width: scaledSize.width,
+                            height: scaledSize.height,
+                            child: child!,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
-            );
-
-            if (isDesktop) {
-              return Stack(
-                children: [
-                  finalChild,
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      color: Colors.transparent,
-                      child: NyantvTitleBar.titleBar(),
-                    ),
-                  ),
-                ],
+                  );
+                },
               );
-            }
 
-            return finalChild;
-          },
-          enableLog: true,
-          logWriterCallback: (text, {isError = false}) async {
-            Logger.d(text);
-          },
+              if (isDesktop) {
+                return Stack(
+                  children: [
+                    finalChild,
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        color: Colors.transparent,
+                        child: NyantvTitleBar.titleBar(),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return finalChild;
+            },
+            enableLog: true,
+            logWriterCallback: (text, {isError = false}) async {
+              Logger.d(text);
+            },
+          ),
         ),
       ),
     );
@@ -346,6 +391,17 @@ class FilterScreen extends StatefulWidget {
 class _FilterScreenState extends State<FilterScreen> {
   int _selectedIndex = 1;
   int _mobileSelectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    setExcludedScreen(false);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resetAutoIdleTimer();
+    });
+
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -375,6 +431,7 @@ class _FilterScreenState extends State<FilterScreen> {
 
   @override
   void dispose() {
+    _autoIdleTimer?.cancel();
     Logger.dispose();
     super.dispose();
   }

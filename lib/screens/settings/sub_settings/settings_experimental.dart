@@ -36,6 +36,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
   final _downloadProgress = 0.0.obs;
   final _currentStatus = ''.obs;
   final _enableShaders = false.obs;
+  final _autoIdleMinutes = 0.obs;
   final FocusNode _bufferProfileFocusNode = FocusNode();
   final GlobalKey _bufferProfileDropdownKey = GlobalKey();
 
@@ -64,11 +65,13 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
     _enableShaders.value =
         settings.preferences.get('shaders_enabled', defaultValue: false);
     _cacheDays.value = settings.preferences.get('cache_days', defaultValue: 7);
+    _autoIdleMinutes.value = settings.autoIdleMinutes;
   }
 
   void saveSettings() {
     settings.preferences.put('shaders_enabled', _enableShaders.value);
     settings.preferences.put('cache_days', _cacheDays.value);
+    settings.autoIdleMinutes = _autoIdleMinutes.value;
   }
 
   void _initializeAnimations() {
@@ -352,6 +355,48 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                       ],
                     ),
                   )),
+              Obx(() => NyantvExpansionTile(
+                title: "Auto Idle",
+                initialExpanded: false,
+                content: Column(
+                  children: [
+                    CustomSliderTile(
+                      icon: Iconsax.timer_1,
+                      title: "Auto Idle Timer",
+                      description: "Automatically start NyanDVD after inactivity",
+                      sliderValue: _autoIdleMinutes.value.toDouble(),
+                      divisions: 20,
+                      onChanged: (double value) {
+                        _autoIdleMinutes.value = value.toInt();
+                        saveSettings();
+                      },
+                      min: 0,
+                      max: 20,
+                      showOffWhenZero: true,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        "Time in minutes",
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.6),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
 
               GetBuilder<Settings>(
                 builder: (settings) {
