@@ -1,11 +1,13 @@
 ### 🌟 Features
--   hold d-pad leftright for accumulated seeks
+-   auto idle
 
 ### 🔧 Bug Fixes & Improvements
--   save video playback position on app exit
--   prevent heartbeat overwriting watch state
+-   updater has proper dpad support now  manual update checking works
+-   select source dropdown
+-   list editor watch state
 
 ### 🎨 Style Changes
--   initialise screen on app launch
+-   better initialising screen and idle screen
+-   a few ui adjustments
 
  
