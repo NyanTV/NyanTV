@@ -118,8 +118,7 @@ class BlurredButton extends StatelessWidget {
                 width: width,
                 height: height,
                 margin: EdgeInsets.symmetric(
-                    horizontal:
-                        getResponsiveSize(context, mobileSize: 0, desktopSize: 20)),
+                    horizontal: getResponsiveSize(context, mobileSize: 0, desktopSize: 20)),
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
@@ -132,39 +131,31 @@ class BlurredButton extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   child: Stack(
                     children: [
-                      Stack(
-                        children: [
-                          Image.network(
-                            backgroundImage,
-                            width: width,
-                            height: height,
-                            fit: BoxFit.cover,
-                          ),
-                          Positioned.fill(child: Obx(() {
-                            return TweenAnimationBuilder<double>(
-                              duration: const Duration(milliseconds: 200),
-                              tween: Tween<double>(
-                                  begin: 3, 
-                                  end: (isHovering.value || hasFocus) ? 0 : 3),
-                              builder: (context, blurValue, child) {
-                                return Blur(
-                                  blur: blurValue,
-                                  blurColor: Colors.black,
-                                  colorOpacity: 0.1,
-                                  child: Container(),
-                                );
-                              },
-                            );
-                          })),
-                          Positioned.fill(
-                            child: Image.asset(
-                              'assets/images/dot_pattern.png',
-                              color: Colors.white.withOpacity(0.1),
-                              fit: BoxFit.fitWidth,
-                              colorBlendMode: BlendMode.overlay,
+                      Image.network(
+                        backgroundImage,
+                        width: width,
+                        height: height,
+                        fit: BoxFit.cover,
+                      ),
+                      Positioned.fill(
+                        child: Obx(() {
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              color: (isHovering.value || hasFocus)
+                                  ? Colors.black.withOpacity(0.3)
+                                  : Colors.black.withOpacity(0.5),
                             ),
-                          ),
-                        ],
+                          );
+                        }),
+                      ),
+                      Positioned.fill(
+                        child: Image.asset(
+                          'assets/images/dot_pattern.png',
+                          color: Colors.white.withOpacity(0.1),
+                          fit: BoxFit.fitWidth,
+                          colorBlendMode: BlendMode.overlay,
+                        ),
                       ),
                       Positioned.fill(
                         child: Column(

@@ -1,13 +1,10 @@
-
 import 'package:nyantv/controllers/settings/methods.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:nyantv/models/Media/media.dart';
 import 'package:nyantv/widgets/header.dart';
 import 'package:nyantv/widgets/helper/tv_wrapper.dart';
-import 'package:blur/blur.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:kenburns_nullsafety/kenburns_nullsafety.dart';
 
 class GradientPoster extends StatelessWidget {
   const GradientPoster({
@@ -29,44 +26,33 @@ class GradientPoster extends StatelessWidget {
       children: [
         SizedBox(
           height: isDesktop ? 460 : 400,
-          child: KenBurns(
-            maxScale: 1.5,
-            minAnimationDuration: const Duration(milliseconds: 6000),
-            maxAnimationDuration: const Duration(milliseconds: 10000),
-            child: Obx(() {
-              return NetworkSizedImage(
-                imageUrl: data?.cover ?? posterUrl,
-                errorImage: data?.poster,
-                radius: 0,
-                height: 300,
-                width: double.infinity,
-                color: settingsController.liquidMode
-                    ? Theme.of(context).colorScheme.primary.withOpacity(0.8)
-                    : null,
-              );
-            }),
-          ),
+          child: Obx(() {
+            return NetworkSizedImage(
+              imageUrl: data?.cover ?? posterUrl,
+              errorImage: data?.poster,
+              radius: 0,
+              height: 300,
+              width: double.infinity,
+              color: settingsController.liquidMode
+                  ? Theme.of(context).colorScheme.primary.withOpacity(0.8)
+                  : null,
+            );
+          }),
         ),
         Container(
           height: isDesktop ? 460 : 400,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.transparent,
+                Colors.black.withOpacity(0.0),
+                Colors.black.withOpacity(0.2),
+                Theme.of(context).colorScheme.surface.withOpacity(0.95),
                 Theme.of(context).colorScheme.surface,
               ],
+              stops: const [0.0, 0.4, 0.8, 1.0],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
-          ),
-        ),
-        SizedBox(
-          height: isDesktop ? 460 : 400,
-          child: Blur(
-            colorOpacity: 0.0,
-            blur: 5,
-            blurColor: Colors.transparent,
-            child: Container(),
           ),
         ),
         Padding(
