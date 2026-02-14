@@ -1,10 +1,15 @@
-### 🌟 Features
--   continue watching widget for home menu
-
 ### 🔧 Bug Fixes & Improvements
--   deeplink for activity and preview
+-   discord rpc images not rendering
+-   no more black screen
 
 ### 🎨 Style Changes
--   better initialising
+-   better player focus visuals
+-   auto-scroll on home page
+
+### 🚀 Performance Improvements
+-   no more unnecessary blur, faster details page
+
+### 🧹 Chores & Documentation
+-   add stoat.chat
 
  
