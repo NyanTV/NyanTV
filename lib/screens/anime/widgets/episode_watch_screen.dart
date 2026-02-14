@@ -8,6 +8,7 @@ import 'package:nyantv/models/Media/media.dart';
 import 'package:nyantv/models/Offline/Hive/episode.dart';
 import 'package:nyantv/screens/anime/widgets/episode_range.dart';
 import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/utils/logger.dart';
 import 'package:nyantv/utils/string_extensions.dart';
 import 'package:nyantv/widgets/common/glow.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_chip.dart';
@@ -188,6 +189,18 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
   }
 
   Future<void> _fetchServers(Episode ep) async {
+    Logger.i('Fetching servers for episode: ${ep.number}');
+    Logger.i('Episode link: ${ep.link}');
+    Logger.i('📺 Active source: ${sourceController.activeSource.value?.name}');
+    
+    if (ep.link == null || ep.link!.isEmpty) {
+      Logger.e('ERROR: Episode link is null or empty!');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Episode link is missing!')),
+      );
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -198,21 +211,35 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
       builder: (context) {
         return SizedBox(
           width: double.infinity,
-          child: FutureBuilder<List<Video>>(
+          child: FutureBuilder<List<d.Video>>(
             future: sourceController.activeSource.value!.methods.getVideoList(
-                    d.DEpisode(episodeNumber: ep.number, url: ep.link))
-                as Future<List<Video>>?,
-            // future: getVideo(
-            // source: sourceController.activeSource.value!, url: url),
+                d.DEpisode(episodeNumber: ep.number, url: ep.link)),
             builder: (context, snapshot) {
+              Logger.i('Connection state: ${snapshot.connectionState}');
+              
+              if (snapshot.hasError) {
+                Logger.e('Error fetching servers: ${snapshot.error}');
+                Logger.e('Stack trace: ${snapshot.stackTrace}');
+              }
+              
+              if (snapshot.hasData) {
+                Logger.i('Found ${snapshot.data!.length} servers');
+                for (var video in snapshot.data!) {
+                  Logger.i('   - ${video.quality}: ${video.url}');
+                }
+              }
+              
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return _buildScrapingLoadingState(true);
               } else if (snapshot.hasError) {
                 return _buildErrorState(snapshot.error.toString());
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                Logger.w('No data or empty server list');
                 return _buildEmptyState();
               } else {
-                streamList.value = snapshot.data ?? [];
+                streamList.value = snapshot.data!
+                    .map((e) => Video.fromVideo(e))
+                    .toList();
                 return _buildServerList();
               }
             },
@@ -222,6 +249,8 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
     );
   }
 
+  
+      
   Widget _buildScrapingLoadingState(bool fromSrc) {
     return Container(
       padding: EdgeInsets.all(20),
@@ -288,6 +317,7 @@ class _EpisodeWatchScreenState extends State<EpisodeWatchScreen> {
   }
 
   Widget _buildEmptyState() {
+    Logger.i("watch_screen");
     return const SizedBox(
       height: 200,
       child: Center(

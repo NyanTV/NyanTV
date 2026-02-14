@@ -1,3 +1,4 @@
+// android/app/src/main/kotlin/com/mukatos/nyantv/MainActivity.kt
 package com.mukatos.nyantv
 
 import io.flutter.embedding.android.FlutterActivity
@@ -13,6 +14,9 @@ import java.io.InputStreamReader
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "app/architecture"
     private val PLATFORM_CHANNEL = "app.nyantv/platform"
+    private val WATCH_NEXT_CHANNEL = "com.nyantv/tv_watch_next"
+    
+    private lateinit var watchNextHelper: TvWatchNextHelper
     
     override fun getCachedEngineId(): String {
         return "nyantv_engine"
@@ -20,6 +24,8 @@ class MainActivity: FlutterActivity() {
     
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        
+        watchNextHelper = TvWatchNextHelper(this)
         
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
@@ -42,6 +48,32 @@ class MainActivity: FlutterActivity() {
                 "isTV" -> {
                     val isTV = checkIfTV()
                     result.success(isTV)
+                }
+                else -> {
+                    result.notImplemented()
+                }
+            }
+        }
+        
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, WATCH_NEXT_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "updateWatchNext" -> {
+                    val data = call.arguments as? Map<String, Any>
+                    if (data != null) {
+                        watchNextHelper.updateWatchNext(data)
+                        result.success(true)
+                    } else {
+                        result.error("INVALID_ARGS", "Invalid arguments", null)
+                    }
+                }
+                "removeFromWatchNext" -> {
+                    val mediaId = call.argument<String>("mediaId")
+                    if (mediaId != null) {
+                        watchNextHelper.removeFromWatchNext(mediaId)
+                        result.success(true)
+                    } else {
+                        result.error("INVALID_ARGS", "Missing mediaId", null)
+                    }
                 }
                 else -> {
                     result.notImplemented()

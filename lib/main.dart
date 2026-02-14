@@ -54,6 +54,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:provider/provider.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:nyantv/controllers/tv/tv_watch_next_service.dart';
 
 WebViewEnvironment? webViewEnvironment;
 late Isar isar;
@@ -79,8 +80,6 @@ void _resetAutoIdleTimer() {
   try {
     final settings = Get.find<Settings>();
     final idleMinutes = settings.autoIdleMinutes;
-    
-    Logger.i('Auto-idle timer reset. Minutes: $idleMinutes, Excluded: ${_isInExcludedScreen.value}');
     
     if (idleMinutes <= 0) return;
     if (_isInExcludedScreen.value) return;
@@ -225,6 +224,9 @@ void _initializeGetxController() async {
   Get.put(ServiceHandler());
   Get.put(GreetingController());
   Get.lazyPut(() => CacheController());
+  if (Platform.isAndroid && isAndroidTV) {
+    Get.put(TvWatchNextService());
+  }
 }
 
 class UIScaleBypass extends InheritedWidget {

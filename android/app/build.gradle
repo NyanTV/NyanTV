@@ -1,3 +1,4 @@
+// android/app/build.gradle
 plugins {
     id "com.android.application"
     id "kotlin-android"
@@ -71,4 +72,9 @@ flutter {
 dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    
+    // TV Watch Next
+    implementation 'androidx.tvprovider:tvprovider:1.0.0'
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
 }

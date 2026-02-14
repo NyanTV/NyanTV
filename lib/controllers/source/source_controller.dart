@@ -17,6 +17,7 @@ import 'package:nyantv/utils/storage_provider.dart';
 import 'package:nyantv/widgets/common/search_bar.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/Aniyomi/AniyomiExtensions.dart';
+import 'package:dartotsu_extension_bridge/Mangayomi/MangayomiExtensions.dart';
 import 'package:flutter/material.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
@@ -59,7 +60,7 @@ class SourceController extends GetxController implements BaseService {
       Logger.i('Settings Aniyomi repo: $val');
       activeAniyomiAnimeRepo = val;
     } else {
-      Logger.i('Settings Anime repo: $val');
+      Logger.i('Settings Mangayomi repo: $val');
       activeAnimeRepo = val;
     }
   }
@@ -69,7 +70,7 @@ class SourceController extends GetxController implements BaseService {
       Logger.i('Getting Aniyomi repo');
       return activeAniyomiAnimeRepo;
     } else {
-      Logger.i('Getting Anime repo');
+      Logger.i('Getting Mangayomi repo');
       return activeAnimeRepo;
     }
   }
@@ -203,6 +204,7 @@ class SourceController extends GetxController implements BaseService {
     if (Platform.isAndroid) {
       Get.put(AniyomiExtensions(), tag: 'AniyomiExtensions');
     }
+    Get.put(MangayomiExtensions(), tag: 'MangayomiExtensions');
     for (var type in extenionTypes) {
       await type
           .getManager()

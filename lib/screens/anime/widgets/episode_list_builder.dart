@@ -15,6 +15,7 @@ import 'package:nyantv/screens/anime/widgets/episode/normal_episode.dart';
 import 'package:nyantv/screens/anime/widgets/episode_range.dart';
 import 'package:nyantv/screens/anime/widgets/track_dialog.dart';
 import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/utils/logger.dart';
 import 'package:nyantv/utils/string_extensions.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_button.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_chip.dart';
@@ -287,6 +288,7 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
   }
 
   Widget _buildUniversalScraper(String url) {
+    Logger.i("universal");
     return FutureBuilder<List<Video>>(
       future: _scrapeVideoStreams(url),
       builder: (context, snapshot) {
@@ -345,7 +347,7 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
           containers.forEach(container => container.click());
         """);
           } catch (e) {
-            print('JavaScript execution error: $e');
+            Logger.i('JavaScript execution error: $e');
           }
 
           await Future.delayed(Duration(seconds: 5));
@@ -357,7 +359,7 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
         shouldInterceptRequest: (controller, request) async {
           final requestUrl = request.url.toString();
           final headers = request.headers ?? {};
-          print('Intercepted request: $requestUrl');
+          Logger.i('Intercepted request: $requestUrl');
 
           if (_isVideoStream(requestUrl)) {
             final video = Video(
@@ -371,10 +373,10 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
             final baseUrl = requestUrl.split('?')[0];
             if (!foundVideos.any((v) => v.url.split('?')[0] == baseUrl)) {
               foundVideos.add(video);
-              print(
+              Logger.i(
                   'Added video stream: $requestUrl (Quality: ${video.quality})');
             } else {
-              print('Skipped duplicate stream: $requestUrl');
+              Logger.i('Skipped duplicate stream: $requestUrl');
             }
           }
 
@@ -388,7 +390,7 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
 
       await headlessWebView?.run();
     } catch (e) {
-      print('Headless WebView error: $e');
+      Logger.i('Headless WebView error: $e');
       if (!completer.isCompleted) {
         completer.complete(foundVideos);
       }
@@ -398,7 +400,7 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
     scrapingTimer?.cancel();
     await headlessWebView?.dispose();
 
-    print('Final video count: ${result.length}');
+    Logger.i('Final video count: ${result.length}');
     return result;
   }
 
@@ -520,6 +522,7 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
   }
 
   Widget _buildEmptyState() {
+    Logger.i("list_builder");
     return const SizedBox(
       height: 200,
       child: Center(

@@ -252,7 +252,7 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
   double _minY = 0.0;
   late final double _logoSize;
 
-  static const double _speed = 3.1;
+  static const double _speed = 2.3;
 
   static const List<Color> _bounceColors = [
     Colors.white,

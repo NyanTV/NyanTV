@@ -192,13 +192,16 @@ class _EpisodeSectionState extends State<EpisodeSection> {
             ),
           ]
         : sourceController.installedExtensions.map<DropdownItem>((source) {
+            final isMangayomi = source.extensionType == ExtensionType.mangayomi;
             return DropdownItem(
               value: '${source.name} (${source.lang?.toUpperCase()})',
               text: source.name?.toUpperCase() ?? 'Unknown Source',
               subtitle: source.lang?.toUpperCase() ?? 'Unknown',
               leadingIcon: NetworkSizedImage(
                 radius: 16,
-                imageUrl: 'https://aniyomi.org/img/logo-128px.png',
+                imageUrl: isMangayomi
+                    ? "https://raw.githubusercontent.com/kodjodevf/mangayomi/main/assets/app_icons/icon-red.png"
+                    : 'https://aniyomi.org/img/logo-128px.png',
                 height: 24,
                 width: 24,
               ),
@@ -211,13 +214,17 @@ class _EpisodeSectionState extends State<EpisodeSection> {
     } else {
       final activeSource = sourceController.activeSource.value;
       if (activeSource != null) {
+        final isMangayomi =
+            activeSource.extensionType == ExtensionType.mangayomi;
         selectedItem = DropdownItem(
           value: '${activeSource.name} (${activeSource.lang?.toUpperCase()})',
           text: activeSource.name?.toUpperCase() ?? 'Unknown Source',
           subtitle: activeSource.lang?.toUpperCase() ?? 'Unknown',
           leadingIcon: NetworkSizedImage(
             radius: 12,
-            imageUrl: 'https://aniyomi.org/img/logo-128px.png',
+            imageUrl: isMangayomi
+                ? "https://raw.githubusercontent.com/kodjodevf/mangayomi/main/assets/app_icons/icon-red.png"
+                : 'https://aniyomi.org/img/logo-128px.png',
             height: 20,
             width: 20,
           ),

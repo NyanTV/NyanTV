@@ -65,13 +65,13 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
                   children: [
                     NyantvExpansionTile(
                         initialExpanded: true,
-                        title: 'Extensions',
+                        title: 'Mangayomi',
                         content: Column(
                           children: [
                             CustomTile(
                               icon: HugeIcons.strokeRoundedGithub,
                               title: 'Github Repo',
-                              description: "Add github repo for extensions",
+                              description: "Add github repo anime",
                               onTap: () => const GitHubRepoDialog(
                                 type: ItemType.anime,
                                 extType: ExtensionType.mangayomi,
@@ -82,13 +82,13 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
                     if (Platform.isAndroid)
                       NyantvExpansionTile(
                           initialExpanded: true,
-                          title: 'Android Extensions',
+                          title: 'Aniyomi',
                           content: Column(
                             children: [
                               CustomTile(
                                 icon: HugeIcons.strokeRoundedGithub,
                                 title: 'Github Repo',
-                                description: "Add github repo for android extensions",
+                                description: "Add github repo for anime",
                                 onTap: () => const GitHubRepoDialog(
                                   type: ItemType.anime,
                                   extType: ExtensionType.aniyomi,
