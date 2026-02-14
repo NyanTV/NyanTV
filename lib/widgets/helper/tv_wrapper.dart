@@ -80,15 +80,9 @@ class NyantvOnTap extends StatelessWidget {
       );
     } else {
       if (inkWell ?? false) {
-        return InkWell(
-          onTap: onTap,
-          child: child,
-        );
+        return InkWell(onTap: onTap, child: child);
       } else {
-        return GestureDetector(
-          onTap: onTap,
-          child: child,
-        );
+        return GestureDetector(onTap: onTap, child: child);
       }
     }
   }

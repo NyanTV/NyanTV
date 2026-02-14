@@ -133,6 +133,10 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final isEpisodeDialogOpen = false.obs;
   late bool isLoggedIn;
   final leftOriented = true.obs;
+  final _prevEpFocusNode  = FocusNode(debugLabel: 'prev-ep');
+  final _playPauseFocusNode = FocusNode(debugLabel: 'play-pause');
+  final _nextEpFocusNode  = FocusNode(debugLabel: 'next-ep');
+  final _skipButtonFocusNode = FocusNode(debugLabel: 'skip-btn');
   late TVRemoteHandler? _tvRemoteHandler;
 
   Timer? _discordUpdateTimer;
@@ -307,30 +311,36 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       skipTraversal: settings.isTV.value,
     );
     
-  ever(showControls, (controlsVisible) {
-    if (settings.isTV.value) {
-      if (controlsVisible) {
-        if (_keyboardListenerFocusNode.hasFocus) {
-          _keyboardListenerFocusNode.unfocus();
-        }
-        Future.delayed(const Duration(milliseconds: 150), () {
-          if (mounted && _lastControlsFocusNode != null && _lastControlsFocusNode!.canRequestFocus) {
-            _lastControlsFocusNode!.requestFocus();
+    ever(showControls, (controlsVisible) {
+      if (settings.isTV.value) {
+        if (controlsVisible) {
+          if (_keyboardListenerFocusNode.hasFocus) {
+            _keyboardListenerFocusNode.unfocus();
           }
-        });
-      } else {
-        final currentFocus = FocusScope.of(context).focusedChild;
-        if (currentFocus != null && currentFocus != _keyboardListenerFocusNode) {
-          _lastControlsFocusNode = currentFocus;
-        }
-        Future.delayed(const Duration(milliseconds: 50), () {
-          if (mounted && !_keyboardListenerFocusNode.hasFocus) {
-            FocusScope.of(context).requestFocus(_keyboardListenerFocusNode);
+          Future.delayed(const Duration(milliseconds: 150), () {
+            if (mounted && _lastControlsFocusNode != null && _lastControlsFocusNode!.canRequestFocus) {
+              _lastControlsFocusNode!.requestFocus();
+            }
+          });
+        } else {
+          final currentFocus = FocusScope.of(context).focusedChild;
+          if (currentFocus != null && currentFocus != _keyboardListenerFocusNode) {
+            _lastControlsFocusNode = currentFocus;
           }
-        });
+          
+          if (_prevEpFocusNode.hasFocus) _prevEpFocusNode.unfocus();
+          if (_playPauseFocusNode.hasFocus) _playPauseFocusNode.unfocus();
+          if (_nextEpFocusNode.hasFocus) _nextEpFocusNode.unfocus();
+          if (_skipButtonFocusNode.hasFocus) _skipButtonFocusNode.unfocus();
+          
+          Future.delayed(const Duration(milliseconds: 50), () {
+            if (mounted && !_keyboardListenerFocusNode.hasFocus) {
+              FocusScope.of(context).requestFocus(_keyboardListenerFocusNode);
+            }
+          });
+        }
       }
-    }
-  });
+    });
     
     ever(isBuffering, (buffering) {
       if (showControls.value && !buffering) {
@@ -598,19 +608,29 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       Logger.i('Using TV buffer profile: ${DeviceRamHelper.getProfileName(profile)}');
       Logger.i('Buffer: ${config.bufferMB}MB, Cache: ${config.cacheSecs}s');
       
-      return PlayerConfiguration(
-        options: {
-          "vo": "gpu",
-          "hwdec": "no",
-          "gpu-context": "android",
-          "cache": "yes",
-          "cache-secs": "${config.cacheSecs}",
-          "demuxer-max-bytes": config.demuxerMax,
-          "demuxer-max-back-bytes": config.demuxerBack,
-        },
-        bufferSize: config.bufferBytes,
-      );
-    }
+    return PlayerConfiguration(
+      options: {
+        "vo": "gpu",
+        "hwdec": "no",
+        "gpu-context": "android",
+        "cache": "yes",
+        "cache-secs": "${config.cacheSecs}",
+        "demuxer-max-bytes": config.demuxerMax,
+        "demuxer-max-back-bytes": config.demuxerBack,
+        
+        "demuxer-readahead-secs": "${config.cacheSecs}",
+        "cache-pause": "yes",
+        "cache-pause-wait": "3",
+        "cache-pause-initial": "yes",
+        "demuxer-seekable-cache": "yes",
+        "cache-on-disk": "no",
+        "demuxer-force-seekable": "yes",
+        
+        "stream-buffer-size": "${config.bufferBytes}", 
+      },
+      bufferSize: config.bufferBytes,
+    );
+  }
     
     if (shadersEnabled) {
       return const PlayerConfiguration();
@@ -1338,6 +1358,10 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     }
     _tvRemoteHandler?.dispose();
     _tvRemoteHandler = null;
+    _prevEpFocusNode.dispose();
+    _playPauseFocusNode.dispose();
+    _nextEpFocusNode.dispose();
+    _skipButtonFocusNode.dispose();
     _keyboardListenerFocusNode.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -2073,123 +2097,145 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      transform: Matrix4.identity()
-                        ..translate(0.0, showControls.value ? 0.0 : -100.0),
-                      padding: EdgeInsets.symmetric(
-                          vertical: 15.0,
-                          horizontal: isEpisodeDialogOpen.value ? 0 : 10),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (!isLocked.value) ...[
+                    Focus(
+                      skipTraversal: true,
+                      onKeyEvent: (node, event) {
+                        if (settings.isTV.value &&
+                            event is KeyDownEvent &&
+                            event.logicalKey == LogicalKeyboardKey.arrowDown &&
+                            !_playPauseFocusNode.hasFocus) {
+                          _playPauseFocusNode.requestFocus();
+                          return KeyEventResult.handled;
+                        }
+                        return KeyEventResult.ignored;
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        transform: Matrix4.identity()
+                          ..translate(
+                              0.0, showControls.value ? 0.0 : -100.0),
+                        padding: EdgeInsets.symmetric(
+                            vertical: 15.0,
+                            horizontal:
+                                isEpisodeDialogOpen.value ? 0 : 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (!isLocked.value) ...[
+                              BlurWrapper(
+                                child: IconButton(
+                                    onPressed: () => Get.back(),
+                                    icon: const Icon(
+                                        Icons.arrow_back_ios_new_rounded,
+                                        color: Colors.white)),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                width: getResponsiveSize(context,
+                                    mobileSize: Get.width * 0.3,
+                                    desktopSize: isEpisodeDialogOpen.value
+                                        ? Get.width * 0.3
+                                        : (Get.width * 0.6)),
+                                padding: const EdgeInsets.only(top: 3.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    NyantvText(
+                                      text:
+                                          'Episode ${currentEpisode.value.number}: ${currentEpisode.value.title}',
+                                      variant: TextVariant.semiBold,
+                                      maxLines: 3,
+                                      color: themeFgColor.value,
+                                    ),
+                                    NyantvText(
+                                      text: anilistData.value.title
+                                          .toUpperCase(),
+                                      variant: TextVariant.bold,
+                                      color:
+                                          Colors.white.withOpacity(0.8),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            const Spacer(),
                             BlurWrapper(
-                              child: IconButton(
-                                  onPressed: () {
-                                    Get.back();
-                                  },
-                                  icon: const Icon(
-                                      Icons.arrow_back_ios_new_rounded,
-                                      color: Colors.white)),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              width: getResponsiveSize(context,
-                                  mobileSize: Get.width * 0.3,
-                                  desktopSize: isEpisodeDialogOpen.value
-                                      ? Get.width * 0.3
-                                      : (Get.width * 0.6)),
-                              padding: const EdgeInsets.only(top: 3.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  NyantvText(
-                                    text:
-                                        'Episode ${currentEpisode.value.number}: ${currentEpisode.value.title}',
-                                    variant: TextVariant.semiBold,
-                                    maxLines: 3,
-                                    color: themeFgColor.value,
-                                  ),
-                                  NyantvText(
-                                    text: anilistData.value.title.toUpperCase(),
-                                    variant: TextVariant.bold,
-                                    color: Colors.white.withOpacity(0.8),
-                                  ),
+                                  if (!isLocked.value) ...[
+                                    _buildIcon(
+                                        onTap: () {
+                                          isEpisodeDialogOpen.value =
+                                              !isEpisodeDialogOpen.value;
+                                          if (MediaQuery.of(context)
+                                                  .orientation ==
+                                              Orientation.portrait) {
+                                            isEpisodeDialogOpen.value =
+                                                false;
+                                            showModalBottomSheet(
+                                                context: context,
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20)),
+                                                clipBehavior:
+                                                    Clip.antiAlias,
+                                                builder: (context) {
+                                                  return EpisodeWatchScreen(
+                                                    episodeList:
+                                                        episodeList.value,
+                                                    anilistData:
+                                                        anilistData.value,
+                                                    currentEpisode:
+                                                        currentEpisode
+                                                            .value,
+                                                    onEpisodeSelected: (src,
+                                                        streamList,
+                                                        selectedEpisode) {
+                                                      episode.value = src;
+                                                      episodeTracks.value =
+                                                          streamList;
+                                                      currentEpisode
+                                                              .value =
+                                                          selectedEpisode;
+                                                      _initPlayer(false);
+                                                      isEpisodeDialogOpen
+                                                          .value = false;
+                                                    },
+                                                  );
+                                                });
+                                          }
+                                        },
+                                        icon: HugeIcons
+                                            .strokeRoundedFolder03),
+                                    _buildIcon(
+                                        onTap: () =>
+                                            showPlaybackSpeedDialog(context),
+                                        icon: HugeIcons
+                                            .strokeRoundedClock01),
+                                  ],
+                                  _buildIcon(
+                                      onTap: () => isLocked.value =
+                                          !isLocked.value,
+                                      icon: isLocked.value
+                                          ? Icons.lock
+                                          : Icons.lock_open),
                                 ],
                               ),
                             ),
                           ],
-                          const Spacer(),
-                          BlurWrapper(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                if (!isLocked.value) ...[
-                                  _buildIcon(
-                                      onTap: () {
-                                        isEpisodeDialogOpen.value =
-                                            !isEpisodeDialogOpen.value;
-                                        if (MediaQuery.of(context)
-                                                .orientation ==
-                                            Orientation.portrait) {
-                                          isEpisodeDialogOpen.value = false;
-                                          showModalBottomSheet(
-                                              context: context,
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          20)),
-                                              clipBehavior: Clip.antiAlias,
-                                              builder: (context) {
-                                                return EpisodeWatchScreen(
-                                                  episodeList:
-                                                      episodeList.value,
-                                                  anilistData:
-                                                      anilistData.value,
-                                                  currentEpisode:
-                                                      currentEpisode.value,
-                                                  onEpisodeSelected: (src,
-                                                      streamList,
-                                                      selectedEpisode) {
-                                                    episode.value = src;
-                                                    episodeTracks.value =
-                                                        streamList;
-                                                    currentEpisode.value =
-                                                        selectedEpisode;
-                                                    _initPlayer(false);
-                                                    isEpisodeDialogOpen.value =
-                                                        false;
-                                                  },
-                                                );
-                                              });
-                                        }
-                                      },
-                                      icon: HugeIcons.strokeRoundedFolder03),
-                                  _buildIcon(
-                                      onTap: () {
-                                        showPlaybackSpeedDialog(context);
-                                      },
-                                      icon: HugeIcons.strokeRoundedClock01),
-                                ],
-                                _buildIcon(
-                                    onTap: () {
-                                      isLocked.value = !isLocked.value;
-                                    },
-                                    icon: isLocked.value
-                                        ? Icons.lock
-                                        : Icons.lock_open),
-              ],
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
+
                     const Spacer(),
+
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       transform: Matrix4.identity()
-                        ..translate(0.0, showControls.value ? 0.0 : 100.0),
+                        ..translate(
+                            0.0, showControls.value ? 0.0 : 100.0),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20.0, vertical: 10),
                       child: Column(
@@ -2197,7 +2243,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                         children: [
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
                             children: [
                               NyantvTextSpans(
                                 maxLines: 1,
@@ -2205,11 +2252,12 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                   NyantvTextSpan(
                                       text: '${formattedTime.value} ',
                                       variant: TextVariant.semiBold,
-                                      color:
-                                          themeFgColor.value.withOpacity(0.8)),
+                                      color: themeFgColor.value
+                                          .withOpacity(0.8)),
                                   NyantvTextSpan(
                                     variant: TextVariant.semiBold,
-                                    text: ' /  ${formattedDuration.value}',
+                                    text:
+                                        ' /  ${formattedDuration.value}',
                                   ),
                                 ],
                               ),
@@ -2221,92 +2269,99 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                             child: SizedBox(
                               height: 27,
                               child: VideoSliderTheme(
-                                  color: themeFgColor.value,
-                                  inactiveTrackColor:
-                                      _getBgColor().withOpacity(0.1),
-                                  child: Slider(
-                                    focusNode: FocusNode(
-                                        canRequestFocus: false,
-                                        skipTraversal: true),
-                                    min: 0,
-                                    value: currentPosition.value.inMilliseconds
-                                        .toDouble(),
-                                    max: (currentPosition.value.inMilliseconds >
-                                                episodeDuration
-                                                    .value.inMilliseconds
-                                            ? currentPosition
-                                                .value.inMilliseconds
-                                            : episodeDuration
-                                                .value.inMilliseconds)
-                                        .toDouble(),
-                                    secondaryTrackValue: bufferred
-                                        .value.inMilliseconds
-                                        .toDouble(),
-                                    onChangeStart: (_) {
-                                      startSeeking();
-                                      _isManualSeeking = true;
-                                    },
-                                    onChangeEnd: (val) async {
-                                      if (episodeDuration.value.inMilliseconds.toDouble() != 0.0) {
-                                        final newPosition = Duration(milliseconds: val.toInt());
-                                        player.seek(newPosition);
-                                        endSeeking(newPosition);
-                                        
-                                        await _waitForBufferingAfterSeek();
-                                        
-                                        _isManualSeeking = false;
-                                        if (mounted && !isSwitchingEpisode && isPlaying.value) {
-                                          Logger.i('Slider seek complete, updating Discord');
-                                          _scheduleDiscordUpdate(isPaused: false);
-                                        }
+                                color: themeFgColor.value,
+                                inactiveTrackColor:
+                                    _getBgColor().withOpacity(0.1),
+                                child: Slider(
+                                  focusNode: FocusNode(
+                                      canRequestFocus: false,
+                                      skipTraversal: true),
+                                  min: 0,
+                                  value: currentPosition
+                                      .value.inMilliseconds
+                                      .toDouble(),
+                                  max: (currentPosition
+                                                  .value.inMilliseconds >
+                                              episodeDuration
+                                                  .value.inMilliseconds
+                                          ? currentPosition
+                                              .value.inMilliseconds
+                                          : episodeDuration
+                                              .value.inMilliseconds)
+                                      .toDouble(),
+                                  secondaryTrackValue: bufferred
+                                      .value.inMilliseconds
+                                      .toDouble(),
+                                  onChangeStart: (_) {
+                                    startSeeking();
+                                    _isManualSeeking = true;
+                                  },
+                                  onChangeEnd: (val) async {
+                                    if (episodeDuration.value
+                                            .inMilliseconds
+                                            .toDouble() !=
+                                        0.0) {
+                                      final newPosition = Duration(
+                                          milliseconds: val.toInt());
+                                      player.seek(newPosition);
+                                      endSeeking(newPosition);
+                                      await _waitForBufferingAfterSeek();
+                                      _isManualSeeking = false;
+                                      if (mounted &&
+                                          !isSwitchingEpisode &&
+                                          isPlaying.value) {
+                                        Logger.i(
+                                            'Slider seek complete, updating Discord');
+                                        _scheduleDiscordUpdate(
+                                            isPaused: false);
                                       }
-                                    },
-                                    onChanged: (val) {
-                                      if (episodeDuration.value.inMilliseconds
-                                              .toDouble() !=
-                                          0.0) {
-                                        currentPosition.value =
-                                            Duration(milliseconds: val.toInt());
-                                        formattedTime.value = formatDuration(
-                                            currentPosition.value);
-                                      }
-                                    },
-                                  )),
+                                    }
+                                  },
+                                  onChanged: (val) {
+                                    if (episodeDuration.value
+                                            .inMilliseconds
+                                            .toDouble() !=
+                                        0.0) {
+                                      currentPosition.value = Duration(
+                                          milliseconds: val.toInt());
+                                      formattedTime.value = formatDuration(
+                                          currentPosition.value);
+                                    }
+                                  },
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 5),
                           if (!isLocked.value)
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 BlurWrapper(
                                   child: Row(
                                     children: [
                                       _buildIcon(
-                                          onTap: () {
-                                            playerSettingsSheet(context);
-                                          },
+                                          onTap: () =>
+                                              playerSettingsSheet(context),
                                           icon: HugeIcons
                                               .strokeRoundedSettings01),
                                       _buildIcon(
-                                          onTap: () {
-                                            showTrackSelector();
-                                          },
+                                          onTap: () =>
+                                              showTrackSelector(),
                                           icon: HugeIcons
                                               .strokeRoundedFolderVideo),
                                       _buildIcon(
-                                          onTap: () {
-                                            showSubtitleSelector();
-                                          },
-                                          icon:
-                                              HugeIcons.strokeRoundedSubtitle),
+                                          onTap: () =>
+                                              showSubtitleSelector(),
+                                          icon: HugeIcons
+                                              .strokeRoundedSubtitle),
                                       if (episode.value.audios != null &&
                                           episode.value.audios!.isNotEmpty)
                                         _buildIcon(
-                                            onTap: () {
-                                              showAudioSelector();
-                                            },
+                                            onTap: () =>
+                                                showAudioSelector(),
                                             icon: HugeIcons
                                                 .strokeRoundedMusicNote01),
                                     ],
@@ -2353,13 +2408,15 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                           onTap: () {
                                             final newIndex =
                                                 (resizeModeList.indexOf(
-                                                            resizeMode.value) +
+                                                            resizeMode
+                                                                .value) +
                                                         1) %
                                                     resizeModeList.length;
                                             resizeMode.value =
                                                 resizeModeList[newIndex];
                                           },
-                                          icon: Icons.aspect_ratio_rounded),
+                                          icon:
+                                              Icons.aspect_ratio_rounded),
                                       if (!Platform.isAndroid &&
                                           !Platform.isIOS)
                                         _buildIcon(
@@ -2378,10 +2435,10 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                   ),
                                 ),
                               ],
-                            )
+                            ),
                         ],
                       ),
-                    )
+                    ),
                   ],
                 ),
                 if (!isLocked.value) ...[_buildPlaybackButtons()],
@@ -2389,86 +2446,13 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                   Positioned(
                       right: 10,
                       top: MediaQuery.of(context).size.height * 0.48,
-                      child: _buildIcon(icon: Icons.arrow_back_ios))
+                      child: _buildIcon(icon: Icons.arrow_back_ios)),
               ],
             ),
           ),
         ),
       );
     });
-  }
-
-  _buildSkipButton(bool invert) {
-    return BlurWrapper(
-      borderRadius: BorderRadius.circular(20.multiplyRoundness()),
-      child: NyanTVButton(
-        height: 50,
-        width: 120,
-        variant: ButtonVariant.simple,
-        borderRadius: BorderRadius.circular(20.multiplyRoundness()),
-        backgroundColor: Colors.transparent,
-        onTap: () async {
-          _isManualSeeking = true;
-          
-          if (invert) {
-            final duration = Duration(
-                seconds:
-                    currentPosition.value.inSeconds - settings.skipDuration);
-            if (duration.inMilliseconds < 0) {
-              currentPosition.value = const Duration(milliseconds: 0);
-              player.seek(const Duration(seconds: 0));
-            } else {
-              currentPosition.value = duration;
-              player.seek(duration);
-            }
-          } else {
-            final duration = Duration(
-                seconds:
-                    currentPosition.value.inSeconds + settings.skipDuration);
-            currentPosition.value = duration;
-            player.seek(duration);
-          }
-          
-          await _waitForBufferingAfterSeek();
-          _isManualSeeking = false;
-          if (mounted && !isSwitchingEpisode && isPlaying.value) {
-            Logger.i('Skip button complete, updating Discord');
-            _scheduleDiscordUpdate(isPaused: false);
-          }
-        },
-        child: invert
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.fast_rewind_rounded,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(width: 5),
-                  NyantvText(
-                    text: "-${settings.skipDuration}s",
-                    variant: TextVariant.semiBold,
-                    color: Colors.white,
-                  ),
-                ],
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  NyantvText(
-                    text: "+${settings.skipDuration}s",
-                    variant: TextVariant.semiBold,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(width: 5),
-                  const Icon(
-                    Icons.fast_forward_rounded,
-                    color: Colors.white,
-                  )
-                ],
-              ),
-      ),
-    );
   }
 
   void showPlaybackSpeedDialog(BuildContext context) async {
@@ -2561,6 +2545,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           mainAxisSize: MainAxisSize.max,
           children: [
             _buildPlaybackButton(
+              focusNode: _prevEpFocusNode,
               icon: Icons.skip_previous_rounded,
               color: currentEpisode.value.number.toInt() <= 1
                   ? Colors.grey[800]
@@ -2582,11 +2567,13 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                   ? _buildBufferingIndicator()
                   : buildPlayButton(
                       isPlaying: isPlaying,
+                      focusNode: _playPauseFocusNode,
                       color: themeBgColor.value,
                       iconColor: themeFgColor.value,
                     ),
             ),
             _buildPlaybackButton(
+              focusNode: _nextEpFocusNode,
               icon: Icons.skip_next_rounded,
               color: currentEpisode.value.number.toInt() >=
                       episodeList.value.last.number.toInt()
@@ -2611,78 +2598,223 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     );
   }
 
+
   Widget buildPlayButton({
     required RxBool isPlaying,
+    FocusNode? focusNode,
     Color? color,
     Color? iconColor,
   }) {
-    final isMobile = !settings.isTV.value && (Platform.isAndroid || Platform.isIOS);
-    final padding = getResponsiveSize(
-      context,
-      mobileSize: 10,
-      desktopSize: 20,
-      isStrict: true,
-    );
-    final radius = getResponsiveSize(
-      context,
-      mobileSize: 20.multiplyRadius(),
-      desktopSize: 40.multiplyRadius(),
-      isStrict: true,
-    );
+    final isMobile =
+        !settings.isTV.value && (Platform.isAndroid || Platform.isIOS);
+    final padding =
+        getResponsiveSize(context, mobileSize: 10, desktopSize: 20, isStrict: true);
+    final radius = getResponsiveSize(context,
+        mobileSize: 20.multiplyRadius(),
+        desktopSize: 40.multiplyRadius(),
+        isStrict: true);
+    final borderRadius = BorderRadius.circular(radius);
 
     return Obx(() {
-      return Container(
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(radius),
+      final iconWidget = AnimatedSwitcher(
+        duration: const Duration(milliseconds: 150),
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(scale: animation, child: child),
         ),
+        child: IconButton(
+          key: ValueKey(isPlaying.value),
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(borderRadius: borderRadius),
+            padding: EdgeInsets.all(padding),
+          ),
+          onPressed: () => player.playOrPause(),
+          icon: Icon(
+            isPlaying.value ? Icons.pause_rounded : Icons.play_arrow_rounded,
+            color: iconColor ?? color,
+            size: getResponsiveSize(context,
+                mobileSize: 40, desktopSize: 80, isStrict: true),
+          ),
+        ),
+      );
+
+      if (settings.isTV.value) {
+        final tvInner = Container(
+          decoration: BoxDecoration(color: color, borderRadius: borderRadius),
+          clipBehavior: Clip.antiAlias,
+          margin: const EdgeInsets.symmetric(horizontal: 50),
+          child: BlurWrapper(
+            borderRadius: borderRadius,
+            child: Focus(
+              focusNode: focusNode,
+              canRequestFocus: focusNode != null && showControls.value,
+              skipTraversal: !showControls.value,
+              onKeyEvent: (node, event) {
+                if (event is! KeyDownEvent) return KeyEventResult.ignored;
+                final key = event.logicalKey;
+                if (key == LogicalKeyboardKey.enter ||
+                    key == LogicalKeyboardKey.select) {
+                  player.playOrPause();
+                  _startHideControlsTimer();
+                  return KeyEventResult.handled;
+                }
+                if (key == LogicalKeyboardKey.arrowDown) {
+                  _skipButtonFocusNode.requestFocus();
+                  _startHideControlsTimer();
+                  return KeyEventResult.handled;
+                }
+                if (key == LogicalKeyboardKey.arrowUp) {
+                  FocusScope.of(context)
+                      .focusInDirection(TraversalDirection.up);
+                  _startHideControlsTimer();
+                  return KeyEventResult.handled;
+                }
+                
+                if (key == LogicalKeyboardKey.arrowLeft) {
+                  if (currentEpisode.value.number.toInt() > 1) {
+                    _prevEpFocusNode.requestFocus();
+                  }
+                  _startHideControlsTimer();
+                  return KeyEventResult.handled;
+                }
+                
+                if (key == LogicalKeyboardKey.arrowRight) {
+                  if (currentEpisode.value.number.toInt() < episodeList.value.last.number.toInt()) {
+                    _nextEpFocusNode.requestFocus();
+                  }
+                  _startHideControlsTimer();
+                  return KeyEventResult.handled;
+                }
+                
+                return KeyEventResult.ignored;
+              },
+              child: GestureDetector(
+                onTap: () {
+                  player.playOrPause();
+                  _startHideControlsTimer();
+                },
+                child: iconWidget,
+              ),
+            ),
+          ),
+        );
+        return _TVFocusGlass(
+            borderRadius: borderRadius, focusNode: focusNode, child: tvInner);
+      }
+
+      return Container(
+        decoration: BoxDecoration(color: color, borderRadius: borderRadius),
         clipBehavior: Clip.antiAlias,
         margin: EdgeInsets.symmetric(horizontal: isMobile ? 20 : 50),
         child: BlurWrapper(
-          borderRadius: BorderRadius.circular(radius),
+          borderRadius: borderRadius,
           child: NyantvOnTap(
-            onTap: () {
-              player.playOrPause();
-            },
+            onTap: () => player.playOrPause(),
             bgColor: Colors.transparent,
             focusedBorderColor: Colors.transparent,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 150),
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: ScaleTransition(scale: animation, child: child),
-              ),
-              child: IconButton(
-                key: ValueKey(isPlaying.value),
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(radius),
-                  ),
-                  padding: EdgeInsets.all(padding),
-                ),
-                onPressed: () {
-                  player.playOrPause();
-                },
-                icon: Icon(
-                  isPlaying.value
-                      ? Icons.pause_rounded
-                      : Icons.play_arrow_rounded,
-                  color: iconColor ?? color,
-                  size: getResponsiveSize(
-                    context,
-                    mobileSize: 40,
-                    desktopSize: 80,
-                    isStrict: true,
-                  ),
-                ),
-              ),
-            ),
+            child: iconWidget,
           ),
         ),
       );
     });
   }
+    
+  Future<void> _doSkip(bool invert) async {
+    _isManualSeeking = true;
+    if (invert) {
+      final dur = Duration(
+          seconds: currentPosition.value.inSeconds - settings.skipDuration);
+      if (dur.inMilliseconds < 0) {
+        currentPosition.value = Duration.zero;
+        player.seek(Duration.zero);
+      } else {
+        currentPosition.value = dur;
+        player.seek(dur);
+      }
+    } else {
+      final dur = Duration(
+          seconds: currentPosition.value.inSeconds + settings.skipDuration);
+      currentPosition.value = dur;
+      player.seek(dur);
+    }
+    await _waitForBufferingAfterSeek();
+    _isManualSeeking = false;
+    if (mounted && !isSwitchingEpisode && isPlaying.value) {
+      Logger.i('Skip button complete, updating Discord');
+      _scheduleDiscordUpdate(isPaused: false);
+    }
+  }
 
+  Widget _buildSkipButtonChild(bool invert) {
+    return invert
+        ? Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.fast_rewind_rounded, color: Colors.white),
+              const SizedBox(width: 5),
+              NyantvText(
+                  text: "-${settings.skipDuration}s",
+                  variant: TextVariant.semiBold,
+                  color: Colors.white),
+            ],
+          )
+        : Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              NyantvText(
+                  text: "+${settings.skipDuration}s",
+                  variant: TextVariant.semiBold,
+                  color: Colors.white),
+              const SizedBox(width: 5),
+              const Icon(Icons.fast_forward_rounded, color: Colors.white),
+            ],
+          );
+  }
+
+  Widget _buildSkipButton(bool invert) {
+    final borderRadius = BorderRadius.circular(20.multiplyRoundness());
+
+    final btn = BlurWrapper(
+      borderRadius: borderRadius,
+      child: NyanTVButton(
+        height: 50,
+        width: 120,
+        variant: ButtonVariant.simple,
+        borderRadius: borderRadius,
+        backgroundColor: Colors.transparent,
+        onTap: () => _doSkip(invert),
+        child: _buildSkipButtonChild(invert),
+      ),
+    );
+
+    if (settings.isTV.value) {
+      return _TVFocusGlass(
+        borderRadius: borderRadius,
+        focusNode: _skipButtonFocusNode,
+        child: Focus(
+          focusNode: _skipButtonFocusNode,
+          onKeyEvent: (node, event) {
+            if (event is! KeyDownEvent) return KeyEventResult.ignored;
+            final key = event.logicalKey;
+            if (key == LogicalKeyboardKey.enter ||
+                key == LogicalKeyboardKey.select) {
+              _doSkip(invert);
+              return KeyEventResult.handled;
+            }
+            if (key == LogicalKeyboardKey.arrowUp) {
+              _playPauseFocusNode.requestFocus();
+              return KeyEventResult.handled;
+            }
+            return KeyEventResult.ignored;
+          },
+          child: btn,
+        ),
+      );
+    }
+
+    return btn;
+  }
+    
   Widget _buildTVPlayer(BuildContext context) {
     final view = View.of(context);
     final physicalSize = view.physicalSize;
@@ -2773,10 +2905,12 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     IconData? icon,
     Color? color,
     Color? iconColor,
+    FocusNode? focusNode,
   }) {
     final isPlay =
         icon == Icons.play_arrow_rounded || icon == Icons.pause_rounded;
-    final isMobile = !settings.isTV.value && (Platform.isAndroid || Platform.isIOS);
+    final isMobile =
+        !settings.isTV.value && (Platform.isAndroid || Platform.isIOS);
     final padding = getResponsiveSize(context,
         mobileSize: isPlay ? 10 : 5,
         desktopSize: isPlay ? 20 : 10,
@@ -2785,6 +2919,88 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         mobileSize: 20.multiplyRadius(),
         desktopSize: 40.multiplyRadius(),
         isStrict: true);
+    final borderRadius = BorderRadius.circular(radius);
+
+    final iconWidget = IconButton(
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: borderRadius),
+        padding: EdgeInsets.all(padding),
+      ),
+      onPressed: onTap,
+      icon: Icon(
+        icon,
+        color: iconColor ?? color,
+        size: getResponsiveSize(context,
+            mobileSize: 40, desktopSize: 80, isStrict: true),
+      ),
+    );
+
+    if (settings.isTV.value) {
+      final isPrev = icon == Icons.skip_previous_rounded;
+      final isNext = icon == Icons.skip_next_rounded;
+      
+      final tvInner = Container(
+        decoration: BoxDecoration(
+          color: isPlay ? color : Colors.transparent,
+          borderRadius: borderRadius,
+          boxShadow: isPlay ? [glowingShadow(context)] : [],
+        ),
+        clipBehavior: Clip.antiAlias,
+        margin: EdgeInsets.symmetric(horizontal: isPlay ? 50 : 0),
+        child: BlurWrapper(
+          borderRadius: borderRadius,
+          child: Focus(
+            focusNode: focusNode,
+            canRequestFocus: focusNode != null && showControls.value,
+            skipTraversal: !showControls.value,
+            onKeyEvent: (node, event) {
+              if (event is! KeyDownEvent) return KeyEventResult.ignored;
+              final key = event.logicalKey;
+              if (key == LogicalKeyboardKey.enter ||
+                  key == LogicalKeyboardKey.select) {
+                onTap();
+                _startHideControlsTimer();
+                return KeyEventResult.handled;
+              }
+              if (key == LogicalKeyboardKey.arrowDown) {
+                _skipButtonFocusNode.requestFocus();
+                _startHideControlsTimer();
+                return KeyEventResult.handled;
+              }
+              if (key == LogicalKeyboardKey.arrowUp) {
+                FocusScope.of(context)
+                    .focusInDirection(TraversalDirection.up);
+                _startHideControlsTimer();
+                return KeyEventResult.handled;
+              }
+              
+              if (isPrev && key == LogicalKeyboardKey.arrowRight) {
+                _playPauseFocusNode.requestFocus();
+                _startHideControlsTimer();
+                return KeyEventResult.handled;
+              }
+              
+              if (isNext && key == LogicalKeyboardKey.arrowLeft) {
+                _playPauseFocusNode.requestFocus();
+                _startHideControlsTimer();
+                return KeyEventResult.handled;
+              }
+              
+              return KeyEventResult.ignored;
+            },
+            child: GestureDetector(
+              onTap: () {
+                onTap();
+                _startHideControlsTimer();
+              },
+              child: iconWidget,
+            ),
+          ),
+        ),
+      );
+      return _TVFocusGlass(
+          borderRadius: borderRadius, focusNode: focusNode, child: tvInner);
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -2793,38 +3009,24 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
             : settings.playerStyle == 0
                 ? Colors.transparent
                 : Colors.black.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(radius),
+        borderRadius: borderRadius,
         boxShadow: isPlay ? [glowingShadow(context)] : [],
       ),
       clipBehavior: Clip.antiAlias,
       margin:
           EdgeInsets.symmetric(horizontal: isPlay ? (isMobile ? 20 : 50) : 0),
       child: BlurWrapper(
-        borderRadius: BorderRadius.circular(radius),
+        borderRadius: borderRadius,
         child: NyantvOnTap(
           onTap: onTap,
           bgColor: Colors.transparent,
           focusedBorderColor: Colors.transparent,
-          child: IconButton(
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(radius),
-              ),
-              padding: EdgeInsets.all(padding),
-            ),
-            onPressed: onTap,
-            icon: Icon(
-              icon,
-              color: iconColor ?? color,
-              size: getResponsiveSize(context,
-                  mobileSize: 40, desktopSize: 80, isStrict: true),
-            ),
-          ),
+          child: iconWidget,
         ),
       ),
     );
   }
-
+    
   Widget _buildBufferingIndicator() {
     final size = getResponsiveSize(context, mobileSize: 50, desktopSize: 70);
     return Padding(
@@ -2836,22 +3038,22 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     );
   }
 
-  Widget _buildIcon({VoidCallback? onTap, IconData? icon}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3),
-      child: NyantvOnTap(
-        onTap: () {
-          onTap?.call();
-        },
-        child: IconButton(
-            onPressed: onTap,
-            icon: Icon(
-              icon,
-              color: Colors.white,
-            )),
-      ),
-    );
-  }
+Widget _buildIcon({VoidCallback? onTap, IconData? icon}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3),
+    child: NyantvOnTap(
+      onTap: () {
+        onTap?.call();
+      },
+      child: IconButton(
+          onPressed: onTap,
+          icon: Icon(
+            icon,
+            color: Colors.white,
+          )),
+    ),
+  );
+}
 
   void showColorProfileSheet(BuildContext context) {
     showModalBottomSheet(
@@ -2871,6 +3073,75 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           settings.preferences.put('currentVisualSettings', sett);
         },
       ),
+    );
+  }
+}
+
+class _TVFocusGlass extends StatefulWidget {
+  final Widget child;
+  final BorderRadius borderRadius;
+  final FocusNode? focusNode; // NEU: direkt übergeben
+  const _TVFocusGlass({
+    required this.child,
+    required this.borderRadius,
+    this.focusNode,
+  });
+  @override
+  State<_TVFocusGlass> createState() => _TVFocusGlassState();
+}
+
+class _TVFocusGlassState extends State<_TVFocusGlass> {
+  bool _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.focusNode?.addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(_TVFocusGlass old) {
+    super.didUpdateWidget(old);
+    if (old.focusNode != widget.focusNode) {
+      old.focusNode?.removeListener(_onFocusChange);
+      widget.focusNode?.addListener(_onFocusChange);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.focusNode?.removeListener(_onFocusChange);
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    final hasFocus = widget.focusNode?.hasFocus ?? false;
+    if (_focused != hasFocus) {
+      setState(() => _focused = hasFocus);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      decoration: BoxDecoration(
+        borderRadius: widget.borderRadius,
+        border: Border.all(
+          color: _focused
+              ? Colors.white.withOpacity(0.75)
+              : Colors.transparent,
+          width: 2,
+        ),
+        color: _focused ? Colors.white.withOpacity(0.12) : Colors.transparent,
+        boxShadow: _focused
+            ? [BoxShadow(
+                color: Colors.white.withOpacity(0.08),
+                blurRadius: 10,
+                spreadRadius: 1)]
+            : null,
+      ),
+      child: widget.child,
     );
   }
 }
