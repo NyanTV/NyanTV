@@ -19,10 +19,6 @@ class MainActivity : FlutterActivity() {
 
     private lateinit var watchNextHelper: TvWatchNextHelper
 
-    // FIX 2: Gecachte Engine nur verwenden, wenn sie wirklich existiert.
-    //         Wird die App kalt via Watch-Next-Karte gestartet, läuft
-    //         SplashActivity nicht → kein pre-warmed Engine → null zurückgeben,
-    //         damit FlutterActivity selbst eine neue Engine erzeugt.
     override fun getCachedEngineId(): String? {
         return if (FlutterEngineCache.getInstance().contains("nyantv_engine")) {
             "nyantv_engine"
@@ -31,8 +27,14 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        watchNextHelper = TvWatchNextHelper(this)
 
         watchNextHelper = TvWatchNextHelper(this)
 

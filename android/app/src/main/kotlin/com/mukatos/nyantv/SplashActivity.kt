@@ -20,7 +20,15 @@ class SplashActivity : Activity() {
     private val handler = Handler(Looper.getMainLooper())
     
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+            if (!isTaskRoot) {
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                startActivity(intent)
+                finish()
+                return
+            }
+            super.onCreate(savedInstanceState)
         
         // Fullscreen
         window.decorView.systemUiVisibility = (
@@ -61,6 +69,7 @@ class SplashActivity : Activity() {
     }
     
     private fun preloadFlutterEngine() {
+        if (FlutterEngineCache.getInstance().contains("nyantv_engine")) return
         try {
             flutterEngine = FlutterEngine(this)
             

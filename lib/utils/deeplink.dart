@@ -12,6 +12,7 @@ import 'package:nyantv/models/Media/media.dart' as nyantv;
 import 'package:nyantv/models/Offline/Hive/video.dart' as model;
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart' as d;
 import 'package:nyantv/screens/anime/details_page.dart';
+import 'package:nyantv/main.dart';
 
 class Deeplink {
   static void handleDeepLink(Uri uri) async {
@@ -141,6 +142,14 @@ class Deeplink {
       }
 
       final mediaObj = nyantv.Media.fromOfflineMedia(media, ItemType.anime);
+
+      Get.offAll(
+        () => FilterScreen(),
+        transition: Transition.noTransition,
+        duration: Duration.zero,
+      );
+
+      await Future.delayed(const Duration(milliseconds: 80));
 
       Get.to(
         () => AnimeDetailsPage(media: mediaObj, tag: mediaId),

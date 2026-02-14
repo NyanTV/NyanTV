@@ -74,7 +74,7 @@ class WatchPage extends StatefulWidget {
   State<WatchPage> createState() => _WatchPageState();
 }
 
-class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TVScrollMixin {
+class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TVScrollMixin, WidgetsBindingObserver {
   late Rx<model.Video> episode;
   late Rx<Episode> currentEpisode;
   late RxList<model.Video> episodeTracks;
@@ -146,6 +146,15 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   RxMap<String, int> customSettings = <String, int>{}.obs;
 
   bool get isMobile => !settings.isTV.value && (Platform.isAndroid || Platform.isIOS);
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!mounted) return;
+    if (state == AppLifecycleState.resumed) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      setState(() {});
+    }
+  }
 
   void applySavedProfile() => ColorProfileManager()
       .applyColorProfile(currentVisualProfile.value, player);
@@ -247,6 +256,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   void initState() {
     super.initState();
     initTVScroll();
+    WidgetsBinding.instance.addObserver(this);
     setExcludedScreen(true);
     final settings = Get.find<Settings>();
     mediaService = widget.anilistData.serviceType;
@@ -1329,6 +1339,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     _tvRemoteHandler?.dispose();
     _tvRemoteHandler = null;
     _keyboardListenerFocusNode.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
