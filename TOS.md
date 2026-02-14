@@ -70,6 +70,7 @@ For questions, support, or inquiries about NyanTV or these terms, contact the De
 - **GitHub Issues**: [NyanTV Issues](https://github.com/NyanTV/NyanTV/issues)
 - **Official Communities**:
   - [Telegram Group](https://t.me/NyanSupport)
+  - [Stoat Server](https://stoat.chat/invite/fKzse8yy)
 
 ## Acknowledgment
 By using NyanTV, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and Disclaimer.

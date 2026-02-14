@@ -79,6 +79,7 @@ jobs:
             - Once resolved, we'll notify you of the fix or provide a workaround.
             **👥 Connect with Us**  
             - **[Telegram](https://t.me/NyanSupport)**: Reach out for real-time discussions and updates.
+            - **[Stoat](https://stoat.chat/invite/fKzse8yy)**: Engage with our community and ask questions.
             We're working hard to resolve the issue and appreciate your patience!
             `;
             await github.rest.issues.createComment({

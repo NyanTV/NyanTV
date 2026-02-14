@@ -150,6 +150,16 @@ class AboutPage extends StatelessWidget {
                     leading: const Icon(HugeIcons.strokeRoundedTelegram),
                     title: "Telegram",
                   ),
+                  CustomListTile(
+                    onTap: () async {
+                      await launchUrlHelper('https://stoat.chat/invite/fKzse8yy');
+                    },
+                    leading: const CircleAvatar(
+                      backgroundImage: NetworkImage('https://files.catbox.moe/kzbgbe.png'),
+                      radius: 12,
+                    ),
+                    title: "Stoat",
+                  ),
                 ],
               ),
             ),

@@ -68,4 +68,4 @@ We'd also recommend reading and parsing the error output, as Flutter is quite ve
 
 ## Community
 
-Feel free to reach out on [Telegram](https://t.me/NyanSupport), we're always happy to assist someone who's trying to contribute to the project.
+Feel free to reach out on [Telegram](https://t.me/NyanSupport) / [Stoat](https://stoat.chat/invite/fKzse8yy), we're always happy to assist someone who's trying to contribute to the project.
