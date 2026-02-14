@@ -24,6 +24,7 @@ class InitialisingScreen extends StatefulWidget {
 class _InitialisingScreenState extends State<InitialisingScreen>
     with WidgetsBindingObserver {
   bool _isReady = false;
+  bool _showChild = false;
   double _opacity = 1.0;
   Timer? _rpcUpdateTimer;
   bool _initStarted = false;
@@ -70,7 +71,7 @@ class _InitialisingScreenState extends State<InitialisingScreen>
 
   Future<void> _waitForInit() async {
     final serviceHandler = Get.find<ServiceHandler>();
-    const minWait = Duration(milliseconds: 4000);
+    const minWait = Duration(milliseconds: 1500);
     const maxWait = Duration(seconds: 10);
     final start = DateTime.now();
 
@@ -81,8 +82,11 @@ class _InitialisingScreenState extends State<InitialisingScreen>
     }
 
     if (!mounted) return;
+    setState(() => _showChild = true);
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
     setState(() => _opacity = 0.0);
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 600));
     if (mounted) {
       setState(() => _isReady = true);
       if (!widget.dvdMode) {
@@ -220,14 +224,19 @@ class _InitialisingScreenState extends State<InitialisingScreen>
       content = scaffold;
     }
 
-    return MediaQuery(
-      data: neutralMediaQuery,
-      child: AnimatedOpacity(
-        opacity: _opacity,
-        duration: const Duration(milliseconds: 380),
-        curve: Curves.easeOut,
-        child: content,
-      ),
+    return Stack(
+      children: [
+        if (_showChild) widget.child,
+        MediaQuery(
+          data: neutralMediaQuery,
+          child: AnimatedOpacity(
+            opacity: _opacity,
+            duration: const Duration(milliseconds: 380),
+            curve: Curves.easeOut,
+            child: content,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -272,7 +281,7 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
 
   late final Ticker _ticker;
   Duration _lastTickTime = Duration.zero;
-  static const Duration _targetFrameDuration = Duration(milliseconds: 33); // ~30 FPS
+  static const Duration _targetFrameDuration = Duration(milliseconds: 33);
 
   double _hue = 0.0;
 
@@ -284,7 +293,7 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
       _logoSize = 95.0;
     }
     else {
-      _logoSize = 300.0;
+      _logoSize = 350.0;
     }
     _vx = _speed * (rng.nextBool() ? 1.0 : -1.0);
     _vy = _speed * (rng.nextBool() ? 1.0 : -1.0) * 0.85;
@@ -384,7 +393,7 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
             left: centerX,
             top: centerY,
             child: RepaintBoundary(
-              child: _BouncingLogo(size: _logoSize, color: rgbColor, dvdMode: false),//widget.dvdMode),
+              child: _BouncingLogo(size: _logoSize, color: rgbColor, dvdMode: false),
             ),
           ),
         ]);
@@ -398,7 +407,7 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
             child: AnimatedBuilder(
               animation: _colorAnim,
               builder: (context, child) => _BouncingLogo(
-                  size: _logoSize, color: _colorAnim.value ?? Colors.white, dvdMode: false),//widget.dvdMode),
+                  size: _logoSize, color: _colorAnim.value ?? Colors.white, dvdMode: false),
             ),
           ),
         ),
