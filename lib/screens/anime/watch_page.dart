@@ -52,6 +52,7 @@ import 'package:nyantv/utils/aniskip.dart' as aniskip;
 import 'package:nyantv/utils/tv_scroll_mixin.dart';
 import 'package:nyantv/controllers/discord/discord_rpc.dart';
 import 'package:nyantv/main.dart';
+import 'package:nyantv/controllers/tv/tv_watch_next_service.dart';
 
 class WatchPage extends StatefulWidget {
   final model.Video episodeSrc;
@@ -220,6 +221,13 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     currentEpisode.value.source = sourceController.activeSource.value!.name;
     currentEpisode.value.currentTrack = preferredStream;
     currentEpisode.value.videoTracks = video;
+
+    if (settings.isTV.value) {
+      try {
+        Get.find<TvWatchNextService>()
+            .setCurrentMedia(widget.anilistData.id.toString());
+      } catch (_) {}
+    }
     
     _initPlayer(false);
     
@@ -255,6 +263,12 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       }
       
       settings.preferences.put('shaders_enabled', false);
+    }
+    if (settings.isTV.value) {
+      try {
+        Get.find<TvWatchNextService>()
+            .setCurrentMedia(widget.anilistData.id.toString());
+      } catch (_) {}
     }
     _initOrientations();
     _leftAnimationController = AnimationController(
@@ -1025,6 +1039,12 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     }
     
     currentEpisode.value = episodeToNav;
+    if (settings.isTV.value) {
+      try {
+        Get.find<TvWatchNextService>()
+            .setCurrentMedia(widget.anilistData.id.toString());
+      } catch (_) {}
+    }
     final resp = await sourceController.activeSource.value!.methods
         .getVideoList(d.DEpisode(
             episodeNumber: episodeToNav.number, url: episodeToNav.link));
@@ -1302,7 +1322,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
       ScreenBrightness.instance.resetScreenBrightness();
     } else {
-      if (!isMobile) {
+      if (!isMobile && !Platform.isAndroid) {
         NyantvTitleBar.setFullScreen(false);
       }
     }

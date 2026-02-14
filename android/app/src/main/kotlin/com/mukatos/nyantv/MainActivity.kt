@@ -3,6 +3,7 @@ package com.mukatos.nyantv
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.plugin.common.MethodChannel
 import android.os.Build
 import android.app.UiModeManager
@@ -11,34 +12,40 @@ import android.content.res.Configuration
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-class MainActivity: FlutterActivity() {
+class MainActivity : FlutterActivity() {
     private val CHANNEL = "app/architecture"
     private val PLATFORM_CHANNEL = "app.nyantv/platform"
     private val WATCH_NEXT_CHANNEL = "com.nyantv/tv_watch_next"
-    
+
     private lateinit var watchNextHelper: TvWatchNextHelper
-    
-    override fun getCachedEngineId(): String {
-        return "nyantv_engine"
+
+    // FIX 2: Gecachte Engine nur verwenden, wenn sie wirklich existiert.
+    //         Wird die App kalt via Watch-Next-Karte gestartet, läuft
+    //         SplashActivity nicht → kein pre-warmed Engine → null zurückgeben,
+    //         damit FlutterActivity selbst eine neue Engine erzeugt.
+    override fun getCachedEngineId(): String? {
+        return if (FlutterEngineCache.getInstance().contains("nyantv_engine")) {
+            "nyantv_engine"
+        } else {
+            null
+        }
     }
-    
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        
+
         watchNextHelper = TvWatchNextHelper(this)
-        
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "getCurrentArchitecture" -> {
                     val architecture = getCurrentArchitecture()
                     result.success(architecture)
                 }
-                else -> {
-                    result.notImplemented()
-                }
+                else -> result.notImplemented()
             }
         }
-        
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, PLATFORM_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "getUIMode" -> {
@@ -49,12 +56,10 @@ class MainActivity: FlutterActivity() {
                     val isTV = checkIfTV()
                     result.success(isTV)
                 }
-                else -> {
-                    result.notImplemented()
-                }
+                else -> result.notImplemented()
             }
         }
-        
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, WATCH_NEXT_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "updateWatchNext" -> {
@@ -75,13 +80,11 @@ class MainActivity: FlutterActivity() {
                         result.error("INVALID_ARGS", "Missing mediaId", null)
                     }
                 }
-                else -> {
-                    result.notImplemented()
-                }
+                else -> result.notImplemented()
             }
         }
     }
-    
+
     private fun getCurrentArchitecture(): String {
         return try {
             val primaryAbi = Build.SUPPORTED_ABIS?.firstOrNull()
@@ -101,7 +104,7 @@ class MainActivity: FlutterActivity() {
             "unknown"
         }
     }
-    
+
     private fun getSystemProperty(property: String): String? {
         return try {
             val process = Runtime.getRuntime().exec("getprop $property")
@@ -115,7 +118,7 @@ class MainActivity: FlutterActivity() {
             null
         }
     }
-    
+
     private fun getUIMode(): String {
         return try {
             val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
@@ -132,15 +135,13 @@ class MainActivity: FlutterActivity() {
             "normal"
         }
     }
-    
+
     private fun checkIfTV(): Boolean {
         return try {
             val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
             val isTV = uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
-            
             val hasLeanback = packageManager.hasSystemFeature("android.software.leanback")
             val isTouchscreen = packageManager.hasSystemFeature("android.hardware.touchscreen")
-            
             isTV || (hasLeanback && !isTouchscreen)
         } catch (e: Exception) {
             e.printStackTrace()

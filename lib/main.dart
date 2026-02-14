@@ -120,9 +120,7 @@ class MyCustomScrollBehavior extends MaterialScrollBehavior {
 void main(List<String> args) async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
-
     MediaKit.ensureInitialized();
-
     await Logger.init();
     await dotenv.load(fileName: ".env");
 
@@ -132,14 +130,15 @@ void main(List<String> args) async {
     }
 
     if (Platform.isWindows) {
-      ['dar', 'nyantv', 'sugoireads', 'mangayomi']
-          .forEach(registerProtocolHandler);
+      ['dar', 'nyantv', 'sugoireads', 'mangayomi'].forEach(registerProtocolHandler);
     }
-    initDeepLinkListener();
+
     HttpOverrides.global = MyHttpoverrides();
     await initializeHive();
-    _initializeGetxController();
+    _initializeGetxController();   // ← zuerst Controller
+    initDeepLinkListener();        // ← dann Deep Link (Get.find ist jetzt sicher)
     initializeDateFormatting();
+
     if (!Platform.isAndroid && !Platform.isIOS) {
       await windowManager.ensureInitialized();
       await NyantvTitleBar.initialize();
@@ -177,7 +176,6 @@ void main(List<String> args) async {
     },
   ));
 }
-
 void initDeepLinkListener() async {
   final appLinks = AppLinks();
   if (Platform.isLinux) return;
@@ -271,10 +269,12 @@ class MainApp extends StatelessWidget {
             if (event is KeyDownEvent) {
               if (event.logicalKey == LogicalKeyboardKey.escape) {
                 Get.back();
-              } else if (event.logicalKey == LogicalKeyboardKey.f11) {
-                bool isFullScreen = await windowManager.isFullScreen();
+              } else if (!Platform.isAndroid && !Platform.isIOS &&
+                          event.logicalKey == LogicalKeyboardKey.f11) {
+              bool isFullScreen = await windowManager.isFullScreen();
                 NyantvTitleBar.setFullScreen(!isFullScreen);
-              } else if (event.logicalKey == LogicalKeyboardKey.enter) {
+              } else if (!Platform.isAndroid && !Platform.isIOS &&
+                          event.logicalKey == LogicalKeyboardKey.enter) {
                 final isAltPressed = HardwareKeyboard.instance.logicalKeysPressed
                         .contains(LogicalKeyboardKey.altLeft) ||
                     HardwareKeyboard.instance.logicalKeysPressed
