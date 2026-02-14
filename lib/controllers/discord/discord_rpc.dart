@@ -423,22 +423,32 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver{
     _gatewaySocket?.add(jsonEncode(payload));
   }
 
-  Future<String> _processImageUrl(String? url) async {
+Future<String> _processImageUrl(String? url, {int retries = 3}) async {
     try {
       if (Platform.isAndroid || Platform.isIOS) {
-        final processedUrl = await urlToDcAsset(url ?? _getAppIconUrl())
-            .timeout(const Duration(seconds: 5));
-        print('Processed image URL: $processedUrl');
-        return processedUrl;
-      }
-
-      if (url == null || url.isEmpty) {
+        for (int i = 0; i < retries; i++) {
+          try {
+            final processedUrl = await urlToDcAsset(url ?? _getAppIconUrl())
+                .timeout(const Duration(seconds: 5));
+            
+            if (processedUrl.startsWith('mp:')) {
+              return processedUrl;
+            }
+            
+            if (i < retries - 1) {
+              await Future.delayed(Duration(seconds: 2 * (i + 1)));
+            }
+          } catch (_) {
+            if (i < retries - 1) {
+              await Future.delayed(Duration(seconds: 2 * (i + 1)));
+            }
+          }
+        }
         return _getAppIconUrl();
       }
 
-      return url;
+      return url ?? _getAppIconUrl();
     } catch (e) {
-      print('Error processing image URL: $e - using fallback');
       return _getAppIconUrl();
     }
   }
@@ -556,6 +566,11 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver{
       });
       _gatewaySocket?.add(presencePayload);
       print('Anime presence updated successfully (Mobile)');
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (_isConnected.value) {
+          _gatewaySocket?.add(presencePayload);
+        }
+      });
     } else {
       try {
         await _discordRPC!.setActivity(
@@ -645,6 +660,11 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver{
       });
       _gatewaySocket?.add(presencePayload);
       print('Paused anime presence updated successfully (Mobile)');
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (_isConnected.value) {
+          _gatewaySocket?.add(presencePayload);
+        }
+      });
     } else {
       try {
         await _discordRPC!.setActivity(
@@ -721,6 +741,11 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver{
       });
       _gatewaySocket?.add(presencePayload);
       print('Media presence updated successfully (Mobile)');
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (_isConnected.value) {
+          _gatewaySocket?.add(presencePayload);
+        }
+      });
     } else {
       try {
         await _discordRPC!.setActivity(
@@ -790,6 +815,11 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver{
       });
       _gatewaySocket?.add(presencePayload);
       print('Browsing presence updated successfully (Mobile)');
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (_isConnected.value) {
+          _gatewaySocket?.add(presencePayload);
+        }
+      });
     } else {
       try {
         await _discordRPC!.setActivity(
