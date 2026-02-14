@@ -1,13 +1,10 @@
 ### 🌟 Features
--   auto idle
+-   continue watching widget for home menu
 
 ### 🔧 Bug Fixes & Improvements
--   updater has proper dpad support now  manual update checking works
--   select source dropdown
--   list editor watch state
+-   deeplink for activity and preview
 
 ### 🎨 Style Changes
--   better initialising screen and idle screen
--   a few ui adjustments
+-   better initialising
 
  
