@@ -30,10 +30,12 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with TVScrollMixin{
+class _HomePageState extends State<HomePage> with TVScrollMixin {
   late ScrollController _scrollController;
   final ValueNotifier<bool> _isAppBarVisibleExternally =
       ValueNotifier<bool>(true);
+
+  static const double _tvScrollStep = 120.0;
 
   @override
   void initState() {
@@ -48,13 +50,37 @@ class _HomePageState extends State<HomePage> with TVScrollMixin{
 
   ScrollController get scrollController => _scrollController;
 
-
   @override
   void dispose() {
     _scrollController.dispose();
     _isAppBarVisibleExternally.dispose();
     disposeTVScroll();
     super.dispose();
+  }
+
+  KeyEventResult _handleTVKeyEvent(FocusNode node, KeyEvent event) {
+    if (!Get.find<Settings>().isTV.value) return KeyEventResult.ignored;
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    if (event.logicalKey != LogicalKeyboardKey.arrowUp) {
+      return KeyEventResult.ignored;
+    }
+
+    if (_scrollController.hasClients &&
+        _scrollController.offset > 0) {
+      final target = (_scrollController.offset - _tvScrollStep).clamp(
+        0.0,
+        _scrollController.position.maxScrollExtent,
+      );
+      _scrollController.animateTo(
+        target,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+      );
+    }
+
+    return KeyEventResult.ignored;
   }
 
   @override
@@ -86,21 +112,27 @@ class _HomePageState extends State<HomePage> with TVScrollMixin{
         extendBodyBehindAppBar: true,
         body: Stack(
           children: [
-            SingleChildScrollView(
-              controller: _scrollController,
-              physics: getTVScrollPhysics(),
-              child: _buildScrollContent(
-                context,
-                cacheController,
-                serviceHandler,
-                isDesktop,
-                isMobile,
-                textAlignment,
-                statusBarHeight,
-                appBarHeight,
-                bottomNavBarHeight,
+            Focus(
+              onKeyEvent: _handleTVKeyEvent,
+              skipTraversal: true,
+              canRequestFocus: false,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                physics: getTVScrollPhysics(),
+                child: _buildScrollContent(
+                  context,
+                  cacheController,
+                  serviceHandler,
+                  isDesktop,
+                  isMobile,
+                  textAlignment,
+                  statusBarHeight,
+                  appBarHeight,
+                  bottomNavBarHeight,
+                ),
               ),
             ),
+
             if (!isDesktop)
               CustomAnimatedAppBar(
                 isVisible: _isAppBarVisibleExternally,
@@ -131,7 +163,7 @@ class _HomePageState extends State<HomePage> with TVScrollMixin{
       ),
     );
   }
-  
+
   Widget _buildScrollContent(
     BuildContext context,
     CacheController cacheController,
