@@ -1,7 +1,7 @@
 name: nyantv
 description: "An Anilist Client"
 publish_to: "GitHub"
-version: 0.1.8+39
+version: 0.1.9+40
 environment:
   sdk: ">=3.4.4 <4.0.0"
   flutter: ">=3.0.0"
@@ -140,5 +140,5 @@ inno_bundle:
   id: 1E872EE2-D856-43CC-AD79-14E9B7D7E985
   publisher: hoemotion
   name: NyanTV
-  version: 0.1.8
+  version: 0.1.9
   admin: auto
