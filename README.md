@@ -77,7 +77,7 @@ Join our community to stay updated and contribute to the discussion:
 
 
 <a href="https://t.me/NyanSupport" style="display: inline-block;"><img src="https://files.catbox.moe/z66xwr.png" alt="Telegram" height="40" style="vertical-align: middle;"></a>
-<a href="https://stoat.chat/invite/fKzse8yy" style="display: inline-block;"><img src="https://files.catbox.moe/kzbgbe.png" alt="Stoat" height="40" style="vertical-align: middle;"></a>
+<a href="./assets/images/stoat-icon.png" style="display: inline-block;"><img src="https://files.catbox.moe/kzbgbe.png" alt="Stoat" height="40" style="vertical-align: middle;"></a>
 
 
 ## Contribute

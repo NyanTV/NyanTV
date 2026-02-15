@@ -37,9 +37,9 @@ class UISettingsAdapter extends TypeAdapter<UISettings> {
             : {
                 "Continue Watching": true,
                 "Completed TV": false,
-                "Paused Animes": false,
-                "Dropped Animes": false,
-                "Planning Animes": false,
+                "Paused Anime": false,
+                "Dropped Anime": false,
+                "Planning Anime": false,
               },
         cardStyle: fields[16] ?? 2,
         historyCardStyle: fields[17] ?? 2,

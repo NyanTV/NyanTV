@@ -309,16 +309,16 @@ List<TrackedMedia> filterListByLabel(
     if (label == "Completed Movie" && anime.watchingStatus == 'COMPLETED') {
       return true;
     }
-    if (label == "Paused Animes" && anime.watchingStatus == 'PAUSED') {
+    if (label == "Paused Anime" && anime.watchingStatus == 'PAUSED') {
       return true;
     }
-    if (label == "Dropped Animes" && anime.watchingStatus == 'DROPPED') {
+    if (label == "Dropped Anime" && anime.watchingStatus == 'DROPPED') {
       return true;
     }
-    if (label == "Planning Animes" && anime.watchingStatus == 'PLANNING') {
+    if (label == "Planning Anime" && anime.watchingStatus == 'PLANNING') {
       return true;
     }
-    if (label == "Rewatching Animes" && anime.watchingStatus == 'REPEATING') {
+    if (label == "Rewatching Anime" && anime.watchingStatus == 'REPEATING') {
       return true;
     }
 
