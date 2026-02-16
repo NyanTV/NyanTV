@@ -56,6 +56,10 @@
     <img src="https://github.com/NyanTV/NyanTV/blob/main/github_assets/desktop/preview_2.png" width="100%" style="margin: 0;" />
 </div>-->
 
+## Wiki
+
+For detailed setup instructions, check out the [Wiki](https://github.com/NyanTV/NyanTV/wiki).
+
 ## Support Us
 
 > [!TIP]
