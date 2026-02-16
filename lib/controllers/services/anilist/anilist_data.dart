@@ -39,11 +39,11 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
   final anilistAuth = Get.find<AnilistAuth>();
 
   // Anime Data
-  RxList<Media> upcomingAnimes = <Media>[].obs;
-  RxList<Media> popularAnimes = <Media>[].obs;
-  RxList<Media> trendingAnimes = <Media>[].obs;
-  RxList<Media> latestAnimes = <Media>[].obs;
-  RxList<Media> recentlyUpdatedAnimes = <Media>[].obs;
+  RxList<Media> upcomingAnime = <Media>[].obs;
+  RxList<Media> popularAnime = <Media>[].obs;
+  RxList<Media> trendingAnime = <Media>[].obs;
+  RxList<Media> latestAnime = <Media>[].obs;
+  RxList<Media> recentlyUpdatedAnime = <Media>[].obs;
 
 
   @override
@@ -55,7 +55,7 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
         .toList();
     final isDesktop = Get.width > 600;
     final recAnimes =
-        (popularAnimes + trendingAnimes + latestAnimes).removeDupes();
+        (popularAnime + trendingAnime + latestAnime).removeDupes();
     final ids = [
       animeList.map((e) => e.id).toSet()
     ];
@@ -75,7 +75,7 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
                 height: !isDesktop ? 70 : 90,
                 buttonText: "ANIME LIST",
                 backgroundImage:
-                    trendingAnimes.firstWhere((e) => e.cover != null).cover ??
+                    trendingAnime.firstWhere((e) => e.cover != null).cover ??
                         '',
                 borderRadius: 16.multiplyRadius(),
                 onPressed: () {
@@ -120,12 +120,12 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
   @override
   RxList<Widget> animeWidgets(BuildContext context) {
     return [
-      buildBigCarousel(trendingAnimes, false),
-      buildSection('Recently Updated', recentlyUpdatedAnimes),
-      buildSection('Trending Animes', trendingAnimes),
-      buildSection('Popular Animes', popularAnimes),
-      buildSection('Recently Completed', latestAnimes),
-      buildSection('Upcoming Animes', upcomingAnimes),
+      buildBigCarousel(trendingAnime, false),
+      buildSection('Recently Updated', recentlyUpdatedAnime),
+      buildSection('Trending Anime', trendingAnime),
+      buildSection('Popular Anime', popularAnime),
+      buildSection('Recently Completed', latestAnime),
+      buildSection('Upcoming Anime', upcomingAnime),
     ].obs;
   }
 
@@ -136,11 +136,11 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
   }
 
   void _initFallback() {
-    if (trendingAnimes.isEmpty) {
-      upcomingAnimes.value = fb.upcomingAnimes;
-      popularAnimes.value = fb.popularAnimes;
-      trendingAnimes.value = fb.trendingAnimes;
-      latestAnimes.value = fb.latestAnimes;
+    if (trendingAnime.isEmpty) {
+      upcomingAnime.value = fb.upcomingAnimes;
+      popularAnime.value = fb.popularAnimes;
+      trendingAnime.value = fb.trendingAnimes;
+      latestAnime.value = fb.latestAnimes;
 
     }
   }
@@ -258,15 +258,15 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
 
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body)['data'];
-      upcomingAnimes.value =
+      upcomingAnime.value =
           parseMediaList(responseData['upcomingAnimes']['media']);
-      popularAnimes.value =
+      popularAnime.value =
           parseMediaList(responseData['popularAnimes']['media']);
-      trendingAnimes.value =
+      trendingAnime.value =
           parseMediaList(responseData['trendingAnimes']['media']);
-      latestAnimes.value =
+      latestAnime.value =
           parseMediaList(responseData['latestAnimes']['media']);
-      recentlyUpdatedAnimes.value =
+      recentlyUpdatedAnime.value =
           parseMediaList(responseData['recentlyUpdatedAnimes']['media']);
     } else {
       throw Exception('Failed to load AniList data: ${response.statusCode}');
@@ -367,7 +367,7 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
       'isAdult': isAdult,
     };
 
-    final String commonFields = '''
+    const String commonFields = '''
     id
     title {
       english

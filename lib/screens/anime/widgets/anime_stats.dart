@@ -24,7 +24,7 @@ class AnimeStats extends StatelessWidget {
   Widget build(BuildContext context) {
     final serviceHandler = Get.find<ServiceHandler>();
     final covers = [
-                ...serviceHandler.anilistService.trendingAnimes,
+                ...serviceHandler.anilistService.trendingAnime,
               ]
         .where((e) => e.cover != null && (e.cover?.isNotEmpty ?? false))
         .toList();
