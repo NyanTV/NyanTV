@@ -236,10 +236,6 @@ class Settings extends GetxController {
       _setUISetting((s) => s?.animationDuration = value);
 
   // Player Settings
-  bool get defaultPortraitMode =>
-      _getPlayerSetting((s) => s.defaultPortraitMode);
-  set defaultPortraitMode(bool value) =>
-      _setPlayerSetting((s) => s?.defaultPortraitMode = value);
 
   double get speed => _getPlayerSetting((s) => s.speed);
   set speed(double value) => _setPlayerSetting((s) => s?.speed = value);

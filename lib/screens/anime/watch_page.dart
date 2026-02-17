@@ -1,8 +1,6 @@
 // ignore_for_file: invalid_use_of_protected_member
 // lib/screens/anime/watch_page.dart
 import 'dart:async';
-import 'dart:math' as math;
-import 'package:nyantv/screens/anime/widgets/media_indicator_old.dart';
 import 'package:nyantv/utils/logger.dart';
 import 'dart:io';
 import 'package:nyantv/controllers/service_handler/params.dart';
@@ -44,10 +42,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:outlined_text/outlined_text.dart';
-import 'package:screen_brightness/screen_brightness.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
-import 'package:volume_controller/volume_controller.dart';
 import 'package:nyantv/utils/aniskip.dart' as aniskip;
 import 'package:nyantv/utils/tv_scroll_mixin.dart';
 import 'package:nyantv/controllers/discord/discord_rpc.dart';
@@ -108,13 +103,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final isOPSkippedOnce = false.obs;
   final isEDSkippedOnce = false.obs;
 
-  final RxBool _volumeIndicator = false.obs;
-  final RxBool _brightnessIndicator = false.obs;
-  Timer? _volumeTimer;
-  Timer? _brightnessTimer;
-  var _volumeInterceptEventStream = false;
-  final RxDouble _volumeValue = 0.0.obs;
-  final RxDouble _brightnessValue = 0.0.obs;
   late AnimationController _leftAnimationController;
   late AnimationController _rightAnimationController;
   RxInt skipDuration = 10.obs;
@@ -132,7 +120,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final sourceController = Get.find<SourceController>();
   final isEpisodeDialogOpen = false.obs;
   late bool isLoggedIn;
-  final leftOriented = true.obs;
   final _prevEpFocusNode  = FocusNode(debugLabel: 'prev-ep');
   final _playPauseFocusNode = FocusNode(debugLabel: 'play-pause');
   final _nextEpFocusNode  = FocusNode(debugLabel: 'next-ep');
@@ -284,7 +271,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
             .setCurrentMedia(widget.anilistData.id.toString());
       } catch (_) {}
     }
-    _initOrientations();
     _leftAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -299,9 +285,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     _initPlayer(true);
     _attachListeners();
     applySavedProfile();
-    if (isMobile) {
-      _handleVolumeAndBrightness();
-    }
     if (widget.currentEpisode.number.toInt() > 1) {
       final episodeNum = widget.currentEpisode.number.toInt() - 1;
       trackAnilistAndLocal(episodeNum, widget.currentEpisode);
@@ -534,32 +517,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     if (_periodicDiscordUpdateTimer != null) {
       _periodicDiscordUpdateTimer?.cancel();
       _periodicDiscordUpdateTimer = null;
-    }
-  }
-
-  void _initOrientations() async {
-    if (!settings.isTV.value) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-      if (settings.defaultPortraitMode) {
-        SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-      } else {
-        final orientation = await _getClosestLandscapeOrientation();
-        SystemChrome.setPreferredOrientations([orientation]);
-      }
-    }
-  }
-
-  Future<DeviceOrientation> _getClosestLandscapeOrientation() async {
-    final event = await accelerometerEvents.first;
-
-    double angle = math.atan2(event.y, event.x) * 180 / math.pi;
-
-    if (angle < 0) angle += 360;
-
-    if (angle >= 0 && angle < 180) {
-      return DeviceOrientation.landscapeLeft;
-    } else {
-      return DeviceOrientation.landscapeRight;
     }
   }
 
@@ -1107,60 +1064,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     });
   }
 
-  Future<void> setVolume(double value) async {
-    try {
-      VolumeController.instance.setVolume(value);
-    } catch (_) {}
-    _volumeValue.value = value;
-    _volumeIndicator.value = true;
-    _volumeInterceptEventStream = true;
-    _volumeTimer?.cancel();
-    _volumeTimer = Timer(const Duration(milliseconds: 200), () {
-      if (mounted) {
-        _volumeIndicator.value = false;
-        _volumeInterceptEventStream = false;
-      }
-    });
-  }
-
-  Future<void> setBrightness(double value) async {
-    try {
-      await ScreenBrightness.instance.setScreenBrightness(value);
-    } catch (_) {}
-    setState(() {
-      _brightnessIndicator.value = true;
-      _brightnessTimer?.cancel();
-      _brightnessTimer = Timer(const Duration(milliseconds: 200), () {
-        if (mounted) {
-          _brightnessIndicator.value = false;
-        }
-      });
-    });
-  }
-
-  void _handleVolumeAndBrightness() {
-    Future.microtask(() async {
-      try {
-        VolumeController.instance.showSystemUI = false;
-        _volumeValue.value = await VolumeController.instance.getVolume();
-        VolumeController.instance.addListener((value) {
-          if (mounted && !_volumeInterceptEventStream) {
-            _volumeValue.value = value;
-          }
-        });
-      } catch (_) {}
-    });
-    Future.microtask(() async {
-      try {
-        _brightnessValue.value = await ScreenBrightness.instance.current;
-        ScreenBrightness.instance.onCurrentBrightnessChanged.listen((value) {
-          if (mounted) {
-            _brightnessValue.value = value;
-          }
-        });
-      } catch (_) {}
-    });
-  }
 
   void _handleDoubleTap(TapDownDetails details) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -1319,8 +1222,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   @override
   void dispose() {
-    _volumeTimer?.cancel();
-    _brightnessTimer?.cancel();
     _hideControlsTimer?.cancel();
     doubleTapTimeout?.cancel();
     _positionSubscription?.cancel();
@@ -1345,17 +1246,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     player.dispose();
     _leftAnimationController.dispose();
     _rightAnimationController.dispose();
-
-    if (isMobile && !settings.isTV.value) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      SystemChrome.setPreferredOrientations(
-          [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-      ScreenBrightness.instance.resetScreenBrightness();
-    } else {
-      if (!isMobile && !Platform.isAndroid) {
-        NyantvTitleBar.setFullScreen(false);
-      }
-    }
     _tvRemoteHandler?.dispose();
     _tvRemoteHandler = null;
     _prevEpFocusNode.dispose();
@@ -1456,10 +1346,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                 _buildSubtitle(),
                 _buildRippleEffect(),
                 _build2xThingy(),
-                if (isMobile && settings.enableSwipeControls) ...[
-                  _buildBrightnessSlider(),
-                  _buildVolumeSlider(),
-                ],
                 Obx(() => isBuffering.value && !showControls.value
                     ? _buildBufferingIndicator()
                     : const SizedBox.shrink()),
@@ -1597,29 +1483,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                 }
               },
               onDoubleTapDown: (e) => _handleDoubleTap(e),
-              onVerticalDragUpdate: (e) async {
-                if (isMobile && settings.enableSwipeControls) {
-                  final screenHeight = MediaQuery.of(context).size.height;
-                  final topBoundary = screenHeight * 0.2;
-                  final bottomBoundary = screenHeight * 0.8;
-
-                  final position = e.localPosition;
-                  if (position.dy >= topBoundary &&
-                      position.dy <= bottomBoundary) {
-                    final delta = e.delta.dy;
-
-                    if (position.dx <= MediaQuery.of(context).size.width / 2) {
-                      final brightness = _brightnessValue - delta / 500;
-                      final result = brightness.clamp(0.0, 1.0);
-                      setBrightness(result.toDouble());
-                    } else {
-                      final volume = _volumeValue - delta / 500;
-                      final result = volume.clamp(0.0, 1.0);
-                      setVolume(result.toDouble());
-                    }
-                  }
-                }
-              },
               child: AnimatedOpacity(
                 curve: Curves.easeInOut,
                 duration: const Duration(milliseconds: 300),
@@ -1630,30 +1493,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
               ),
             )),
     );
-  }
-
-  Widget _buildVolumeSlider() {
-    return Obx(() => AnimatedOpacity(
-          curve: Curves.easeInOut,
-          opacity: _volumeIndicator.value ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 300),
-          child: MediaIndicatorBuilder(
-            value: _volumeValue.value,
-            isVolumeIndicator: true,
-          ),
-        ));
-  }
-
-  Widget _buildBrightnessSlider() {
-    return Obx(() => AnimatedOpacity(
-          curve: Curves.easeInOut,
-          opacity: _brightnessIndicator.value ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 300),
-          child: MediaIndicatorBuilder(
-            value: _brightnessValue.value,
-            isVolumeIndicator: false,
-          ),
-        ));
   }
 
   Obx _buildSubtitle() {
@@ -2168,44 +2007,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                         onTap: () {
                                           isEpisodeDialogOpen.value =
                                               !isEpisodeDialogOpen.value;
-                                          if (MediaQuery.of(context)
-                                                  .orientation ==
-                                              Orientation.portrait) {
-                                            isEpisodeDialogOpen.value =
-                                                false;
-                                            showModalBottomSheet(
-                                                context: context,
-                                                shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            20)),
-                                                clipBehavior:
-                                                    Clip.antiAlias,
-                                                builder: (context) {
-                                                  return EpisodeWatchScreen(
-                                                    episodeList:
-                                                        episodeList.value,
-                                                    anilistData:
-                                                        anilistData.value,
-                                                    currentEpisode:
-                                                        currentEpisode
-                                                            .value,
-                                                    onEpisodeSelected: (src,
-                                                        streamList,
-                                                        selectedEpisode) {
-                                                      episode.value = src;
-                                                      episodeTracks.value =
-                                                          streamList;
-                                                      currentEpisode
-                                                              .value =
-                                                          selectedEpisode;
-                                                      _initPlayer(false);
-                                                      isEpisodeDialogOpen
-                                                          .value = false;
-                                                    },
-                                                  );
-                                                });
-                                          }
                                         },
                                         icon: HugeIcons
                                             .strokeRoundedFolder03),
@@ -2370,36 +2171,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                 BlurWrapper(
                                   child: Row(
                                     children: [
-                                      if (Platform.isAndroid ||
-                                          Platform.isIOS) ...[
-                                        _buildIcon(
-                                            onTap: () async {
-                                              SystemChrome
-                                                  .setPreferredOrientations([
-                                                DeviceOrientation.portraitUp,
-                                              ]);
-                                            },
-                                            icon: Icons.phone_android),
-                                        _buildIcon(
-                                            onTap: () async {
-                                              leftOriented.value =
-                                                  !leftOriented.value;
-                                              if (!leftOriented.value) {
-                                                SystemChrome
-                                                    .setPreferredOrientations([
-                                                  DeviceOrientation
-                                                      .landscapeLeft,
-                                                ]);
-                                              } else {
-                                                SystemChrome
-                                                    .setPreferredOrientations([
-                                                  DeviceOrientation
-                                                      .landscapeRight,
-                                                ]);
-                                              }
-                                            },
-                                            icon: Icons.screen_rotation),
-                                      ],
                                       _buildIcon(
                                           onTap: () =>
                                               showColorProfileSheet(context),

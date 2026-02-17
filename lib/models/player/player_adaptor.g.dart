@@ -31,7 +31,6 @@ class PlayerSettingsAdapter extends TypeAdapter<PlayerSettings> {
         bottomMargin: fields[10] != null ? fields[10] as double : 5.0,
         transculentControls: fields[11] != null ? fields[11] as bool : false,
         playerStyle: fields[13] != null ? fields[13] as int : 0,
-        defaultPortraitMode: fields[12] != null ? fields[12] as bool : false,
         subtitleOutlineWidth: fields[14] != null ? fields[14] as int : 1,
         autoSkipOP: fields[15] ?? false,
         autoSkipED: fields[16] ?? false,
@@ -45,7 +44,7 @@ class PlayerSettingsAdapter extends TypeAdapter<PlayerSettings> {
   @override
   void write(BinaryWriter writer, PlayerSettings obj) {
     writer
-      ..writeByte(22)
+      ..writeByte(21)
       ..writeByte(0)
       ..write(obj.speed)
       ..writeByte(1)
@@ -70,8 +69,6 @@ class PlayerSettingsAdapter extends TypeAdapter<PlayerSettings> {
       ..write(obj.bottomMargin)
       ..writeByte(11)
       ..write(obj.transculentControls)
-      ..writeByte(12)
-      ..write(obj.defaultPortraitMode)
       ..writeByte(13)
       ..write(obj.playerStyle)
       ..writeByte(14)

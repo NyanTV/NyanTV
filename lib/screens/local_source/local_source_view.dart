@@ -1167,8 +1167,6 @@ class _WatchOfflineState extends State<WatchOffline> {
         if (isDirectory) {
           controller.navigateToFolder(item.path);
         } else {
-          if (settingsController.preferences
-              .get('useOldPlayer', defaultValue: true)) {
             navigate(() => OfflineWatchPageOld(
                   episodePath: LocalEpisode(
                       path: item.path,
@@ -1176,14 +1174,6 @@ class _WatchOfflineState extends State<WatchOffline> {
                       folderName: path.basename(controller.currentPath.value)),
                   episodesList: const [],
                 ));
-          } else {
-            navigate(() => OfflineWatchPage(
-                episodeList: const [],
-                episode: LocalEpisode(
-                    path: item.path,
-                    name: itemName,
-                    folderName: path.basename(controller.currentPath.value))));
-          }
         }
       },
       child: Container(

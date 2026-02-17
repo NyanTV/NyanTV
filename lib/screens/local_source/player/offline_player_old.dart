@@ -123,14 +123,10 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
     super.initState();
     if (!settings.isTV.value) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-      if (settings.defaultPortraitMode) {
-        SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-      } else {
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight
-        ]);
-      }
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight
+      ]);
     }
     _leftAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
@@ -503,14 +499,9 @@ class _OfflineWatchPageOldState extends State<OfflineWatchPageOld>
     _leftAnimationController.dispose();
     _rightAnimationController.dispose();
 
-    if (isMobile && !settings.isTV.value) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      SystemChrome.setPreferredOrientations(
-          [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-      ScreenBrightness().resetScreenBrightness();
-    } else {
-      NyantvTitleBar.setFullScreen(false);
-    }
+
+    NyantvTitleBar.setFullScreen(false);
+    
     _keyboardListenerFocusNode.dispose();
     super.dispose();
   }

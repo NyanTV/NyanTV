@@ -40,8 +40,6 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
   final FocusNode _bufferProfileFocusNode = FocusNode();
   final GlobalKey _bufferProfileDropdownKey = GlobalKey();
 
-  final _cacheDays = 7.obs;
-
   late AnimationController _pulseController;
   late AnimationController _progressController;
   late Animation<double> _pulseAnimation;
@@ -64,13 +62,11 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
   void getSavedSettings() {
     _enableShaders.value =
         settings.preferences.get('shaders_enabled', defaultValue: false);
-    _cacheDays.value = settings.preferences.get('cache_days', defaultValue: 7);
     _autoIdleMinutes.value = settings.autoIdleMinutes;
   }
 
   void saveSettings() {
     settings.preferences.put('shaders_enabled', _enableShaders.value);
-    settings.preferences.put('cache_days', _cacheDays.value);
     settings.autoIdleMinutes = _autoIdleMinutes.value;
   }
 
@@ -335,29 +331,8 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
               ),
               const SizedBox(height: 30),
               Obx(() => NyantvExpansionTile(
-                    title: "Reader",
-                    initialExpanded: true,
-                    content: Column(
-                      children: [
-                        CustomSliderTile(
-                            icon: Icons.extension,
-                            title: "Cache Duration",
-                            label: "${_cacheDays.value} days",
-                            description:
-                                "When should the image cache be cleared?",
-                            sliderValue: _cacheDays.value.toDouble(),
-                            divisions: 30,
-                            onChanged: (double value) {
-                              _cacheDays.value = value.toInt();
-                              saveSettings();
-                            },
-                            max: 30)
-                      ],
-                    ),
-                  )),
-              Obx(() => NyantvExpansionTile(
                 title: "Auto Idle",
-                initialExpanded: false,
+                initialExpanded: true,
                 content: Column(
                   children: [
                     CustomSliderTile(
@@ -451,7 +426,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
 
                 return NyantvExpansionTile(
                   title: "TV Player Buffer",
-                  initialExpanded: false,
+                  initialExpanded: true,
                   content: Column(
                     children: [
                       Container(
@@ -696,7 +671,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                 settings.animationDuration;
                 return NyantvExpansionTile(
                   title: 'Player',
-                  initialExpanded: true,
+                  initialExpanded: false,
                   content: Container(
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(16),

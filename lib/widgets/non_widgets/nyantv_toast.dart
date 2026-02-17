@@ -13,8 +13,7 @@ class NyantvToast {
 
     Get.showSnackbar(
       GetSnackBar(
-        snackPosition:
-            context.isPortrait ? SnackPosition.BOTTOM : SnackPosition.TOP,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.transparent,
         padding: EdgeInsets.zero,
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

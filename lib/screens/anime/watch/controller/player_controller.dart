@@ -956,8 +956,6 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
       NyantvTitleBar.setFullScreen(false);
     }
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight
     ]);

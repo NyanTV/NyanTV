@@ -29,8 +29,6 @@ class PlayerSettings {
   double bottomMargin;
   @HiveField(11)
   bool transculentControls;
-  @HiveField(12)
-  bool defaultPortraitMode;
   @HiveField(13)
   int playerStyle;
   @HiveField(14)
@@ -64,7 +62,6 @@ class PlayerSettings {
       this.bottomMargin = 5,
       this.playerStyle = 0,
       this.transculentControls = false,
-      this.defaultPortraitMode = false,
       this.subtitleOutlineWidth = 1,
       this.autoSkipED = false,
       this.autoSkipOP = false,

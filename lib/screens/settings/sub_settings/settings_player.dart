@@ -222,19 +222,6 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                           title: 'Common',
                           content: Column(
                             children: [
-                              CustomSwitchTile(
-                                  icon: Icons.play_arrow_rounded,
-                                  padding: const EdgeInsets.all(10),
-                                  title: "Use Old Player",
-                                  description:
-                                      "As many features are missing in the new player",
-                                  switchValue: settings.preferences
-                                      .get('useOldPlayer', defaultValue: true),
-                                  onChanged: (val) {
-                                    settings.preferences
-                                        .put('useOldPlayer', val);
-                                    setState(() {});
-                                  }),
                               CustomTile(
                                 padding: 10,
                                 descColor:
@@ -246,15 +233,6 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                 description:
                                     numToPlayerStyle(settings.playerStyle),
                               ),
-                              CustomSwitchTile(
-                                  padding: const EdgeInsets.all(10),
-                                  icon: Icons.stay_current_portrait,
-                                  title: "Default Portrait",
-                                  description:
-                                      "For psychopaths who like watching in portrait",
-                                  switchValue: settings.defaultPortraitMode,
-                                  onChanged: (val) =>
-                                      settings.defaultPortraitMode = val),
                               CustomTile(
                                 padding: 10,
                                 isDescBold: true,

@@ -1,7 +1,6 @@
 import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:nyantv/models/Offline/Hive/offline_media.dart';
-import 'package:nyantv/screens/anime/watch/watch_view.dart';
 import 'package:nyantv/screens/anime/watch_page.dart';
 import 'package:nyantv/utils/function.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
@@ -60,16 +59,7 @@ class HistoryModel {
           snackBar(
               "Install ${media.currentEpisode?.source} First, Then Click");
         } else {
-          navigate(() => settingsController.preferences
-                  .get('useOldPlayer', defaultValue: false)
-              ? WatchPage(
-                  episodeSrc: media.currentEpisode!.currentTrack!,
-                  episodeList: media.episodes!,
-                  anilistData: convertOfflineToMedia(media),
-                  currentEpisode: media.currentEpisode!,
-                  episodeTracks: media.currentEpisode!.videoTracks!,
-                )
-              : WatchScreen(
+          navigate(() => WatchPage(
                   episodeSrc: media.currentEpisode!.currentTrack!,
                   episodeList: media.episodes!,
                   anilistData: convertOfflineToMedia(media),
