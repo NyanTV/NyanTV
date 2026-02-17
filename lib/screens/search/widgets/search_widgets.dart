@@ -663,8 +663,6 @@ class _FuturisticFilterSheetState extends State<FuturisticFilterSheet>
   }
 
   Widget _buildActionButtons() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Row(
       children: [

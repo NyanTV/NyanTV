@@ -15,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 class ReusableCarousel extends StatefulWidget {
@@ -95,7 +94,7 @@ class _ReusableCarouselState extends State<ReusableCarousel> {
       children: [
         _buildHeaderTitle(),
         const SizedBox(height: 15, width: double.infinity),
-        SizedBox(
+        const SizedBox(
           height: 280,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

@@ -1,25 +1,13 @@
 // ignore_for_file: invalid_use_of_protected_member
 
 import 'package:nyantv/widgets/header.dart';
-import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nyantv/utils/tv_scroll_mixin.dart';
-
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
-
-import 'package:nyantv/controllers/cacher/cache_controller.dart';
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
-import 'package:nyantv/controllers/settings/methods.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:nyantv/widgets/common/scroll_aware_app_bar.dart';
-import 'package:nyantv/widgets/custom_widgets/nyantv_button.dart';
-import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
-import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
-import 'package:nyantv/widgets/helper/tv_wrapper.dart';
-import 'package:nyantv/widgets/history/tap_history_cards.dart';
-import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 
 class AnimeHomePage extends StatefulWidget {
   const AnimeHomePage({

@@ -5,7 +5,6 @@ import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 import 'package:nyantv/models/Media/media.dart';
 import 'package:nyantv/models/Anilist/anilist_media_user.dart';
 import 'package:nyantv/models/Media/relation.dart';
-import 'package:nyantv/models/Offline/Hive/chapter.dart';
 import 'package:nyantv/models/Offline/Hive/episode.dart';
 import 'package:nyantv/models/Offline/Hive/offline_media.dart';
 import 'package:nyantv/models/models_convertor/carousel/carousel_data.dart';

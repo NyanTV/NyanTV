@@ -1,7 +1,6 @@
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/models/Offline/Hive/offline_media.dart';
 import 'package:nyantv/models/models_convertor/carousel/carousel_data.dart';
-import 'package:nyantv/utils/extension_utils.dart';
 import 'package:nyantv/utils/function.dart';
 import 'package:nyantv/widgets/common/cards/base_card.dart';
 import 'package:nyantv/widgets/common/cards/media_cards.dart';

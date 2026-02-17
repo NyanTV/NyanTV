@@ -4,7 +4,6 @@ import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/models/Media/media.dart';
 import 'package:nyantv/screens/home_page.dart';
 import 'package:nyantv/screens/search/search_view.dart';
-import 'package:nyantv/utils/fallback/fallback_anime.dart';
 import 'package:nyantv/utils/function.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_text.dart';

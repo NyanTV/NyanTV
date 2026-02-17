@@ -12,7 +12,6 @@ import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
-import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 
 import 'package:outlined_text/outlined_text.dart';
 

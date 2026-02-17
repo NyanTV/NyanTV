@@ -3,8 +3,6 @@
 import 'dart:convert';
 import 'package:nyantv/utils/logger.dart';
 import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
-import 'package:nyantv/controllers/service_handler/params.dart';
-import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/database/comments_db.dart';
 import 'package:nyantv/models/Anilist/anilist_media_user.dart';
 import 'package:nyantv/models/Anilist/anilist_profile.dart';

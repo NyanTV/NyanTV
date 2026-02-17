@@ -1,12 +1,10 @@
 import 'dart:convert';
-import 'package:nyantv/screens/other_features.dart';
 import 'package:nyantv/utils/logger.dart';
 import 'dart:math' show min;
 import 'package:nyantv/controllers/cacher/cache_controller.dart';
 import 'package:nyantv/controllers/service_handler/params.dart';
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/controllers/services/anilist/kitsu.dart';
-import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 import 'package:nyantv/controllers/services/anilist/anilist_auth.dart';
 import 'package:nyantv/controllers/services/anilist/anilist_queries.dart';
@@ -63,9 +61,6 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
       if (anilistAuth.isLoggedIn.value) ...[
         LayoutBuilder(builder: (context, constraints) {
           final width = isDesktop ? 300.0 : constraints.maxWidth / 2 - 40;
-          final overflow = constraints.maxWidth < 900;
-          final overflowSecond =
-              !isDesktop ? false : constraints.maxWidth < 600;
           return Wrap(
             alignment: WrapAlignment.center,
             spacing: 15,

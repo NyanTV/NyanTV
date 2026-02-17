@@ -5,7 +5,6 @@ import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
-import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class GitHubRepoDialog extends StatefulWidget {

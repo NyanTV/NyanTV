@@ -11,7 +11,6 @@ import 'package:nyantv/widgets/custom_widgets/custom_icon_wrapper.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:nyantv/widgets/helper/scroll_wrapper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconly/iconly.dart';

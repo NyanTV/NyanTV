@@ -1,7 +1,5 @@
 import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
-import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
-import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:nyantv/models/Media/media.dart';
 import 'package:nyantv/models/Offline/Hive/offline_media.dart';
 import 'package:nyantv/screens/anime/details_page.dart';
@@ -10,7 +8,6 @@ import 'package:nyantv/screens/library/widgets/history_model.dart';
 import 'package:nyantv/screens/library/widgets/library_deps.dart';
 import 'package:nyantv/screens/settings/widgets/history_card_gate.dart';
 import 'package:nyantv/screens/settings/widgets/history_card_selector.dart';
-import 'package:nyantv/utils/extension_utils.dart';
 import 'package:nyantv/utils/function.dart';
 import 'package:nyantv/widgets/common/cards/base_card.dart';
 import 'package:nyantv/widgets/common/cards/card_gate.dart';
@@ -21,7 +18,6 @@ import 'package:nyantv/widgets/exceptions/empty_library.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:nyantv/widgets/helper/tv_wrapper.dart';
-import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -353,7 +349,7 @@ class _MyLibraryState extends State<MyLibrary> {
                 ),
                 isSelected: false,
                 onSelected: (_) =>
-                    navigate(() => CustomListsEditor(type: ItemType.anime)),
+                    navigate(() => const CustomListsEditor(type: ItemType.anime)),
               ),
             ),
           ]);

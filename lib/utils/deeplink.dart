@@ -144,7 +144,7 @@ class Deeplink {
       final mediaObj = nyantv.Media.fromOfflineMedia(media, ItemType.anime);
 
       Get.offAll(
-        () => FilterScreen(),
+        () => const FilterScreen(),
         transition: Transition.noTransition,
         duration: Duration.zero,
       );

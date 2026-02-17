@@ -1,7 +1,6 @@
 // lib/screens/anime/watch/controller/player_controller.dart
 import 'dart:async';
 import 'dart:io';
-import 'dart:math' as math;
 import 'package:nyantv/controllers/discord/discord_rpc.dart';
 import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
 import 'package:nyantv/controllers/service_handler/params.dart';
@@ -24,11 +23,9 @@ import 'package:nyantv/widgets/non_widgets/nyantv_toast.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:dartotsu_extension_bridge/Models/DEpisode.dart' as d;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:nyantv/main.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:rxdart/rxdart.dart' show ThrottleExtensions;
@@ -481,7 +478,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
     } else {
       // Standard-Konfiguration für Mobile/Desktop
       player = Player(
-        configuration: PlayerConfiguration(
+        configuration: const PlayerConfiguration(
           options: {
             "hwdec": "mediacodec-copy",
             "gpu-context": "android",

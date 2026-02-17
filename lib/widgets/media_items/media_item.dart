@@ -135,12 +135,12 @@ class GridAnimeCard extends StatelessWidget {
           const SizedBox(height: 5),
           if (data is Media &&
               ((variant ?? CardVariant.onlinelist) != CardVariant.search))
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.movie_filter_rounded,
                     color: Colors.grey, size: 16),
-                const SizedBox(width: 2),
+                SizedBox(width: 2),
                 NyantvText(
                   text: 'ANIME',
                   maxLines: 1,

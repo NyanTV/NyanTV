@@ -2867,10 +2867,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     final shouldBypassScale = uiScaleBypass?.bypassScale ?? false;
 
     if (shouldBypassScale) {
-      final view = View.of(context);
-      final physicalSize = view.physicalSize;
-      final devicePixelRatio = view.devicePixelRatio;
-      final realScreenSize = physicalSize / devicePixelRatio;
 
       return SizedBox(
         width: double.infinity,
