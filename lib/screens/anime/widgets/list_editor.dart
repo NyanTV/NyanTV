@@ -46,6 +46,8 @@ class _ListEditorModalState extends State<ListEditorModal> {
   late String _localStatus;
   late double _localScore;
   late int _localProgress;
+  LogicalKeyboardKey? _sliderHeldKey;
+  bool _sliderHoldActive = false;
 
   @override
   void initState() {
@@ -84,6 +86,32 @@ class _ListEditorModalState extends State<ListEditorModal> {
     _deleteButtonFocusNode.dispose();
     _saveButtonFocusNode.dispose();
     super.dispose();
+  }
+
+  void _startSliderHold(LogicalKeyboardKey key) {
+    if (_sliderHeldKey == key && _sliderHoldActive) return;
+    _sliderHeldKey = key;
+    _sliderHoldActive = true;
+    _runSliderHoldLoop(key);
+  }
+
+  void _stopSliderHold() {
+    _sliderHeldKey = null;
+    _sliderHoldActive = false;
+  }
+
+  void _runSliderHoldLoop(LogicalKeyboardKey key) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    while (_sliderHoldActive && _sliderHeldKey == key && mounted) {
+      setState(() {
+        if (key == LogicalKeyboardKey.arrowRight) {
+          _localScore = (_localScore + 1.0).clamp(0.0, 10.0);
+        } else {
+          _localScore = (_localScore - 1.0).clamp(0.0, 10.0);
+        }
+      });
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
   }
 
   @override
@@ -673,22 +701,34 @@ class _ListEditorModalState extends State<ListEditorModal> {
               Focus(
                 focusNode: _sliderFocusNode,
                 onKeyEvent: (node, event) {
-                  if (event is KeyDownEvent) {
-                    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                  if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                    if (event is KeyDownEvent) {
+                      _stopSliderHold();
                       _decrementButtonFocusNode.requestFocus();
                       return KeyEventResult.handled;
-                    } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                    }
+                  } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                    if (event is KeyDownEvent) {
+                      _stopSliderHold();
                       _deleteButtonFocusNode.requestFocus();
                       return KeyEventResult.handled;
-                    } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-                      setState(() {
-                        _localScore = (_localScore - 0.1).clamp(0.0, 10.0);
-                      });
+                    }
+                  } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                    if (event is KeyDownEvent && _sliderHeldKey != LogicalKeyboardKey.arrowLeft) {
+                      setState(() => _localScore = (_localScore - 0.1).clamp(0.0, 10.0));
+                      _startSliderHold(LogicalKeyboardKey.arrowLeft);
                       return KeyEventResult.handled;
-                    } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-                      setState(() {
-                        _localScore = (_localScore + 0.1).clamp(0.0, 10.0);
-                      });
+                    } else if (event is KeyUpEvent) {
+                      _stopSliderHold();
+                      return KeyEventResult.handled;
+                    }
+                  } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+                    if (event is KeyDownEvent && _sliderHeldKey != LogicalKeyboardKey.arrowRight) {
+                      setState(() => _localScore = (_localScore + 0.1).clamp(0.0, 10.0));
+                      _startSliderHold(LogicalKeyboardKey.arrowRight);
+                      return KeyEventResult.handled;
+                    } else if (event is KeyUpEvent) {
+                      _stopSliderHold();
                       return KeyEventResult.handled;
                     }
                   }
