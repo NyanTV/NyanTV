@@ -139,7 +139,7 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
 
   Future<void> _fetchFillerInfo() async {
     final malId = anilistData?.idMal ?? widget.media.idMal;
-    if (malId == null || malId == '0') return;
+    if (malId == '0') return;
 
     try {
       final data = await JikanService.getFillerEpisodes(malId.toString());

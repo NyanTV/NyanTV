@@ -101,7 +101,7 @@ class _ReusableCarouselState extends State<ReusableCarousel> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(Icons.movie_filter_rounded),
-              const SizedBox(height: 10, width: double.infinity),
+              SizedBox(height: 10, width: double.infinity),
               NyantvText(
                 text: "Lowkey time for a binge sesh 🎬",
                 variant: TextVariant.semiBold,
