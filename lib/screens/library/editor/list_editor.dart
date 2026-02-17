@@ -161,44 +161,46 @@ class _CustomListsEditorState extends State<CustomListsEditor> {
   }
 
   Widget _buildContent() {
-    if (_lists.isEmpty) {
-      return _buildEmptyState();
+    if (_lists.isEmpty) return _buildEmptyState();
+
+    if (_isReordering) {
+      return ReorderableListView.builder(
+        onReorder: _onReorder,
+        padding: const EdgeInsets.all(20),
+        itemCount: _lists.length,
+        buildDefaultDragHandles: false,
+        proxyDecorator: (child, index, animation) {
+          return AnimatedBuilder(
+            animation: animation,
+            builder: (context, child) {
+              final animValue = Curves.easeInOut.transform(animation.value);
+              final elevation = lerpDouble(0, 8, animValue)!;
+              final scale = lerpDouble(1, 1.05, animValue)!;
+              return Transform.scale(
+                scale: scale,
+                child: Material(
+                  elevation: elevation,
+                  color: Colors.transparent,
+                  shadowColor: Theme.of(context).colorScheme.shadow.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(24),
+                  child: child,
+                ),
+              );
+            },
+            child: child,
+          );
+        },
+        itemBuilder: (context, index) => _buildListCard(index),
+      );
     }
 
-    return ReorderableListView.builder(
-      onReorder: _isReordering ? _onReorder : (a, b) {},
+    return ListView.builder(
       padding: const EdgeInsets.all(20),
       itemCount: _lists.length,
-      buildDefaultDragHandles: false,
-      proxyDecorator: (child, index, animation) {
-        return AnimatedBuilder(
-          animation: animation,
-          builder: (context, child) {
-            final animValue = Curves.easeInOut.transform(animation.value);
-            final elevation = lerpDouble(0, 8, animValue)!;
-            final scale = lerpDouble(1, 1.05, animValue)!;
-
-            return Transform.scale(
-              scale: scale,
-              child: Material(
-                elevation: elevation,
-                color: Colors.transparent,
-                shadowColor:
-                    Theme.of(context).colorScheme.shadow.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(24),
-                child: child,
-              ),
-            );
-          },
-          child: child,
-        );
-      },
-      itemBuilder: (context, index) {
-        return _buildListCard(index);
-      },
+      itemBuilder: (context, index) => _buildListCard(index),
     );
   }
-
+  
   Widget _buildListCard(int index) {
     final theme = Theme.of(context);
     final listData = _lists[index];
@@ -236,78 +238,93 @@ class _CustomListsEditorState extends State<CustomListsEditor> {
             Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () => _toggleExpansion(index),
+                onTap: null,
+                focusColor: Colors.transparent,
                 borderRadius: BorderRadius.circular(24),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      if (_isReordering) ...[
-                        ReorderableDragStartListener(
-                          index: index,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            child: Icon(
-                              Icons.drag_handle_rounded,
-                              color:
-                                  theme.colorScheme.onSurface.withOpacity(0.4),
-                              size: 24,
+                  child: FocusTraversalGroup(
+                    policy: OrderedTraversalPolicy(),
+                    child: Row(
+                      children: [
+                        if (_isReordering) ...[
+                          ReorderableDragStartListener(
+                            index: index,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.drag_handle_rounded,
+                                color: theme.colorScheme.onSurface.withOpacity(0.4),
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                        ],
+                        Expanded(
+                          child: FocusTraversalOrder(
+                            order: const NumericFocusOrder(0),
+                            child: InkWell(
+                              onTap: () => _toggleExpansion(index),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    listData.listName,
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onSurface,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 18,
+                                      letterSpacing: -0.3,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${listData.listData.length} items',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                      ],
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              listData.listName,
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurface,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 18,
-                                letterSpacing: -0.3,
-                              ),
+                        if (!_isReordering) ...[
+                          FocusTraversalOrder(
+                            order: const NumericFocusOrder(1),
+                            child: _buildActionButton(
+                              icon: Icons.edit_rounded,
+                              onTap: () => _showRenameDialog(index),
+                              color: theme.colorScheme.primary,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${listData.listData.length} items',
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurface
-                                    .withOpacity(0.6),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (!_isReordering) ...[
-                        _buildActionButton(
-                          icon: Icons.edit_rounded,
-                          onTap: () => _showRenameDialog(index),
-                          color: theme.colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        if (_lists.length != 1)
-                          _buildActionButton(
-                            icon: Icons.delete_outline_rounded,
-                            onTap: () => _showDeleteDialog(index),
-                            color: theme.colorScheme.error,
                           ),
-                        const SizedBox(width: 8),
-                      ],
-                      AnimatedRotation(
-                        turns: isExpanded ? 0.5 : 0,
-                        duration: const Duration(milliseconds: 300),
-                        child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
-                          size: 24,
+                          const SizedBox(width: 8),
+                          if (_lists.length != 1)
+                            FocusTraversalOrder(
+                              order: const NumericFocusOrder(2),
+                              child: _buildActionButton(
+                                icon: Icons.delete_outline_rounded,
+                                onTap: () => _showDeleteDialog(index),
+                                color: theme.colorScheme.error,
+                              ),
+                            ),
+                          const SizedBox(width: 8),
+                        ],
+                        AnimatedRotation(
+                          turns: isExpanded ? 0.5 : 0,
+                          duration: const Duration(milliseconds: 300),
+                          child: Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                            size: 24,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -452,11 +469,7 @@ class _CustomListsEditorState extends State<CustomListsEditor> {
             color: color.withOpacity(0.3),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 18,
-          ),
+          child: Icon(icon, color: color, size: 18),
         ),
       ),
     );
@@ -566,80 +579,86 @@ class _CustomListsEditorState extends State<CustomListsEditor> {
 
   void _showRenameDialog(int index) {
     final controller = TextEditingController(text: _lists[index].listName);
+    final focusNode = FocusNode();
+    final cancelFocusNode = FocusNode();
+    bool textFieldWasFocused = false;
     final theme = Theme.of(context);
+
+    focusNode.addListener(() {
+      if (focusNode.hasFocus) textFieldWasFocused = true;
+    });
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface.withOpacity(0.5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Rename List',
-          style: TextStyle(
-            color: theme.colorScheme.onSurface,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          style: TextStyle(color: theme.colorScheme.onSurface),
-          decoration: InputDecoration(
-            hintText: 'Enter list name',
-            hintStyle: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.3),
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: theme.colorScheme.primary),
-            ),
-            filled: true,
-            fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
+      builder: (context) => PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          if (textFieldWasFocused) {
+            textFieldWasFocused = false;
+            focusNode.unfocus();
+            Future.microtask(() => cancelFocusNode.requestFocus());
+          } else {
+            Navigator.pop(context);
+          }
+        },
+        child: AlertDialog(
+          backgroundColor: theme.colorScheme.surface.withOpacity(0.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text('Rename List',
               style: TextStyle(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600)),
+          content: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            style: TextStyle(color: theme.colorScheme.onSurface),
+            decoration: InputDecoration(
+              hintText: 'Enter list name',
+              hintStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.5)),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: theme.colorScheme.outline.withOpacity(0.3))),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: theme.colorScheme.primary)),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
             ),
           ),
-          FilledButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty &&
-                  controller.text != _lists[index].listName) {
-                if (_lists.any((list) => list.listName == controller.text)) {
-                  (snackBar(('List name already exists')));
-                  return;
+          actions: [
+            TextButton(
+              focusNode: cancelFocusNode,
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel',
+                  style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7))),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (controller.text.isNotEmpty &&
+                    controller.text != _lists[index].listName) {
+                  if (_lists.any((list) => list.listName == controller.text)) {
+                    snackBar('List name already exists');
+                    return;
+                  }
+                  setState(() => _lists[index].listName = controller.text);
+                  _saveListData();
+                  Navigator.pop(context);
+                  HapticFeedback.lightImpact();
                 }
-
-                setState(() {
-                  _lists[index].listName = controller.text;
-                });
-                _saveListData();
-                Navigator.pop(context);
-                HapticFeedback.lightImpact();
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.5),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary.withOpacity(0.5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Rename'),
             ),
-            child: const Text('Rename'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
-
+    
   void _showDeleteDialog(int index) {
     final theme = Theme.of(context);
 
@@ -692,81 +711,87 @@ class _CustomListsEditorState extends State<CustomListsEditor> {
 
   void _showCreateListDialog() {
     final controller = TextEditingController();
+    final focusNode = FocusNode();
+    final cancelFocusNode = FocusNode();
+    bool textFieldWasFocused = false;
     final theme = Theme.of(context);
+
+    focusNode.addListener(() {
+      if (focusNode.hasFocus) textFieldWasFocused = true;
+    });
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface.withOpacity(0.5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Create New List',
-          style: TextStyle(
-            color: theme.colorScheme.onSurface,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          style: TextStyle(color: theme.colorScheme.onSurface),
-          decoration: InputDecoration(
-            hintText: 'Enter list name',
-            hintStyle: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.3),
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: theme.colorScheme.primary),
-            ),
-            filled: true,
-            fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
+      builder: (context) => PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          if (textFieldWasFocused) {
+            textFieldWasFocused = false;
+            focusNode.unfocus();
+            Future.microtask(() => cancelFocusNode.requestFocus());
+          } else {
+            Navigator.pop(context);
+          }
+        },
+        child: AlertDialog(
+          backgroundColor: theme.colorScheme.surface.withOpacity(0.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text('Create New List',
               style: TextStyle(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600)),
+          content: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            style: TextStyle(color: theme.colorScheme.onSurface),
+            decoration: InputDecoration(
+              hintText: 'Enter list name',
+              hintStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.5)),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: theme.colorScheme.outline.withOpacity(0.3))),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: theme.colorScheme.primary)),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
             ),
           ),
-          FilledButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty) {
-                if (_lists.any((list) => list.listName == controller.text)) {
-                  snackBar('List name already exists');
-                  return;
+          actions: [
+            TextButton(
+              focusNode: cancelFocusNode,
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel',
+                  style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7))),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (controller.text.isNotEmpty) {
+                  if (_lists.any((list) => list.listName == controller.text)) {
+                    snackBar('List name already exists');
+                    return;
+                  }
+                  setState(() {
+                    _lists.add(CustomListData(
+                      listName: controller.text,
+                      listData: [],
+                    ));
+                  });
+                  _saveListData();
+                  Navigator.pop(context);
+                  HapticFeedback.lightImpact();
                 }
-
-                setState(() {
-                  _lists.add(CustomListData(
-                    listName: controller.text,
-                    listData: [],
-                  ));
-                });
-                _saveListData();
-                Navigator.pop(context);
-                HapticFeedback.lightImpact();
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('Create',
+                  style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
             ),
-            child: Text(
-              'Create',
-              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

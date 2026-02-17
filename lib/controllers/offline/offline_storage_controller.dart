@@ -57,8 +57,14 @@ class OfflineStorageController extends GetxController {
         _offlineStorageBox.get('storage') ?? OfflineStorage();
 
     animeLibrary.assignAll(offlineStorage.animeLibrary ?? []);
-    animeCustomLists.value
-        .assignAll(offlineStorage.animeCustomList ?? [CustomList()]);
+
+    final savedLists = offlineStorage.animeCustomList;
+    if (savedLists != null && savedLists.isNotEmpty) {
+      animeCustomLists.value.assignAll(savedLists);
+    } else {
+      animeCustomLists.value.assignAll([CustomList(listName: 'Default', mediaIds: [])]);
+      _saveLibraries();
+    }
 
     _refreshListData();
   }
@@ -393,20 +399,18 @@ class OfflineStorageController extends GetxController {
         serviceIndex: handler.serviceType.value.index);
   }
 
-  void _saveLibraries() {
-    if (_isUpdating) return;
+void _saveLibraries() {
+  final updatedStorage = OfflineStorage(
+      animeLibrary: animeLibrary.toList(),
+      animeCustomList: animeCustomLists.value);
 
-    final updatedStorage = OfflineStorage(
-        animeLibrary: animeLibrary.toList(),
-        animeCustomList: animeCustomLists.value);
-
-    try {
-      _offlineStorageBox.put('storage', updatedStorage);
-      Logger.i("Anime Successfully Saved!");
-    } catch (e) {
-      Logger.i('Error saving libraries: $e');
-    }
+  try {
+    _offlineStorageBox.put('storage', updatedStorage);
+    Logger.i("Anime Successfully Saved!");
+  } catch (e) {
+    Logger.i('Error saving libraries: $e');
   }
+}
 
   OfflineMedia? getAnimeById(String id) {
     return animeLibrary.firstWhereOrNull((anime) => anime.id == id);

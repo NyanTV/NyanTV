@@ -352,9 +352,8 @@ class _MyLibraryState extends State<MyLibrary> {
                   ],
                 ),
                 isSelected: false,
-                onSelected: (selected) {
-                  navigate(() => CustomListsEditor(type: ItemType.anime));
-                },
+                onSelected: (_) =>
+                    navigate(() => CustomListsEditor(type: ItemType.anime)),
               ),
             ),
           ]);
