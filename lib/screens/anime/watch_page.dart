@@ -126,6 +126,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final _skipButtonFocusNode = FocusNode(debugLabel: 'skip-btn');
   late TVRemoteHandler? _tvRemoteHandler;
 
+  bool _menuInteractionPaused = false;
+
   Timer? _discordUpdateTimer;
   Timer? _periodicDiscordUpdateTimer;
   bool _isUpdatingDiscord = false;
@@ -363,6 +365,13 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           formattedTime.value = formatDuration(duration);
         },
         onToggleMenu: () {
+          if (isEpisodeDialogOpen.value) {
+            isEpisodeDialogOpen.value = false;
+            _menuInteractionPaused = false;
+            _startHideControlsTimer();
+            return;
+          }
+          
           toggleControls();
           Future.delayed(const Duration(milliseconds: 100), () {
             if (mounted) {
@@ -376,7 +385,15 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
             }
           });
         },
-        onExitPlayer: () => Get.back(),
+        onExitPlayer: () {
+          if (isEpisodeDialogOpen.value) {
+            isEpisodeDialogOpen.value = false;
+            _menuInteractionPaused = false;
+            _startHideControlsTimer();
+            return;
+          }
+          Get.back();
+        },
         getCurrentPosition: () => currentPosition.value,
         getVideoDuration: () => episodeDuration.value,
         isMenuVisible: () => showControls.value,
@@ -849,21 +866,18 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
     player.stream.playing.listen((e) {
       isPlaying.value = e;
-
       if (e) {
+        _menuInteractionPaused = false;
+        _startHideControlsTimer();
         setExcludedScreen(true);
         Future.delayed(const Duration(milliseconds: 1500), () {
-          if (mounted) {
-            isSwitchingEpisode = false;
-          }
+          if (mounted) isSwitchingEpisode = false;
         });
-        
         _startPeriodicDiscordUpdates();
       } else {
         setExcludedScreen(false);
         _stopPeriodicDiscordUpdates();
       }
-      
       if (!_isManualSeeking && !isInDVDMode) {
         _scheduleDiscordUpdate(isPaused: !e);
       }
@@ -1207,17 +1221,24 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   }
 
   void _startHideControlsTimer() {
-    if (!isPlaying.value) {
+    if (!isPlaying.value || _menuInteractionPaused) {
       _hideControlsTimer?.cancel();
       return;
     }
     _hideControlsTimer?.cancel();
-
     _hideControlsTimer = Timer(const Duration(seconds: 5), () {
-      if (isPlaying.value) {
+      if (isPlaying.value && !_menuInteractionPaused) {
         showControls.value = false;
       }
     });
+  }
+
+  void _pauseForMenuInteraction() {
+    _hideControlsTimer?.cancel();
+    if (isPlaying.value) {
+      _menuInteractionPaused = true;
+      player.pause();
+    }
   }
 
   @override
@@ -1327,6 +1348,14 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           canPop: false,
           onPopInvoked: (didPop) {
             if (didPop) return;
+            
+            if (isEpisodeDialogOpen.value) {
+              isEpisodeDialogOpen.value = false;
+              _menuInteractionPaused = false;
+              _startHideControlsTimer();
+              return;
+            }
+            
             if (settings.isTV.value && showControls.value) {
               toggleControls(val: false);
             } else {
@@ -2005,14 +2034,21 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                   if (!isLocked.value) ...[
                                     _buildIcon(
                                         onTap: () {
-                                          isEpisodeDialogOpen.value =
-                                              !isEpisodeDialogOpen.value;
+                                          isEpisodeDialogOpen.value = !isEpisodeDialogOpen.value;
+                                          if (isEpisodeDialogOpen.value) {
+                                            _pauseForMenuInteraction();
+                                          } else {
+                                            _menuInteractionPaused = false;
+                                            _startHideControlsTimer();
+                                          }
                                         },
                                         icon: HugeIcons
                                             .strokeRoundedFolder03),
                                     _buildIcon(
-                                        onTap: () =>
-                                            showPlaybackSpeedDialog(context),
+                                        onTap: () {
+                                          _pauseForMenuInteraction();
+                                          showPlaybackSpeedDialog(context);
+                                        },
                                         icon: HugeIcons
                                             .strokeRoundedClock01),
                                   ],
@@ -2144,25 +2180,32 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                   child: Row(
                                     children: [
                                       _buildIcon(
-                                          onTap: () =>
-                                              playerSettingsSheet(context),
-                                          icon: HugeIcons
-                                              .strokeRoundedSettings01),
+                                          onTap: () {
+                                            _pauseForMenuInteraction();
+                                            playerSettingsSheet(context);
+                                          },
+                                          icon: HugeIcons.strokeRoundedSettings01),
                                       _buildIcon(
-                                          onTap: () =>
-                                              showTrackSelector(),
+                                          onTap: () {
+                                              _pauseForMenuInteraction();
+                                              showTrackSelector();
+                                          },
                                           icon: HugeIcons
                                               .strokeRoundedFolderVideo),
                                       _buildIcon(
-                                          onTap: () =>
-                                              showSubtitleSelector(),
+                                          onTap: () {
+                                            _pauseForMenuInteraction();
+                                            showSubtitleSelector();
+                                          },
                                           icon: HugeIcons
                                               .strokeRoundedSubtitle),
                                       if (episode.value.audios != null &&
                                           episode.value.audios!.isNotEmpty)
                                         _buildIcon(
-                                            onTap: () =>
-                                                showAudioSelector(),
+                                            onTap: () {
+                                              _pauseForMenuInteraction();
+                                              showAudioSelector();
+                                            },
                                             icon: HugeIcons
                                                 .strokeRoundedMusicNote01),
                                     ],
@@ -2172,8 +2215,10 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                   child: Row(
                                     children: [
                                       _buildIcon(
-                                          onTap: () =>
-                                              showColorProfileSheet(context),
+                                          onTap: () {
+                                            _pauseForMenuInteraction();
+                                            showColorProfileSheet(context);
+                                          },
                                           icon: Icons.hdr_on_rounded),
                                       _buildIcon(
                                           onTap: () {

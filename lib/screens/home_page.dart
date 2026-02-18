@@ -218,7 +218,7 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Find your favourite anime !',
+                'Find your favourite anime!',
                 style: TextStyle(
                   color: Theme.of(context)
                       .colorScheme
