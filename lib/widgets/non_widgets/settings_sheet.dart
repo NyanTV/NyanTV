@@ -3,7 +3,6 @@ import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:nyantv/screens/extensions/ExtensionScreen.dart';
 import 'package:nyantv/screens/profile/profile_page.dart';
 import 'package:nyantv/screens/settings/settings.dart';
-import 'package:nyantv/screens/local_source/local_source_view.dart';
 import 'package:nyantv/utils/function.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_bottomsheet.dart';
 import 'package:nyantv/widgets/helper/tv_wrapper.dart';
@@ -12,7 +11,6 @@ import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:iconly/iconly.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -184,26 +182,16 @@ class SettingsSheet extends StatelessWidget {
                     )
                   : const SizedBox.shrink();
             }),
-            NyantvOnTap(
-              child: ListTile(
-                leading: const Icon(HugeIcons.strokeRoundedAiSetting),
-                title: const Text('Change Service'),
-                onTap: () {
-                  Get.back();
-                  showServiceSelector(context);
-                },
-              ),
-            ),
-            NyantvOnTap(
-              child: ListTile(
-                leading: const Icon(Iconsax.document_download),
-                title: const Text('Local Media'),
-                onTap: () {
-                  Get.back();
-                  navigate(() => const WatchOffline());
-                },
-              ),
-            ),
+//            NyantvOnTap(
+//              child: ListTile(
+//                leading: const Icon(HugeIcons.strokeRoundedAiSetting),
+//                title: const Text('Change Service'),
+//                onTap: () {
+//                  Get.back();
+//                  showServiceSelector(context);
+//                },
+//              ),
+//            ),
             NyantvOnTap(
               child: ListTile(
                 leading: const Icon(Iconsax.setting),

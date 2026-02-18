@@ -2,11 +2,12 @@ import 'package:nyantv/utils/logger.dart';
 import 'dart:io';
 
 import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/screens/settings/sub_settings/settings_accounts.dart';
 import 'package:nyantv/utils/function.dart';
 import 'package:nyantv/widgets/common/custom_tiles.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
-import 'package:nyantv/widgets/non_widgets/settings_sheet.dart';
+//import 'package:nyantv/widgets/non_widgets/settings_sheet.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -92,6 +93,8 @@ void showWelcomeDialogg(BuildContext context) {
       final settings = Get.find<Settings>();
       final RxBool storagePermissionGranted = false.obs;
       final RxBool installPermissionGranted = false.obs;
+      final serviceHandler = Get.find<ServiceHandler>();
+      serviceHandler.changeService(ServicesType.anilist);
 
       Future<void> requestStoragePermission() async {
         final status = await _requestStoragePermissions();
@@ -199,15 +202,15 @@ void showWelcomeDialogg(BuildContext context) {
                                   }
                                 }),
                           ],
-                          CustomTile(
-                            description:
-                                'You may choose AL as Service',
-                            icon: HugeIcons.strokeRoundedAiSetting,
-                            title: 'Choose Service',
-                            onTap: () {
-                              SettingsSheet().showServiceSelector(context);
-                            },
-                          ),
+//                          CustomTile(
+//                            description:
+//                                'You may choose AL as Service',
+//                            icon: HugeIcons.strokeRoundedAiSetting,
+//                            title: 'Choose Service',
+//                            onTap: () {
+//                              SettingsSheet().showServiceSelector(context);
+//                            },
+//                          ),
                           Container(
                             height: 50,
                             padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
