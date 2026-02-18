@@ -28,7 +28,6 @@ class AnilistAuth extends GetxController {
 
 
   Future<void> tryAutoLogin() async {
-    isLoggedIn.value = false;
     final token = await storage.get('auth_token');
     if (token != null) {
       await fetchUserProfile();
@@ -48,6 +47,10 @@ class AnilistAuth extends GetxController {
       final result = await FlutterWebAuth2.authenticate(
         url: url,
         callbackUrlScheme: 'nyantv',
+        options: const FlutterWebAuth2Options(
+          preferEphemeral: false,
+          timeout: 120,
+        ),
       );
 
       final code = Uri.parse(result).queryParameters['code'];
@@ -57,6 +60,7 @@ class AnilistAuth extends GetxController {
       }
     } catch (e) {
       Logger.i('Error during login: $e');
+      await tryAutoLogin();
     }
   }
 
