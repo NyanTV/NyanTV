@@ -727,8 +727,8 @@ class _SettingsThemeState extends State<SettingsTheme> {
       itemBuilder: (context, index) {
         final theme = colorMap.entries.toList()[index];
         bool isSelected = selectedColorIndex == index;
-        final ColorScheme colorScheme = ColorScheme.fromSeed(
-            seedColor: theme.value, brightness: Theme.of(context).brightness);
+        final ColorScheme colorScheme = buildColorScheme(
+            theme.value, Theme.of(context).brightness);
 
         return NyantvOnTap(
           onTap: () {
@@ -779,7 +779,7 @@ class _SettingsThemeState extends State<SettingsTheme> {
                             width: 300,
                             padding: const EdgeInsets.only(left: 10, top: 5),
                             decoration: BoxDecoration(
-                              color: theme.value.withAlpha(140),
+                              color: theme.value.primary.withAlpha(140),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             alignment: Alignment.center,

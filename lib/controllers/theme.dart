@@ -12,13 +12,13 @@ class ThemeProvider extends ChangeNotifier {
   late ThemeData _lightTheme;
   late ThemeData _darkTheme;
   late String currentThemeMode;
-  Color _seedColor;
+  NyantvThemeColors _seedColor;
   late int selectedVariantIndex;
 
   List<String> availThemeModes = ["default", "material", "custom"];
 
   ThemeProvider()
-      : _seedColor = Colors.indigo,
+      : _seedColor = const NyantvThemeColors(Colors.indigo),
         isLightMode =
             Hive.box("themeData").get("isLightMode", defaultValue: false),
         isSystemMode =
@@ -37,7 +37,7 @@ class ThemeProvider extends ChangeNotifier {
 
   void _determineSeedColor() {
     if (currentThemeMode == "default") {
-      _seedColor = Colors.indigo;
+      _seedColor = const NyantvThemeColors(Colors.indigo);
     } else if (currentThemeMode == "material") {
       loadDynamicTheme();
     } else {
@@ -51,9 +51,9 @@ class ThemeProvider extends ChangeNotifier {
     currentThemeMode = "material";
     Hive.box("themeData").put("themeMode", "material");
     final corePalette = await DynamicColorPlugin.getCorePalette();
-    _seedColor = corePalette != null
-        ? Color(corePalette.primary.get(40))
-        : Colors.indigo;
+    _seedColor = NyantvThemeColors(
+      corePalette != null ? Color(corePalette.primary.get(40)) : Colors.indigo,
+    );
     _updateTheme();
   }
 
@@ -94,7 +94,7 @@ class ThemeProvider extends ChangeNotifier {
   void setDefaultTheme() {
     currentThemeMode = "default";
     Hive.box("themeData").put("themeMode", "default");
-    _seedColor = Colors.indigo;
+    _seedColor = const NyantvThemeColors(Colors.indigo);
     _updateTheme();
   }
 
@@ -131,26 +131,20 @@ class ThemeProvider extends ChangeNotifier {
     isOled = false;
     selectedVariantIndex = 0;
     currentThemeMode = "default";
-    _seedColor = Colors.indigo;
-
+    _seedColor = const NyantvThemeColors(Colors.indigo);
     _updateTheme();
     notifyListeners();
   }
 
   void _updateTheme() {
+    final variant = dynamicSchemeVariantList[selectedVariantIndex];
     _lightTheme = lightMode.copyWith(
       scaffoldBackgroundColor: isOled ? Colors.white : Colors.transparent,
-      colorScheme: ColorScheme.fromSeed(
-          seedColor: _seedColor,
-          brightness: Brightness.light,
-          dynamicSchemeVariant: dynamicSchemeVariantList[selectedVariantIndex]),
+      colorScheme: buildColorScheme(_seedColor, Brightness.light, variant: variant),
     );
     _darkTheme = darkMode.copyWith(
       scaffoldBackgroundColor: isOled ? Colors.black : Colors.transparent,
-      colorScheme: ColorScheme.fromSeed(
-          seedColor: _seedColor,
-          brightness: Brightness.dark,
-          dynamicSchemeVariant: dynamicSchemeVariantList[selectedVariantIndex]),
+      colorScheme: buildColorScheme(_seedColor, Brightness.dark, variant: variant),
     );
     syncStatusBar();
     notifyListeners();
