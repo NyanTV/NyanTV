@@ -103,6 +103,32 @@ class SourceController extends GetxController implements BaseService {
         ServicesType.extensions) {
       fetchHomePage();
     }
+
+    if (Get.context != null) {
+      checkForUpdates(Get.context!);
+    }
+  }
+
+
+  Future<void> checkForUpdates(BuildContext context) async {
+    try {
+      await fetchRepos();
+      final updates = <Source>[];
+      for (final source in installedExtensions) {
+        final available =
+            availableExtensions.firstWhereOrNull((s) => s.id == source.id);
+        if (available != null &&
+            (available.version ?? '') != (source.version ?? '')) {
+          updates.add(available);
+        }
+      }
+
+      if (updates.isNotEmpty) {
+        snackString("Updates available for ${updates.length} extensions");
+      }
+    } catch (e) {
+      Logger.e('Error checking for updates: $e');
+    }
   }
 
   Future<List<Source>> _getInstalledExtensions(

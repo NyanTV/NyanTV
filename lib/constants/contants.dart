@@ -37,7 +37,7 @@ ColorScheme buildColorScheme(
 
   return base.copyWith(
     secondary: themeColors.secondary,
-    secondaryContainer: themeColors.secondary!.withOpacity(0.20),
+    secondaryContainer: themeColors.secondary!.withOpacity(0.2),
     onSecondary: contrast,
   );
 }

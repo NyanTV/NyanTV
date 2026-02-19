@@ -158,7 +158,7 @@ class _ReusableCarouselState extends State<ReusableCarousel> {
 
   void _navigateToDetailsPage(CarouselData itemData, String tag) {
     final controller = Get.find<SourceController>();
-    final ItemType mediaType = ItemType.anime;
+    const ItemType mediaType = ItemType.anime;
     final media = Media.fromCarouselData(itemData, mediaType);
 
     final Widget page = AnimeDetailsPage(

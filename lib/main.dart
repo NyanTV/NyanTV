@@ -440,7 +440,7 @@ class _FilterScreenState extends State<FilterScreen> {
   @override
   Widget build(BuildContext context) {
     final authService = Get.find<ServiceHandler>();
-    final isSimkl = false;
+    const isSimkl = false;
     return Glow(
       child: PlatformBuilder(
         strictMode: false,

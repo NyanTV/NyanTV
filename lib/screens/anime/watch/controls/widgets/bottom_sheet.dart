@@ -81,20 +81,20 @@ class _DynamicBottomSheetState extends State<DynamicBottomSheet>
     super.dispose();
   }
 
-  void _filterItems(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filteredItems = widget.items;
-      } else {
-        _filteredItems = widget.items
-            .where((item) =>
-                item.title.toLowerCase().contains(query.toLowerCase()) ||
-                (item.subtitle?.toLowerCase().contains(query.toLowerCase()) ??
-                    false))
-            .toList();
-      }
-    });
-  }
+//  void _filterItems(String query) {
+//    setState(() {
+//      if (query.isEmpty) {
+//        _filteredItems = widget.items;
+//      } else {
+//        _filteredItems = widget.items
+//            .where((item) =>
+//                item.title.toLowerCase().contains(query.toLowerCase()) ||
+//                (item.subtitle?.toLowerCase().contains(query.toLowerCase()) ??
+//                    false))
+//            .toList();
+//      }
+//    });
+//  }
 
   void _closeBottomSheet() async {
     await _fadeController.reverse();

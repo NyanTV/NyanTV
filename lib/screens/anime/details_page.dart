@@ -675,9 +675,9 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
     });
   }
 
-  Widget _buildCommentsSection(BuildContext context) {
-    return const SizedBox.shrink();
-  }
+//  Widget _buildCommentsSection(BuildContext context) {
+//    return const SizedBox.shrink();
+//  }
 
   Column _buildCommonInfo(BuildContext context) {
     return Column(

@@ -78,7 +78,7 @@ class _InitialisingScreenState extends State<InitialisingScreen>
     while (DateTime.now().difference(start) < maxWait) {
       await Future.delayed(const Duration(milliseconds: 150));
       if (DateTime.now().difference(start) >= minWait &&
-          _isServiceReady(serviceHandler)) break;
+          _isServiceReady(serviceHandler)){ break; }
     }
 
     if (!mounted) return;

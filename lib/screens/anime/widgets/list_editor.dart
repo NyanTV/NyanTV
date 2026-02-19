@@ -207,7 +207,7 @@ class _ListEditorModalState extends State<ListEditorModal> {
 
   Widget _buildStatusSection(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final GlobalKey<State<StatefulWidget>> dropdownKey = GlobalKey();
+    //final GlobalKey<State<StatefulWidget>> dropdownKey = GlobalKey();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -63,7 +63,7 @@ Future<Media?> mapMedia(
   String? savedTitle,
 }) async {
   final sourceController = Get.find<SourceController>();
-  final type = ItemType.anime;
+  const type = ItemType.anime;
 
   String englishTitle = animeId[0].split("*").first;
   String romajiTitle = animeId[1] == '??' ? englishTitle : animeId[1];
