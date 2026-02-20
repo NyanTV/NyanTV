@@ -23,6 +23,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconly/iconly.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:flutter/services.dart';
+import 'package:nyantv/utils/tv_scroll_mixin.dart';
 
 enum SortType {
   title,
@@ -46,7 +48,7 @@ class MyLibrary extends StatefulWidget {
   State<MyLibrary> createState() => _MyLibraryState();
 }
 
-class _MyLibraryState extends State<MyLibrary> {
+class _MyLibraryState extends State<MyLibrary> with TVScrollMixin {
   final TextEditingController controller = TextEditingController();
   final offlineStorage = Get.find<OfflineStorageController>();
   final gridCount = 0.obs;
@@ -59,13 +61,26 @@ class _MyLibraryState extends State<MyLibrary> {
   RxString searchQuery = ''.obs;
   RxInt selectedListIndex = 0.obs;
   Rx<ItemType> type = ItemType.anime.obs;
+  final FocusNode _searchFocusNode = FocusNode();
+  final FocusNode _sortFocusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    initTVScroll();
     _initLibraryData();
     _getPreferences();
     ever(offlineStorage.animeCustomLists, (_) => _initLibraryData());
+  }
+
+  @override
+  void dispose() {
+    disposeTVScroll();
+    _searchFocusNode.dispose();
+    _sortFocusNode.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _initLibraryData() {
@@ -94,18 +109,14 @@ class _MyLibraryState extends State<MyLibrary> {
   }
 
   void _savePreferences() {
-    settingsController.preferences
-        .put('anime_sort_type', currentSort.index);
-    settingsController.preferences
-        .put('anime_sort_order', isAscending);
-    settingsController.preferences
-        .put('anime_grid_size', gridCount.value);
+    settingsController.preferences.put('anime_sort_type', currentSort.index);
+    settingsController.preferences.put('anime_sort_order', isAscending);
+    settingsController.preferences.put('anime_grid_size', gridCount.value);
   }
 
   void _search(String val) {
     searchQuery.value = val;
     final currentIndex = selectedListIndex.value;
-
     final initialData = customListData[currentIndex].listData;
     filteredData.value = initialData
         .where(
@@ -125,17 +136,28 @@ class _MyLibraryState extends State<MyLibrary> {
 
   @override
   Widget build(BuildContext context) {
+    final isTV = Get.find<Settings>().isTV.value;
     return Scaffold(
       body: CustomScrollView(
+        controller: _scrollController,
+        physics: isTV
+            ? const NeverScrollableScrollPhysics()
+            : const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 28.0),
-              child: _buildHeader(),
+            child: FocusTraversalGroup(
+              policy: WidgetOrderTraversalPolicy(),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 28.0),
+                child: _buildHeader(),
+              ),
             ),
           ),
           SliverToBoxAdapter(
-            child: _buildChipTabs(),
+            child: FocusTraversalGroup(
+              policy: WidgetOrderTraversalPolicy(),
+              child: _buildChipTabs(),
+            ),
           ),
           _buildSliverTabsBody(),
         ],
@@ -200,7 +222,8 @@ class _MyLibraryState extends State<MyLibrary> {
           crossAxisSpacing: 10,
           mainAxisSpacing: 20,
           mainAxisExtent:
-              (MediaQuery.of(context).size.width / gridCount.value) * (3 / 2) +
+              (MediaQuery.of(context).size.width / gridCount.value) *
+                      (3 / 2) +
                   10);
     }
   }
@@ -239,8 +262,8 @@ class _MyLibraryState extends State<MyLibrary> {
                             tag: '${getRandomTag()}-$i',
                             variant: DataVariant.library,
                             type: ItemType.anime,
-                            cardStyle:
-                                CardStyle.values[settingsController.cardStyle]),
+                            cardStyle: CardStyle
+                                .values[settingsController.cardStyle]),
                       );
                     },
                     childCount: items.length,
@@ -250,25 +273,24 @@ class _MyLibraryState extends State<MyLibrary> {
       } else {
         return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-          sliver: SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: getResponsiveCrossAxisVal(
-                    MediaQuery.of(context).size.width - 120,
-                    itemWidth: 400),
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 0,
-                mainAxisExtent: getHistoryCardHeight(
-                    HistoryCardStyle
-                        .values[settingsController.historyCardStyle],
-                    context)),
+          sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, i) {
-                final historyModel =
-                    HistoryModel.fromOfflineMedia(historyData[i], ItemType.anime);
-                return HistoryCardGate(
-                  data: historyModel,
-                  cardStyle: HistoryCardStyle
-                      .values[settingsController.historyCardStyle],
+                final historyModel = HistoryModel.fromOfflineMedia(
+                    historyData[i], ItemType.anime);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: SizedBox(
+                    height: getHistoryCardHeight(
+                        HistoryCardStyle
+                            .values[settingsController.historyCardStyle],
+                        context),
+                    child: HistoryCardGate(
+                      data: historyModel,
+                      cardStyle: HistoryCardStyle
+                          .values[settingsController.historyCardStyle],
+                    ),
+                  ),
                 );
               },
               childCount: historyData.length,
@@ -278,6 +300,8 @@ class _MyLibraryState extends State<MyLibrary> {
       }
     });
   }
+
+  final RxBool isSearchActive = false.obs;
 
   Padding _buildChipTabs() {
     return Padding(
@@ -342,14 +366,15 @@ class _MyLibraryState extends State<MyLibrary> {
                 icon: Row(
                   children: [
                     Icon(Iconsax.edit,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        color:
+                            Theme.of(context).colorScheme.onSurfaceVariant),
                     5.width(),
                     const NyantvText(text: 'Edit')
                   ],
                 ),
                 isSelected: false,
-                onSelected: (_) =>
-                    navigate(() => const CustomListsEditor(type: ItemType.anime)),
+                onSelected: (_) => navigate(
+                    () => const CustomListsEditor(type: ItemType.anime)),
               ),
             ),
           ]);
@@ -357,8 +382,6 @@ class _MyLibraryState extends State<MyLibrary> {
       ),
     );
   }
-
-  final RxBool isSearchActive = false.obs;
 
   Widget _buildSegmentedControl() {
     final availableTypes = [ItemType.anime];
@@ -413,7 +436,9 @@ class _MyLibraryState extends State<MyLibrary> {
                         key: ValueKey('${itemType.name}_icon'),
                         color: isSelected
                             ? Theme.of(context).colorScheme.onPrimary
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                            : Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
                         size: 18,
                       ),
                     ),
@@ -426,7 +451,9 @@ class _MyLibraryState extends State<MyLibrary> {
                           fontSize: 14,
                           color: isSelected
                               ? Theme.of(context).colorScheme.onPrimary
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                         ),
                         child: Text(
                           _getTypeLabel(itemType),
@@ -482,7 +509,8 @@ class _MyLibraryState extends State<MyLibrary> {
                                 'Discover your favorite anime',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color:
+                                      Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                             ],
@@ -495,103 +523,177 @@ class _MyLibraryState extends State<MyLibrary> {
                             : 0,
                         duration: const Duration(milliseconds: 350),
                         curve: Curves.easeOutCubic,
-                        child: AnimatedOpacity(
-                          opacity: isSearchActive.value ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 250),
-                          curve: Curves.easeOutCubic,
-                          child: Row(
-                            children: [
-                              TweenAnimationBuilder<double>(
-                                duration: const Duration(milliseconds: 400),
-                                curve: Curves.elasticOut,
-                                tween: Tween<double>(
-                                  begin: 0.0,
-                                  end: isSearchActive.value ? 1.0 : 0.0,
-                                ),
-                                builder: (context, value, child) {
-                                  return Transform.scale(
-                                    scale: value,
-                                    child: child,
-                                  );
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      width: 1,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
+                        child: ExcludeFocus(
+                          excluding: !isSearchActive.value,
+                          child: AnimatedOpacity(
+                            opacity: isSearchActive.value ? 1.0 : 0.0,
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeOutCubic,
+                            child: Row(
+                              children: [
+                                TweenAnimationBuilder<double>(
+                                  duration: const Duration(milliseconds: 400),
+                                  curve: Curves.elasticOut,
+                                  tween: Tween<double>(
+                                    begin: 0.0,
+                                    end: isSearchActive.value ? 1.0 : 0.0,
+                                  ),
+                                  builder: (context, value, child) {
+                                    return Transform.scale(
+                                      scale: value,
+                                      child: child,
+                                    );
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary,
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                      border: Border.all(
                                         color: Theme.of(context)
                                             .colorScheme
-                                            .primary
-                                            .withOpacity(0.3),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 3),
+                                            .primary,
+                                        width: 1,
                                       ),
-                                    ],
-                                  ),
-                                  child: IconButton(
-                                    onPressed: () {
-                                      isSearchActive.value = false;
-                                    },
-                                    icon: Icon(Icons.arrow_back_ios_new,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary),
-                                    constraints: const BoxConstraints(
-                                      minHeight: 40,
-                                      minWidth: 40,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: IconButton(
+                                      onPressed: () {
+                                        isSearchActive.value = false;
+                                      },
+                                      icon: Icon(Icons.arrow_back_ios_new,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary),
+                                      constraints: const BoxConstraints(
+                                        minHeight: 40,
+                                        minWidth: 40,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10),
-                                  child: CustomSearchBar(
-                                    controller: controller,
-                                    onChanged: _search,
-                                    hintText: 'Search Anime...',
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10),
+                                    child: CustomSearchBar(
+                                      controller: controller,
+                                      onChanged: _search,
+                                      hintText: 'Search Anime...',
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  Row(
-                    children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        transitionBuilder:
-                            (Widget child, Animation<double> animation) {
-                          return ScaleTransition(
-                            scale: animation,
-                            child: FadeTransition(
-                              opacity: animation,
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: !isSearchActive.value
-                            ? Container(
-                                key: const ValueKey('searchButton'),
-                                margin: const EdgeInsets.only(right: 8),
+                  FocusTraversalGroup(
+                    policy: WidgetOrderTraversalPolicy(),
+                    child: Row(
+                      children: [
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          transitionBuilder:
+                              (Widget child, Animation<double> animation) {
+                            return ScaleTransition(
+                              scale: animation,
+                              child: FadeTransition(
+                                  opacity: animation, child: child),
+                            );
+                          },
+                          child: !isSearchActive.value
+                              ? ListenableBuilder(
+                                  key: const ValueKey('searchButton'),
+                                  listenable: _searchFocusNode,
+                                  builder: (context, _) {
+                                    return Container(
+                                      margin:
+                                          const EdgeInsets.only(right: 8),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: _searchFocusNode.hasFocus
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimary
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                          width: _searchFocusNode.hasFocus
+                                              ? 2.5
+                                              : 1,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                                .withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      child: IconButton(
+                                        focusNode: _searchFocusNode,
+                                        onPressed: () =>
+                                            isSearchActive.value = true,
+                                        icon: Icon(IconlyLight.search,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onPrimary),
+                                      ),
+                                    );
+                                  },
+                                )
+                              : const SizedBox(
+                                  key: ValueKey('emptySearch'), width: 0),
+                        ),
+                        TweenAnimationBuilder<double>(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutBack,
+                          tween: Tween<double>(begin: 0.9, end: 1.0),
+                          builder: (context, value, child) {
+                            return Transform.scale(
+                                scale: value, child: child);
+                          },
+                          child: ListenableBuilder(
+                            listenable: _sortFocusNode,
+                            builder: (context, _) {
+                              return Container(
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    width: 1,
+                                    color: _sortFocusNode.hasFocus
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                    width:
+                                        _sortFocusNode.hasFocus ? 2.5 : 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
@@ -605,65 +707,24 @@ class _MyLibraryState extends State<MyLibrary> {
                                   ],
                                 ),
                                 child: IconButton(
-                                  onPressed: () {
-                                    isSearchActive.value = true;
-                                  },
-                                  icon: Icon(IconlyLight.search,
+                                  focusNode: _sortFocusNode,
+                                  onPressed: showSortingSettings,
+                                  icon: Icon(Icons.sort,
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onPrimary),
                                 ),
-                              )
-                            : const SizedBox(
-                                key: ValueKey('emptySearch'), width: 0),
-                      ),
-                      TweenAnimationBuilder<double>(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOutBack,
-                        tween: Tween<double>(
-                          begin: 0.9,
-                          end: 1.0,
-                        ),
-                        builder: (context, value, child) {
-                          return Transform.scale(
-                            scale: value,
-                            child: child,
-                          );
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.primary,
-                              width: 1,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: IconButton(
-                            onPressed: () {
-                              showSortingSettings();
+                              );
                             },
-                            icon: Icon(Icons.sort,
-                                color: Theme.of(context).colorScheme.onPrimary),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              _buildSegmentedControl(),
+              ExcludeFocus(child: _buildSegmentedControl()),
             ],
           ),
         ));
@@ -690,8 +751,8 @@ class _MyLibraryState extends State<MyLibrary> {
                                 currentSort: currentSort,
                                 sortType: SortType.title,
                                 isAscending: isAscending,
-                                onTap: () =>
-                                    _handleSortChange(SortType.title, setState),
+                                onTap: () => _handleSortChange(
+                                    SortType.title, setState),
                                 icon: Icons.sort_by_alpha,
                               ),
                               _buildSortBox(
@@ -821,8 +882,8 @@ class _MyLibraryState extends State<MyLibrary> {
                             height: 42,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color:
-                                  theme.colorScheme.primary.withOpacity(0.12),
+                              color: theme.colorScheme.primary
+                                  .withOpacity(0.12),
                             ),
                           ),
                         Icon(
@@ -858,8 +919,9 @@ class _MyLibraryState extends State<MyLibrary> {
                       duration: const Duration(milliseconds: 200),
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                         color: isSelected
                             ? theme.colorScheme.primary
                             : theme.colorScheme.onSurfaceVariant,
@@ -892,13 +954,13 @@ class _MyLibraryState extends State<MyLibrary> {
         isAscending = false;
       });
     }
-
     _savePreferences();
     _applySorting();
   }
 
   void _applySorting() {
-    if (customListData.isEmpty || selectedListIndex.value >= customListData.length) return;
+    if (customListData.isEmpty ||
+        selectedListIndex.value >= customListData.length) return;
 
     final currentList = customListData[selectedListIndex.value];
     final initialList = initialCustomListData[selectedListIndex.value];
@@ -908,7 +970,6 @@ class _MyLibraryState extends State<MyLibrary> {
 
       switch (currentSort) {
         case SortType.title:
-          // Handle potential null names
           final aName = a.name ?? '';
           final bName = b.name ?? '';
           comparison = aName.compareTo(bName);

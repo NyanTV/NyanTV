@@ -3,12 +3,11 @@ import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class NyantvChip extends StatelessWidget {
+class NyantvChip extends StatefulWidget {
   final String label;
   final bool isSelected;
   final Function(bool e) onSelected;
   final bool showCheck;
-
   const NyantvChip({
     super.key,
     required this.label,
@@ -16,6 +15,25 @@ class NyantvChip extends StatelessWidget {
     required this.onSelected,
     this.showCheck = true,
   });
+
+  @override
+  State<NyantvChip> createState() => _NyantvChipState();
+}
+
+class _NyantvChipState extends State<NyantvChip> {
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   BoxShadow glowingShadow(BuildContext context) {
     final controller = Get.find<Settings>();
@@ -26,9 +44,8 @@ class NyantvChip extends StatelessWidget {
         color: Theme.of(context).colorScheme.primary.withOpacity(
             Theme.of(context).brightness == Brightness.dark ? 0.1 : 0.2),
         blurRadius: 20.0.multiplyBlur(),
-        spreadRadius:
-            -1.0.multiplyGlow(), // Negative spread makes shadow smaller
-        offset: const Offset(0, 0), // Centered shadow
+        spreadRadius: -1.0.multiplyGlow(),
+        offset: const Offset(0, 0),
       );
     }
   }
@@ -40,22 +57,28 @@ class NyantvChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [glowingShadow(context)]),
       child: FilterChip(
-        selected: isSelected,
-        onSelected: onSelected,
-        label: Text(label),
+        focusNode: _focusNode,
+        selected: widget.isSelected,
+        onSelected: widget.onSelected,
+        label: Text(widget.label),
+        side: _focusNode.hasFocus
+            ? BorderSide(
+                color: Theme.of(context).colorScheme.onSurface,
+                width: 2,
+              )
+            : BorderSide.none,
         labelStyle: TextStyle(
-          color: isSelected
+          color: widget.isSelected
               ? Theme.of(context).colorScheme.onPrimary
               : Theme.of(context).colorScheme.onSurfaceVariant,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.normal,
         ),
-        checkmarkColor: isSelected
+        checkmarkColor: widget.isSelected
             ? Theme.of(context).colorScheme.onPrimary
             : Theme.of(context).colorScheme.onSurfaceVariant,
         backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
         selectedColor: Theme.of(context).colorScheme.primary,
-        side: BorderSide.none,
-        showCheckmark: showCheck,
+        showCheckmark: widget.showCheck,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -64,38 +87,63 @@ class NyantvChip extends StatelessWidget {
   }
 }
 
-class NyantvIconChip extends StatelessWidget {
+class NyantvIconChip extends StatefulWidget {
   final Widget icon;
   final bool isSelected;
   final Function(bool e) onSelected;
   final bool showCheck;
+  const NyantvIconChip({
+    super.key,
+    required this.icon,
+    required this.isSelected,
+    required this.onSelected,
+    this.showCheck = true,
+  });
 
-  const NyantvIconChip(
-      {super.key,
-      required this.icon,
-      required this.isSelected,
-      required this.onSelected,
-      this.showCheck = true});
+  @override
+  State<NyantvIconChip> createState() => _NyantvIconChipState();
+}
+
+class _NyantvIconChipState extends State<NyantvIconChip> {
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return FilterChip(
-      selected: isSelected,
-      onSelected: onSelected,
-      showCheckmark: showCheck,
-      label: icon,
-      checkmarkColor: isSelected
+      focusNode: _focusNode,
+      selected: widget.isSelected,
+      onSelected: widget.onSelected,
+      showCheckmark: widget.showCheck,
+      label: widget.icon,
+      side: _focusNode.hasFocus
+          ? BorderSide(
+              color: Theme.of(context).colorScheme.onSurface,
+              width: 2,
+            )
+          : BorderSide.none,
+      checkmarkColor: widget.isSelected
           ? Theme.of(context).colorScheme.onPrimary
           : Theme.of(context).colorScheme.onSurfaceVariant,
       labelStyle: TextStyle(
-        color: isSelected
+        color: widget.isSelected
             ? Theme.of(context).colorScheme.onPrimary
             : Theme.of(context).colorScheme.onSurfaceVariant,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
       selectedColor: Theme.of(context).colorScheme.primary,
-      side: BorderSide.none,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
