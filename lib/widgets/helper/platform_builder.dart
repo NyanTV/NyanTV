@@ -3,13 +3,13 @@ import 'package:nyantv/constants/contants.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:nyantv/utils/logger.dart';
 
 bool _isMobileDevice() {
   try {
     final settings = Get.find<Settings>();
     if (settings.isTV.value) return false; // Android TV is NOT mobile
-  } catch (e) {
-  }
+  } catch (e) {Logger.i("$e");}
   return Platform.isAndroid || Platform.isIOS;
 }
 

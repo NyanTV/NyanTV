@@ -960,7 +960,7 @@ class _MyLibraryState extends State<MyLibrary> with TVScrollMixin {
 
   void _applySorting() {
     if (customListData.isEmpty ||
-        selectedListIndex.value >= customListData.length) return;
+        selectedListIndex.value >= customListData.length) { return; }
 
     final currentList = customListData[selectedListIndex.value];
     final initialList = initialCustomListData[selectedListIndex.value];

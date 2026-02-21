@@ -29,10 +29,10 @@ class BigCarousel extends StatefulWidget {
   });
 
   @override
-  _BigCarouselState createState() => _BigCarouselState();
+  BigCarouselState createState() => BigCarouselState();
 }
 
-class _BigCarouselState extends State<BigCarousel> {
+class BigCarouselState extends State<BigCarousel> {
   int activeIndex = 0;
   final CarouselSliderController controller = CarouselSliderController();
 
