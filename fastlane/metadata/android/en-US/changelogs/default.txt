@@ -1,15 +1,18 @@
+### 🌟 Features
+-   auto-update-checking for extensions from anymex
+-   themes with secondary colors better custom themes with more flexibility soon
+-   add hold-to-accelerate for score slider navigation
+
 ### 🔧 Bug Fixes & Improvements
--   discord rpc images not rendering
--   no more black screen
+-   visual glitch on app start
+-   d-pad misbehaving on watch page when opening settings
+-   no more login duplicates
+-   library editor with full d-pad support
 
 ### 🎨 Style Changes
--   better player focus visuals
--   auto-scroll on home page
+-   better library focus visibility
 
 ### 🚀 Performance Improvements
--   no more unnecessary blur, faster details page
-
-### 🧹 Chores & Documentation
--   add stoat.chat
+-   use const on some functions
 
  
