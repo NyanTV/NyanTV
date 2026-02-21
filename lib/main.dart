@@ -392,6 +392,7 @@ class FilterScreen extends StatefulWidget {
 class _FilterScreenState extends State<FilterScreen> {
   int _selectedIndex = 1;
   int _mobileSelectedIndex = 0;
+  bool _firstLoad = true;
 
   @override
   void initState() {
@@ -406,12 +407,14 @@ class _FilterScreenState extends State<FilterScreen> {
 
   void _onItemTapped(int index) {
     setState(() {
+      _firstLoad = false;
       _selectedIndex = index;
     });
   }
 
   void _onMobileItemTapped(int index) {
     setState(() {
+      _firstLoad = false;
       _mobileSelectedIndex = index;
     });
   }
@@ -462,76 +465,19 @@ class _FilterScreenState extends State<FilterScreen> {
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Obx(() => SizedBox(
-                width: 120,
-                child: SuperListView(
-                  children: [
-                    ResponsiveNavBar(
-                      isDesktop: true,
-                      currentIndex: _selectedIndex,
-                      margin: const EdgeInsets.fromLTRB(20, 30, 15, 10),
-                      items: [
-                        NavItem(
-                            unselectedIcon: IconlyBold.profile,
-                            selectedIcon: IconlyBold.profile,
-                            onTap: (index) {
-                              return SettingsSheet.show(context);
-                            },
-                            label: 'Profile',
-                            altIcon: CircleAvatar(
-                                radius: 24,
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainer
-                                    .withValues(alpha: 0.3),
-                                child: authService.isLoggedIn.value
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(59),
-                                        child: CachedNetworkImage(
-                                          width: 40,
-                                          height: 40,
-                                          fit: BoxFit.cover,
-                                          errorWidget: (context, url, error) =>
-                                              const Icon(IconlyBold.profile),
-                                          imageUrl: authService
-                                                  .profileData.value.avatar ??
-                                              ''),
-                                      )
-                                    : const Icon((IconlyBold.profile)))),
-                        NavItem(
-                          unselectedIcon: IconlyLight.home,
-                          selectedIcon: IconlyBold.home,
-                          onTap: _onItemTapped,
-                          label: 'Home',
-                        ),
-                        NavItem(
-                          unselectedIcon: Icons.movie_filter_outlined,
-                          selectedIcon: Icons.movie_filter_rounded,
-                          onTap: _onItemTapped,
-                          label: 'Anime',
-                        ),
-                        NavItem(
-                          unselectedIcon: HugeIcons.strokeRoundedLibrary,
-                          selectedIcon: HugeIcons.strokeRoundedLibrary,
-                          onTap: _onItemTapped,
-                          label: 'Library',
-                        ),
-                        if (sourceController.shouldShowExtensions.value)
-                          NavItem(
-                            unselectedIcon: Icons.extension_outlined,
-                            selectedIcon: Icons.extension_rounded,
-                            onTap: _onItemTapped,
-                            label: "Extensions",
-                          ),
-                      ],
-                    ),
-                  ],
-                ))),
+          _Sidebar(
+            selectedIndex: _selectedIndex,
+            authService: authService,
+            onItemTapped: _onItemTapped,
+          ),
           Expanded(
-              child: SmoothPageEntrance(
+            child: _firstLoad
+              ? routes[_selectedIndex]
+              : SmoothPageEntrance(
                   style: PageEntranceStyle.slideUpGentle,
                   key: Key(_selectedIndex.toString()),
-                  child: routes[_selectedIndex])),
+                  child: routes[_selectedIndex]),
+          ),
         ],
       ),
     );
@@ -539,7 +485,9 @@ class _FilterScreenState extends State<FilterScreen> {
 
   Scaffold _buildAndroidLayout(bool isSimkl) {
     return Scaffold(
-        body: SmoothPageEntrance(
+        body: _firstLoad
+          ? mobileRoutes[_mobileSelectedIndex]
+          : SmoothPageEntrance(
             style: PageEntranceStyle.slideUpGentle,
             key: Key(_mobileSelectedIndex.toString()),
             child: mobileRoutes[_mobileSelectedIndex]),
@@ -569,5 +517,59 @@ class _FilterScreenState extends State<FilterScreen> {
             ),
           ],
         ));
+  }
+}
+
+class _Sidebar extends StatelessWidget {
+  final int selectedIndex;
+  final ServiceHandler authService;
+  final void Function(int) onItemTapped;
+
+  const _Sidebar({
+    required this.selectedIndex,
+    required this.authService,
+    required this.onItemTapped,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 120,
+      child: SuperListView(
+        children: [
+          ResponsiveNavBar(
+            isDesktop: true,
+            currentIndex: selectedIndex,
+            margin: const EdgeInsets.fromLTRB(20, 30, 15, 10),
+            items: [
+              NavItem(
+                unselectedIcon: IconlyBold.profile,
+                selectedIcon: IconlyBold.profile,
+                onTap: (_) => SettingsSheet.show(context),
+                label: 'Profile',
+                altIcon: CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
+                  child: Obx(() => authService.isLoggedIn.value
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(59),
+                        child: CachedNetworkImage(
+                          width: 40, height: 40,
+                          fit: BoxFit.cover,
+                          errorWidget: (_, __, ___) => const Icon(IconlyBold.profile),
+                          imageUrl: authService.profileData.value.avatar ?? ''),
+                      )
+                    : const Icon(IconlyBold.profile)),
+                ),
+              ),
+              NavItem(unselectedIcon: IconlyLight.home, selectedIcon: IconlyBold.home, onTap: onItemTapped, label: 'Home'),
+              NavItem(unselectedIcon: Icons.movie_filter_outlined, selectedIcon: Icons.movie_filter_rounded, onTap: onItemTapped, label: 'Anime'),
+              NavItem(unselectedIcon: HugeIcons.strokeRoundedLibrary, selectedIcon: HugeIcons.strokeRoundedLibrary, onTap: onItemTapped, label: 'Library'),
+              NavItem(unselectedIcon: Icons.extension_outlined, selectedIcon: Icons.extension_rounded, onTap: onItemTapped, label: "Extensions"),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

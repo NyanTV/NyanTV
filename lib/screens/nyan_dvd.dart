@@ -24,7 +24,6 @@ class InitialisingScreen extends StatefulWidget {
 class _InitialisingScreenState extends State<InitialisingScreen>
     with WidgetsBindingObserver {
   bool _isReady = false;
-  bool _showChild = false;
   double _opacity = 1.0;
   Timer? _rpcUpdateTimer;
   bool _initStarted = false;
@@ -82,7 +81,6 @@ class _InitialisingScreenState extends State<InitialisingScreen>
     }
 
     if (!mounted) return;
-    setState(() => _showChild = true);
     await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
     setState(() => _opacity = 0.0);
@@ -113,7 +111,7 @@ class _InitialisingScreenState extends State<InitialisingScreen>
 
   @override
   Widget build(BuildContext context) {
-    if (_isReady) return widget.child;
+    //if (_isReady) return widget.child;
 
     final view = View.of(context);
     final physicalSize = view.physicalSize;
@@ -226,16 +224,17 @@ class _InitialisingScreenState extends State<InitialisingScreen>
 
     return Stack(
       children: [
-        if (_showChild) widget.child,
-        MediaQuery(
-          data: neutralMediaQuery,
-          child: AnimatedOpacity(
-            opacity: _opacity,
-            duration: const Duration(milliseconds: 380),
-            curve: Curves.easeOut,
-            child: content,
+        widget.child,
+        if (!_isReady)
+          MediaQuery(
+            data: neutralMediaQuery,
+            child: AnimatedOpacity(
+              opacity: _opacity,
+              duration: const Duration(milliseconds: 380),
+              curve: Curves.easeOut,
+              child: content,
+            ),
           ),
-        ),
       ],
     );
   }
