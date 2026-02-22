@@ -39,8 +39,6 @@ class PlayerSettings {
   bool autoSkipED;
   @HiveField(17)
   bool autoSkipOnce;
-  @HiveField(18)
-  bool enableSwipeControls;
   @HiveField(19)
   int markAsCompleted;
   @HiveField(20)
@@ -66,7 +64,6 @@ class PlayerSettings {
       this.autoSkipED = false,
       this.autoSkipOP = false,
       this.autoSkipOnce = false,
-      this.enableSwipeControls = true,
       this.markAsCompleted = 90,
       this.transitionSubtitle = true,
       this.autoSkipFiller = false});

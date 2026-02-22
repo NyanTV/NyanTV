@@ -309,11 +309,6 @@ class Settings extends GetxController {
   set autoSkipFiller(bool value) =>
       _setPlayerSetting((s) => s?.autoSkipFiller = value);
 
-  bool get enableSwipeControls =>
-      _getPlayerSetting((s) => s.enableSwipeControls);
-  set enableSwipeControls(bool value) =>
-      _setPlayerSetting((s) => s?.enableSwipeControls = value);
-
   int get markAsCompleted => _getPlayerSetting((s) => s.markAsCompleted);
   set markAsCompleted(int value) =>
       _setPlayerSetting((s) => s?.markAsCompleted = value);

@@ -1025,59 +1025,6 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
     onUserInteraction();
   }
 
-  void onVerticalDragStart(BuildContext context, DragStartDetails details) {
-    if (settings.enableSwipeControls) {
-      _controlsTimer?.cancel();
-      _cancelAutoHideTimer();
-
-      _wasControlsVisible = showControls.value;
-
-      if (showControls.value) {
-        toggleControls(val: false);
-      }
-    }
-  }
-
-  void onVerticalDragUpdate(BuildContext context, DragUpdateDetails e) {
-    if (!settings.enableSwipeControls) return;
-
-    final size = MediaQuery.of(context).size;
-    final position = e.localPosition;
-    if (position.dy < size.height * 0.2 || position.dy > size.height * 0.8) {
-      return;
-    }
-
-    const sensitivity = 200.0;
-
-    final delta = e.delta.dy;
-    if (position.dx <= size.width / 2) {
-      final bright = brightness.value - delta / sensitivity;
-      setBrightness(bright.clamp(0.0, 1.0), isDragging: true);
-    } else {
-      final vol = (volume.value - delta / sensitivity).toPrecision(2);
-      if (volume.value != vol) {
-        volume.value = vol.clamp(0.0, 1.0);
-        volumeIndicator.value = true;
-        Future.microtask(
-            () => VolumeController.instance.setVolume(volume.value));
-      }
-    }
-  }
-
-  void onVerticalDragEnd(BuildContext context, DragEndDetails details) {
-    if (settings.enableSwipeControls) {
-      _controlsTimer?.cancel();
-      _hideVolumeIndicatorAfterDelay();
-      _hideBrightnessIndicatorAfterDelay();
-
-      if (_wasControlsVisible && !showControls.value) {
-        toggleControls(val: true);
-      }
-
-      _resetAutoHideTimer();
-    }
-  }
-
   Future<void> setVolume(double value, {bool isDragging = false}) async {
     try {
       VolumeController.instance.setVolume(value);
