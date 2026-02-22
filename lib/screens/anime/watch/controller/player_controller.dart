@@ -187,7 +187,6 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
   Timer? _volumeTimer;
   Timer? _brightnessTimer;
   Timer? _controlsTimer;
-  bool _wasControlsVisible = false;
   bool isLeftLandscaped = true;
 
   final Rx<BoxFit> videoFit = Rx<BoxFit>(BoxFit.contain);

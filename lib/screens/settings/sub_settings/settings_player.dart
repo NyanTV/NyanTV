@@ -493,15 +493,15 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
     );
   }
 
-  static List<Shadow> outlinedText(
-      {int strokeWidth = 2, Color strokeColor = Colors.black}) {
-    return List.generate(
-      strokeWidth,
-      (index) => Shadow(
-        offset: Offset(index * 0.5, index * 0.5),
-        blurRadius: index.toDouble(),
-        color: strokeColor,
-      ),
-    );
-  }
+//  static List<Shadow> outlinedText(
+//      {int strokeWidth = 2, Color strokeColor = Colors.black}) {
+//    return List.generate(
+//      strokeWidth,
+//      (index) => Shadow(
+//        offset: Offset(index * 0.5, index * 0.5),
+//        blurRadius: index.toDouble(),
+//        color: strokeColor,
+//      ),
+//    );
+//  }
 }
