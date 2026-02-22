@@ -250,8 +250,8 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
       isLocked: () => false,
       
       onPlayPause: () => player.playOrPause(),
-      onSkipSegments: (isLeft) {
-        final skipSeconds = isLeft ? -settings.seekDuration : settings.seekDuration;
+      onSkipSegments: (isLeft, amount) {
+        final skipSeconds = isLeft ? -amount : amount;
         final newPos = Duration(seconds: currentPosition.value.inSeconds + skipSeconds);
         player.seek(newPos);
       },

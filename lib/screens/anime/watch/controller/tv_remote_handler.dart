@@ -20,7 +20,7 @@ class TVRemoteHandler {
   final VoidCallback? onPlayPause;
   final VoidCallback? onNextEpisode;
   final VoidCallback? onPreviousEpisode;
-  final Function(bool)? onSkipSegments;
+  final Function(bool, int)? onSkipSegments;
   final VoidCallback? onMenuInteraction;
 
   TVRemoteHandler({
@@ -46,7 +46,14 @@ class TVRemoteHandler {
   Timer? _holdTimer;
   Timer? _accelerationTimer;
   int _accumulatedSeekSeconds = 0;
+  int _holdTickCount = 0;
   SeekDirection? _currentHoldDirection;
+
+  int get _currentSeekIncrement {
+    if (_holdTickCount >= 10) return (shortPressSeekSeconds * 2.5).round();
+    if (_holdTickCount >= 4)  return (shortPressSeekSeconds * 1.5).round();
+    return shortPressSeekSeconds;
+  }
 
   void dispose() {
     _cancelHoldTimers();
@@ -218,7 +225,7 @@ class TVRemoteHandler {
   void _handleSeek(SeekDirection direction) {
     // Use the skip segments function if available (for visual feedback)
     if (onSkipSegments != null) {
-      onSkipSegments!(direction == SeekDirection.backward);
+      onSkipSegments!(direction == SeekDirection.backward, shortPressSeekSeconds);
       return;
     }
 
@@ -245,44 +252,41 @@ class TVRemoteHandler {
   void _startHoldSeek(SeekDirection direction) {
     _cancelHoldTimers();
     _currentHoldDirection = direction;
+    _holdTickCount = 0;
     _accumulatedSeekSeconds = shortPressSeekSeconds;
-    
-    // Initial seek feedback
-    if (onSkipSegments != null) {
-      onSkipSegments!(direction == SeekDirection.backward);
-    }
-    
-    // Start acceleration after 1 second
+
+    onSkipSegments?.call(direction == SeekDirection.backward, _accumulatedSeekSeconds);
+
     _holdTimer = Timer(const Duration(seconds: 1), () {
       _accelerationTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-        _accumulatedSeekSeconds += shortPressSeekSeconds;
-        if (onSkipSegments != null) {
-          onSkipSegments!(direction == SeekDirection.backward);
-        }
+        _holdTickCount++;
+        _accumulatedSeekSeconds += _currentSeekIncrement;
+        onSkipSegments?.call(direction == SeekDirection.backward, _accumulatedSeekSeconds);
       });
     });
   }
 
   void _executeAccumulatedSeek() {
     _cancelHoldTimers();
-    
+
     if (_currentHoldDirection != null && _accumulatedSeekSeconds > 0) {
       final currentPos = getCurrentPosition();
       final duration = getVideoDuration();
-      
+
       int seekSeconds = _currentHoldDirection == SeekDirection.backward
           ? -_accumulatedSeekSeconds
           : _accumulatedSeekSeconds;
-      
+
       final targetPosition = _clampPosition(
         currentPos.inSeconds + seekSeconds,
         duration.inSeconds,
       );
-      
+
       onSeek(Duration(seconds: targetPosition));
     }
-    
+
     _accumulatedSeekSeconds = 0;
+    _holdTickCount = 0;
     _currentHoldDirection = null;
   }
 

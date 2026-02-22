@@ -411,7 +411,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
             player.pause().then((_) => fetchEpisode(true));
           }
         },
-        onSkipSegments: (isLeft) => _skipSegments(isLeft),
+        onSkipSegments: (isLeft, amount) => _skipSegmentsTV(isLeft, amount),
         onMenuInteraction: () => _startHideControlsTimer(),
       );
     }
@@ -1131,6 +1131,26 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           _scheduleDiscordUpdate(isPaused: false);
         }
       });
+    });
+  }
+
+  void _skipSegmentsTV(bool isLeft, int totalSeconds) {
+    if (isLeftSide.value != isLeft) {
+      doubleTapLabel.value = 0;
+    }
+
+    isLeftSide.value = isLeft;
+    doubleTapLabel.value = totalSeconds;
+
+    if (isLeft) {
+      _leftAnimationController.forward(from: 0);
+    } else {
+      _rightAnimationController.forward(from: 0);
+    }
+
+    doubleTapTimeout?.cancel();
+    doubleTapTimeout = Timer(const Duration(milliseconds: 800), () {
+      doubleTapLabel.value = 0;
     });
   }
 
