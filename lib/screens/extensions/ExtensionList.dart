@@ -268,6 +268,7 @@ class _ExtensionListState extends State<ExtensionList>
         ),
       ),
       itemBuilder: (context, Source element) => ExtensionListTileWidget(
+        key: ValueKey('update_${element.id ?? element.name}_${element.lang}'),
         source: element,
         mediaType: widget.itemType,
         onUpdate: _computeAllData,
@@ -294,71 +295,74 @@ class _ExtensionListState extends State<ExtensionList>
     }
   }
 
-  Widget _buildInstalledList(List<Source> installedEntries) {
-    return SliverGroupedListView<Source, String>(
-      elements: installedEntries,
-      groupBy: (element) => "",
-      groupSeparatorBuilder: (_) => const SizedBox(height: 8),
-      itemBuilder: (context, Source element) => ExtensionListTileWidget(
-        source: element,
-        mediaType: widget.itemType,
-        onUpdate: _computeAllData,
-      ),
-      groupComparator: (group1, group2) => group1.compareTo(group2),
-      itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
-      order: GroupedListOrder.ASC,
-    );
-  }
+Widget _buildInstalledList(List<Source> installedEntries) {
+  return SliverGroupedListView<Source, String>(
+    elements: installedEntries,
+    groupBy: (element) => "",
+    groupSeparatorBuilder: (_) => const SizedBox(height: 8),
+    itemBuilder: (context, Source element) => ExtensionListTileWidget(
+      key: ValueKey('installed_${element.id ?? element.name}_${element.lang}'),
+      source: element,
+      mediaType: widget.itemType,
+      onUpdate: _computeAllData,
+    ),
+    groupComparator: (group1, group2) => group1.compareTo(group2),
+    itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
+    order: GroupedListOrder.ASC,
+  );
+}
 
-  Widget _buildRecommendedList(List<Source> recommendedEntries) {
-    return SliverGroupedListView<Source, String>(
-      elements: recommendedEntries,
-      groupBy: (element) => "",
-      groupSeparatorBuilder: (_) => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          children: [
-            Text(
-              'Recommended',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-          ],
-        ),
+Widget _buildRecommendedList(List<Source> recommendedEntries) {
+  return SliverGroupedListView<Source, String>(
+    elements: recommendedEntries,
+    groupBy: (element) => "",
+    groupSeparatorBuilder: (_) => const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          Text(
+            'Recommended',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+        ],
       ),
-      itemBuilder: (context, Source element) => ExtensionListTileWidget(
-        source: element,
-        mediaType: widget.itemType,
-        onUpdate: _computeAllData,
-      ),
-      groupComparator: (group1, group2) => group1.compareTo(group2),
-      itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
-      order: GroupedListOrder.ASC,
-    );
-  }
+    ),
+    itemBuilder: (context, Source element) => ExtensionListTileWidget(
+      key: ValueKey('recommended_${element.id ?? element.name}_${element.lang}'),
+      source: element,
+      mediaType: widget.itemType,
+      onUpdate: _computeAllData,
+    ),
+    groupComparator: (group1, group2) => group1.compareTo(group2),
+    itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
+    order: GroupedListOrder.ASC,
+  );
+}
 
-  Widget _buildNotInstalledList(List<Source> notInstalledEntries) {
-    return SliverGroupedListView<Source, String>(
-      elements: notInstalledEntries,
-      groupBy: (element) => completeLanguageName(element.lang!.toLowerCase()),
-      groupSeparatorBuilder: (String groupByValue) => Padding(
-        padding: const EdgeInsets.only(left: 12, top: 8, bottom: 4),
-        child: Row(
-          children: [
-            Text(
-              groupByValue,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-          ],
-        ),
+Widget _buildNotInstalledList(List<Source> notInstalledEntries) {
+  return SliverGroupedListView<Source, String>(
+    elements: notInstalledEntries,
+    groupBy: (element) => completeLanguageName(element.lang!.toLowerCase()),
+    groupSeparatorBuilder: (String groupByValue) => Padding(
+      padding: const EdgeInsets.only(left: 12, top: 8, bottom: 4),
+      child: Row(
+        children: [
+          Text(
+            groupByValue,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+        ],
       ),
-      itemBuilder: (context, Source element) => ExtensionListTileWidget(
-        source: element,
-        mediaType: widget.itemType,
-        onUpdate: _computeAllData,
-      ),
-      groupComparator: (group1, group2) => group1.compareTo(group2),
-      itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
-      order: GroupedListOrder.ASC,
-    );
-  }
+    ),
+    itemBuilder: (context, Source element) => ExtensionListTileWidget(
+      key: ValueKey('not_installed_${element.id ?? element.name}_${element.lang}'),
+      source: element,
+      mediaType: widget.itemType,
+      onUpdate: _computeAllData,
+    ),
+    groupComparator: (group1, group2) => group1.compareTo(group2),
+    itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
+    order: GroupedListOrder.ASC,
+  );
+}
 }
