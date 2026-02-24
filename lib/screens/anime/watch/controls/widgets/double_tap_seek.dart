@@ -547,28 +547,6 @@ class _DoubleTapSeekWidgetState extends State<DoubleTapSeekWidget>
             onKeyEvent: _handleKeyboard,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onVerticalDragStart: (details) {
-                if (!_longPressStarted && !_isHolding) {
-                  _isDragging = true;
-                  widget.controller.onVerticalDragStart(context, details);
-                } else if (_isHolding) {
-                  _initialSwipeY = details.globalPosition.dy;
-                }
-              },
-              onVerticalDragEnd: (details) {
-                if (!_isHolding) {
-                  _isDragging = false;
-                  widget.controller.onVerticalDragEnd(context, details);
-                }
-              },
-              onVerticalDragUpdate: (details) {
-                if (_isHolding) {
-                  double deltaY = details.globalPosition.dy - _initialSwipeY;
-                  _updateSpeedFromSwipe(deltaY);
-                } else if (_isDragging) {
-                  widget.controller.onVerticalDragUpdate(context, details);
-                }
-              },
               onTapDown: _handleSingleTap,
               onDoubleTapDown: _handleDoubleTap,
               onLongPressStart: (details) {

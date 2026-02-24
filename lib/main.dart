@@ -302,8 +302,6 @@ class MainApp extends StatelessWidget {
                 return child!;
               }
 
-              final isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
-
               Widget finalChild = GetBuilder<Settings>(
                 init: Get.find<Settings>(),
                 builder: (settings) {
@@ -351,23 +349,6 @@ class MainApp extends StatelessWidget {
                   );
                 },
               );
-
-              if (isDesktop) {
-                return Stack(
-                  children: [
-                    finalChild,
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        color: Colors.transparent,
-                        child: NyantvTitleBar.titleBar(),
-                      ),
-                    ),
-                  ],
-                );
-              }
 
               return finalChild;
             },

@@ -43,18 +43,11 @@
   
 </div>
 
-<!--## Screenshots
+## Preview
 
-| Home                                                                                                                                           | Search                                                                                                                                          | Details                                                                                                                      | Library                                                                                                              |
-| ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-|![The home page containing multiple sections of stuff, you've read or watched.](github_assets/android/Home-portrait.png) | ![The search page showing multiple search results for JoJo’s Bizarre Adventure.](github_assets/android/Search-portrait.png) | ![The details page of Re:Zero Kara Hajimeru Isekai Seikatsu.](github_assets/android/Details-portrait.png) | ![The library page showing the user’s watching list.](github_assets/android/Library-portrait.png) |
+<img src="./github_assets/screenshots/preview.webp" height="225"/>
 
-<!-- Once I make the screenshots I'll add this back
-### 💻 Desktop
-<div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
-    <img src="https://github.com/NyanTV/NyanTV/blob/main/github_assets/desktop/preview_1.png" width="100%" style="margin: 0;" />
-    <img src="https://github.com/NyanTV/NyanTV/blob/main/github_assets/desktop/preview_2.png" width="100%" style="margin: 0;" />
-</div>-->
+
 
 ## Wiki
 
