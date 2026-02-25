@@ -91,6 +91,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final showControls = true.obs;
   final isBuffering = true.obs;
   final bufferred = const Duration(milliseconds: 0).obs;
+  Timer? _bufferingDebounceTimer;
+  final isBufferingVisible = false.obs;
   final playbackSpeed = 1.0.obs;
   final isFullscreen = false.obs;
   final selectedSubIndex = (-1).obs;
@@ -892,14 +894,23 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     playerController.player.stream.buffering.listen((e) {
       isBuffering.value = e;
 
-      if (!e && isPlaying.value && !isSwitchingEpisode && !_isManualSeeking) {
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted && !isSwitchingEpisode) {
-            Logger.i('Buffering ended, re-syncing Discord presence');
-            _scheduleDiscordUpdate(isPaused: false);
-          }
+      if (e) {
+        _bufferingDebounceTimer?.cancel();
+        _bufferingDebounceTimer = Timer(const Duration(milliseconds: 400), () {
+          if (isBuffering.value) isBufferingVisible.value = true;
         });
-       }
+      } else {
+        _bufferingDebounceTimer?.cancel();
+        isBufferingVisible.value = false;
+
+        if (isPlaying.value && !isSwitchingEpisode && !_isManualSeeking) {
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted && !isSwitchingEpisode) {
+              _scheduleDiscordUpdate(isPaused: false);
+            }
+          });
+        }
+      }
     });
 
     player.stream.buffer.listen((e) {
@@ -1269,6 +1280,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     _discordUpdateTimer?.cancel();
     _periodicDiscordUpdateTimer?.cancel();
     _initialSeekSubscription?.cancel();
+    _bufferingDebounceTimer?.cancel();
     disposeTVScroll();
     setExcludedScreen(false);
 
@@ -1395,7 +1407,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                 _buildSubtitle(),
                 _buildRippleEffect(),
                 _build2xThingy(),
-                Obx(() => isBuffering.value && !showControls.value
+                Obx(() => isBufferingVisible.value && !showControls.value
                     ? _buildBufferingIndicator()
                     : const SizedBox.shrink()),
               ],
