@@ -45,7 +45,9 @@
 
 ## Preview
 
-<img src="./github_assets/screenshots/preview.webp" height="225"/>
+<p align="center">
+<img src="./github_assets/screenshots/preview.webp" height="300"/>
+</p>
 
 
 
