@@ -49,7 +49,13 @@
 <img src="./github_assets/screenshots/preview.webp" height="300"/>
 </p>
 
-
+## Upcoming Features
+- [x] Full D-Pad integration
+- [x] Watch next widget for Android Home Launcher
+- [ ] MAL integration
+- [ ] Smoother experience on low-end devices
+- [ ] More custom theme flexibility
+- [ ] Apple TV build (with sideloading)
 
 ## Wiki
 
