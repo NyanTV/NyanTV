@@ -50,12 +50,18 @@
 </p>
 
 ## Upcoming Features
-- [x] Full D-Pad integration
-- [x] Watch next widget for Android Home Launcher
 - [ ] MAL integration
 - [ ] Smoother experience on low-end devices
 - [ ] More custom theme flexibility
 - [ ] Apple TV build (with sideloading)
+
+<details>
+  <summary>Implemented</summary>
+  
+- [x] Full D-Pad integration
+- [x] Watch next widget for Android Home Launcher
+
+</details>
 
 ## Wiki
 
