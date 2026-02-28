@@ -44,7 +44,7 @@ class _DoubleTapSeekWidgetState extends State<DoubleTapSeekWidget>
   Timer? _holdStartTimer;
 
   double _initialSwipeY = 0.0;
-  bool _isDragging = false;
+  final _isDragging = false;
   bool _longPressStarted = false;
   late AnimationController _speedAnimationController;
   late Animation<double> _speedScaleAnimation;
