@@ -152,6 +152,13 @@ class AboutPage extends StatelessWidget {
                   ),
                   CustomListTile(
                     onTap: () async {
+                      await launchUrlHelper('https://discord.gg/kFrnJfRm');
+                    },
+                    leading: const Icon(HugeIcons.strokeRoundedDiscord),
+                    title: "Discord",
+                  ),
+                  CustomListTile(
+                    onTap: () async {
                       await launchUrlHelper('https://stoat.chat/invite/fKzse8yy');
                     },
                     leading: CircleAvatar(

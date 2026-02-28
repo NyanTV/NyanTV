@@ -88,6 +88,7 @@ Join our community to stay updated and contribute to the discussion:
 
 
 <a href="https://t.me/NyanSupport" style="display: inline-block;"><img src="https://files.catbox.moe/z66xwr.png" alt="Telegram" height="40" style="vertical-align: middle;"></a>
+<a href="https://discord.gg/kFrnJfRm" style="display: inline-block;"><img src="https://files.catbox.moe/tb0004.png" alt="Discord" height="40" style="vertical-align: middle;"></a>
 <a href="https://stoat.chat/invite/fKzse8yy" style="display: inline-block;"><img src="./assets/images/stoat-icon.png" alt="Stoat" height="40" style="vertical-align: middle;"></a>
 
 
@@ -95,7 +96,7 @@ Join our community to stay updated and contribute to the discussion:
 
 We welcome contributions, from translations to new features.  
 Our development environment setup guide is available [here](./DEVELOPMENT.md).  
-For inquiries, join our [Telegram group](https://t.me/NyanSupport) / [Stoat server](https://stoat.chat/invite/fKzse8yy).  
+For inquiries, join our [Telegram group](https://t.me/NyanSupport) / [Discord server](https://discord.gg/kFrnJfRm) / [Stoat server](https://stoat.chat/invite/fKzse8yy).  
 Pull requests are welcome; check the [open issues](https://github.com/NyanTV/NyanTV/issues) for guidance on major changes.
 
 <!--<details>
@@ -119,6 +120,10 @@ Your efforts are invaluable.
 <a href="https://github.com/NyanTV/NyanTV/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=NyanTV/NyanTV" alt="Contributors">
 </a>
+
+## Stats
+
+![Alt](https://repobeats.axiom.co/api/embed/3def595751b3c9e9bff02749e0c56bf8274f3a72.svg "Repobeats analytics image")
 
 ## License
 
