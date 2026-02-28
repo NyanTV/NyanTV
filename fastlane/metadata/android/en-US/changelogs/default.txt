@@ -1,18 +1,17 @@
 ### 🌟 Features
--   auto-update-checking for extensions from anymex
--   themes with secondary colors better custom themes with more flexibility soon
--   add hold-to-accelerate for score slider navigation
+-   add myanimelist as a tracking service
+-   accelerated hold-to-seek with progressive speed stages
 
 ### 🔧 Bug Fixes & Improvements
--   visual glitch on app start
--   d-pad misbehaving on watch page when opening settings
--   no more login duplicates
--   library editor with full d-pad support
-
-### 🎨 Style Changes
--   better library focus visibility
+-   buffering animation will only show when actually buffering
+-   extension download button unresponsive
 
 ### 🚀 Performance Improvements
--   use const on some functions
+-   overall better player performance, smoother playback on low end devices
+-   remove unused player gestures
+
+### 🧹 Chores & Documentation
+-   update tos
+-   add discord support server
 
  
