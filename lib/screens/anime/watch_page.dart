@@ -575,38 +575,62 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   PlayerConfiguration getPlayerConfig(bool shadersEnabled) {
     final settings = Get.find<Settings>();
-    
+
     if (settings.isTV.value) {
-      // Get the buffer configuration based on selected profile
       final profile = settings.tvBufferProfile.value;
       final config = DeviceRamHelper.getConfig(profile);
-      
-      Logger.i('Using TV buffer profile: ${DeviceRamHelper.getProfileName(profile)}');
-      Logger.i('Buffer: ${config.bufferMB}MB, Cache: ${config.cacheSecs}s');
-      
-    return PlayerConfiguration(
-      options: {
-        "vo": "gpu",
-        "hwdec": "no",
-        "gpu-context": "android",
-        "cache": "yes",
-        "cache-secs": "${config.cacheSecs}",
-        "demuxer-max-bytes": config.demuxerMax,
-        "demuxer-max-back-bytes": config.demuxerBack,
-        
-        "demuxer-readahead-secs": "${config.cacheSecs}",
-        "cache-pause": "yes",
-        "cache-pause-wait": "3",
-        "cache-pause-initial": "yes",
-        "demuxer-seekable-cache": "yes",
-        "cache-on-disk": "no",
-        "demuxer-force-seekable": "yes",
-        
-        "stream-buffer-size": "${config.bufferBytes}", 
-      },
-      bufferSize: config.bufferBytes,
-    );
-  }
+      final useHW = config.cacheSecs < 120;
+
+      Logger.i('TV buffer profile : ${DeviceRamHelper.getProfileName(profile)}');
+      Logger.i('Buffer            : ${config.bufferMB}MB');
+      Logger.i('Cache             : ${config.cacheSecs}s');
+      Logger.i('HW accel          : $useHW');
+
+      return PlayerConfiguration(
+        options: {
+          // ── Rendering ──────────────────────────────────────────────────
+          // Do NOT force "vo: gpu" or "gpu-context: android" here.
+          // media_kit sets a sane default; overriding it breaks Amlogic/MTK.
+          if (useHW) "hwdec": "auto-safe" else "hwdec": "no",
+          "vd-lavc-threads": "0",          // auto thread count
+
+          // ── Cache / demuxer ────────────────────────────────────────────
+          "cache": "yes",
+          "cache-secs": "${config.cacheSecs}",
+          "demuxer-max-bytes": config.demuxerMax,
+          "demuxer-max-back-bytes": config.demuxerBack,
+          "demuxer-readahead-secs": "${config.cacheSecs}",
+          "demuxer-seekable-cache": "yes",
+          "demuxer-force-seekable": "yes",
+          "cache-on-disk": "no",
+
+          // ── Cache pause / resume ───────────────────────────────────────
+          // cache-pause:       pause when buffer runs dry  (prevents stutter)
+          // cache-pause-wait:  resume only after X seconds of buffer are full
+          // cache-pause-initial: also pause at the very first open
+          "cache-pause": "yes",
+          "cache-pause-initial": "yes",
+          "cache-pause-wait": config.extraMpvOptions['cache-pause-wait'] ?? '3',
+
+          // ── Network ────────────────────────────────────────────────────
+          "stream-buffer-size": "${config.bufferBytes}",
+          "network-timeout":    config.extraMpvOptions['network-timeout'] ?? '20',
+          "tcp-nodelay": "yes",     // disables Nagle → lower latency per chunk
+          "tls-verify": "no",       // faster TLS handshake on Android TV
+
+          // ── Seek quality ───────────────────────────────────────────────
+          "hr-seek": "yes",         // accurate seek → less A/V gap after resume
+          "audio-buffer": "0.2",    // small audio buffer → less desync
+
+          // ── Playlist pre-fetch ─────────────────────────────────────────
+          "prefetch-playlist": "yes",  // pre-opens next segment URL
+
+          // ── Spread any remaining profile-specific overrides ────────────
+          ...config.extraMpvOptions,
+        },
+        bufferSize: config.bufferBytes,
+      );
+    }
     
     if (shadersEnabled) {
       return const PlayerConfiguration();
@@ -645,12 +669,21 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         Logger.i('Demuxer Max: ${config.demuxerMax}');
         Logger.i('Demuxer Back: ${config.demuxerBack}');
         Logger.i('=============================');
-        
-        playerController = VideoController(player,
+
+        if (config.cacheSecs >= 120) {
+           playerController = VideoController(player,
             configuration: const VideoControllerConfiguration(
               androidAttachSurfaceAfterVideoParameters: false,
               enableHardwareAcceleration: false,
             ));
+        }
+        else {
+          playerController = VideoController(player,
+            configuration: const VideoControllerConfiguration(
+              androidAttachSurfaceAfterVideoParameters: false,
+              enableHardwareAcceleration: true,
+            ));
+        }
       } else {
         playerController = VideoController(player,
             configuration: const VideoControllerConfiguration(
@@ -731,97 +764,64 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   }
     
   StreamSubscription? _initialSeekSubscription;
-  bool _hasPerformedInitialSeek = false;
+  //bool _hasPerformedInitialSeek = false;
 
   Future<void> _performInitialSeek(int startTimeMilliseconds) async {
     if (startTimeMilliseconds <= 0) {
-      Logger.i('No initial seek needed, starting from beginning');
-      _hasPerformedInitialSeek = true;
+      Logger.i('No initial seek needed');
+      //_hasPerformedInitialSeek = true;
       return;
     }
-    
-    Logger.i('Setting up initial seek to: ${startTimeMilliseconds}ms');
-    _hasPerformedInitialSeek = false;
+
+    Logger.i('Scheduling initial seek → ${startTimeMilliseconds}ms');
+    //_hasPerformedInitialSeek = false;
     _initialSeekSubscription?.cancel();
-    
+
     final completer = Completer<void>();
-    
-    StreamSubscription? durationSub;
-    StreamSubscription? bufferSub;
-    bool durationReady = false;
-    bool bufferReady = false;
-    
-    void trySeek() async {
-      if (durationReady && bufferReady && !_hasPerformedInitialSeek) {
-        _hasPerformedInitialSeek = true;
-        durationSub?.cancel();
-        bufferSub?.cancel();
-        
-        final seekPosition = Duration(milliseconds: startTimeMilliseconds);
-        
-        await Future.delayed(const Duration(milliseconds: 300));
-        
-        if (mounted) {
-          Logger.i('Performing initial seek to: ${seekPosition.inSeconds}s');
-          player.seek(seekPosition);
-          
-          await Future.delayed(const Duration(milliseconds: 500));
-          
-          if (mounted && currentPosition.value.inMilliseconds < startTimeMilliseconds - 1000) {
-            Logger.i('Seek verification failed, retrying...');
-            player.seek(seekPosition);
-            await Future.delayed(const Duration(milliseconds: 500));
-          }
-          
-          Logger.i('Initial seek completed');
-          
-          if (mounted) {
-            await _waitForBufferingAfterSeek();
-            Logger.i('Initial seek done, triggering Discord update');
-            _performDiscordUpdate(isPaused: false);
-          }
-          
-          completer.complete();
-        }
+    bool seekDone = false;
+
+    _initialSeekSubscription = player.stream.duration.listen((duration) async {
+      if (duration.inMilliseconds <= 0 || seekDone) return;
+      seekDone = true;
+      _initialSeekSubscription?.cancel();
+
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (!mounted) { completer.complete(); return; }
+
+      final seekPos = Duration(milliseconds: startTimeMilliseconds);
+      Logger.i('Seeking to ${seekPos.inSeconds}s …');
+      player.seek(seekPos);
+
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (mounted && currentPosition.value.inMilliseconds < startTimeMilliseconds - 2000) {
+        Logger.i('Seek retry …');
+        player.seek(seekPos);
       }
-    }
-    
-    durationSub = player.stream.duration.listen((duration) {
-      if (duration.inMilliseconds > 0) {
-        durationReady = true;
-        Logger.i('Duration ready: ${duration.inSeconds}s');
-        trySeek();
+
+     // _hasPerformedInitialSeek = true;
+      Logger.i('Initial seek done');
+
+      if (mounted) {
+        _performDiscordUpdate(isPaused: false);
       }
+
+      if (!completer.isCompleted) completer.complete();
     });
-    
-    bufferSub = player.stream.buffer.listen((buffer) {
-      if (buffer.inMilliseconds > startTimeMilliseconds || 
-          buffer.inMilliseconds > 3000) {
-        bufferReady = true;
-        Logger.i('Buffer ready: ${buffer.inSeconds}s');
-        trySeek();
-      }
-    });
-    
-    Future.delayed(const Duration(milliseconds: 7500), () {
-      if (!_hasPerformedInitialSeek && mounted) {
-        Logger.i('Initial seek timeout, forcing seek');
-        _hasPerformedInitialSeek = true;
-        durationSub?.cancel();
-        bufferSub?.cancel();
+
+    Future.delayed(const Duration(milliseconds: 5000), () {
+      if (!seekDone && mounted) {
+        Logger.i('Seek timeout — forcing seek');
+        seekDone = true;
+        _initialSeekSubscription?.cancel();
+        //_hasPerformedInitialSeek = true;
         player.seek(Duration(milliseconds: startTimeMilliseconds));
-        
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (!completer.isCompleted) {
-            completer.complete();
-          }
-        });
+        if (!completer.isCompleted) completer.complete();
       }
     });
 
     return completer.future;
   }
-
+    
   int lastProcessedMinute = 0;
   bool isSwitchingEpisode = false;
   StreamSubscription<Duration>? _positionSubscription;

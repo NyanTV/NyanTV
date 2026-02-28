@@ -423,8 +423,8 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
             "gpu-context": "android",
             
             // Hardware acceleration - DEAKTIVIERT für TV Kompatibilität
-            "hwdec": "no",                  // Wichtig: Kein Hardware Decoding auf TV
-            "hwdec-codecs": "none",         // Keine Hardware Decoder
+            "hwdec": "auto-safe",//"no",
+            //"hwdec-codecs": "none",         // Keine Hardware Decoder
             
             // Cache-Einstellungen mit explizitem Pfad
             "cache": "yes",
@@ -444,10 +444,10 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
             "video-sync": "display-resample",
             "interpolation": "no",
             "video-latency-hacks": "yes",
-            "scale": "spline36",
-            "cscale": "spline36",
-            "dscale": "spline36",
-            "tscale": "oversample",
+            //"scale": "spline36",
+            //"cscale": "spline36",
+            //"dscale": "spline36",
+            //"tscale": "oversample",
             
             // Audio optimiert
             "audio-buffer": "0.5",
@@ -470,7 +470,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
         player,
         configuration: const VideoControllerConfiguration(
           androidAttachSurfaceAfterVideoParameters: false, // Wichtig für TV!
-          enableHardwareAcceleration: false,               // Deaktiviert für TV
+          enableHardwareAcceleration: true,
         ),
       );
       
