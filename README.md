@@ -50,8 +50,8 @@
 </p>
 
 ## Upcoming Features
-- [ ] Smoother experience on low-end devices
 - [ ] More custom theme flexibility
+- [ ] Simkl integration
 - [ ] Apple TV build (with sideloading)
 
 <details>
@@ -60,6 +60,7 @@
 - [x] Full D-Pad integration
 - [x] Watch next widget for Android Home Launcher
 - [x] MAL integration
+- [x] Smoother experience on low-end devices
 
 </details>
 
