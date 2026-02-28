@@ -164,7 +164,7 @@ class SettingsSheet extends StatelessWidget {
             const SizedBox(height: 10),
             if (serviceHandler.isLoggedIn.value &&
                 serviceHandler.serviceType.value == ServicesType.anilist)
-                NyantvOnTapAdv(
+                NyantvOnTap(
                   onTap: () {
                     Get.back();
                     navigate(() => const ProfilePage());
@@ -188,7 +188,7 @@ class SettingsSheet extends StatelessWidget {
                     )
                   : const SizedBox.shrink();
             }),
-            NyantvOnTapAdv(
+            NyantvOnTap(
               onTap: () {
                 Get.back();
                 showServiceSelector(context);
