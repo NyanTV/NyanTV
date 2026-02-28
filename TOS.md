@@ -1,6 +1,6 @@
 # NyanTV Terms of Service and Disclaimer
 
-**Last Updated: September 6, 2025**
+**Last Updated: February 28, 2026**
 
 ## Introduction
 Welcome to **NyanTV**, a multiservice tracking client designed exclusively for managing and tracking anime, manga, novels, movies, and series through integration with the official APIs of **AniList** and **MyAnimeList (MAL)**. These Terms of Service ("ToS") and Disclaimer govern your use of NyanTV. By using NyanTV, you agree to comply with these terms and conditions. If you disagree, please do not use the app.
