@@ -27,6 +27,11 @@ class SettingsAccounts extends StatelessWidget {
         'icon': 'anilist-icon.png',
         'title': "Anilist"
       },
+      {
+        'service': serviceHandler.malService,
+        'icon': 'mal-icon.png',
+        'title': "MyAnimeList"
+      },
     ];
 
     services.sort((a, b) =>

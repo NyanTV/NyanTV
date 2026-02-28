@@ -29,6 +29,7 @@ class Media {
   ItemType mediaType;
   List<DEpisode>? mediaContent;
   List<Chapter>? altMediaContent;
+  String? totalChapters;
   List<String> genres;
   List<String>? studios;
   List<Character>? characters;
@@ -62,6 +63,7 @@ class Media {
       this.popularity = '?',
       this.format = '?',
       this.aired = '?',
+      this.totalChapters = '?',
       this.genres = const [],
       this.studios,
       this.characters,
@@ -75,6 +77,86 @@ class Media {
       this.sourceName,
       DateTime? createdAt})
       : createdAt = DateTime.now();
+
+  factory Media.fromMAL(Map<String, dynamic> json) {
+    final node = json['node'] ?? {};
+
+    return Media(
+      id: node['id']?.toString() ?? '0',
+      title: node['title'] ?? '??',
+      romajiTitle: node['alternative_titles']?['en'] ?? '??',
+      description: node['synopsis'] ?? '??',
+      poster: node['main_picture']?['medium'] ?? '??',
+      cover: node['main_picture']?['large'] ?? '??',
+      totalEpisodes: node['num_episodes']?.toString() ?? '??',
+      type: node['media_type'] ?? '??',
+      season: node['start_season']?['season'] ?? '??',
+      premiered: node['start_date'] ?? '??',
+      duration: node['average_episode_duration']?.toString() ?? '??',
+      status: node['status'] ?? '??',
+      rating: node['mean']?.toString() ?? '??',
+      popularity: node['popularity']?.toString() ?? '??',
+      format: node['media_type'] ?? '??',
+      aired: node['start_date'] ?? '??',
+      totalChapters: node['num_chapters']?.toString() ?? '??',
+      genres: (node['genres'] as List<dynamic>?)
+              ?.map((genre) => genre['name']?.toString() ?? '??')
+              .toList() ??
+          [],
+      studios: (node['studios'] as List<dynamic>?)
+          ?.map((studio) => studio['name']?.toString() ?? '??')
+          .toList(),
+      characters: [],
+      relations: [],
+      recommendations: [],
+      nextAiringEpisode: null,
+      rankings: [],
+      mediaContent: [],
+      mediaType: node['media_type'] == 'tv' ? ItemType.anime : ItemType.manga,
+      serviceType: ServicesType.mal,
+    );
+  }
+
+
+  factory Media.fromFullMAL(Map<String, dynamic> json) {
+    final node = json;
+
+    return Media(
+      id: node['id']?.toString() ?? '0',
+      title: node['title'] ?? '??',
+      romajiTitle: node['alternative_titles']?['en'] ?? '??',
+      description: node['synopsis'] ?? '??',
+      poster: node['main_picture']?['medium'] ?? '??',
+      cover: node['main_picture']?['large'] ?? '??',
+      totalEpisodes: node['num_episodes']?.toString() ?? '??',
+      type: node['media_type']?.toUpperCase() ?? '??',
+      season: node['start_season']?['season'] ?? '??',
+      premiered: node['start_date'] ?? '??',
+      duration: node['average_episode_duration']?.toString() ?? '??',
+      status: node['status']?.replaceAll('_', ' ')?.toUpperCase() ?? '??',
+      rating: node['mean']?.toString() ?? '??',
+      popularity: node['popularity']?.toString() ?? '??',
+      format: node['media_type'] ?? '??',
+      aired: node['start_date'] ?? '??',
+      totalChapters: node['num_chapters']?.toString() ?? '??',
+      genres: (node['genres'] as List<dynamic>?)
+              ?.map((genre) => genre['name']?.toString() ?? '??')
+              .toList() ??
+          [],
+      studios: (node['studios'] as List<dynamic>?)
+          ?.map((studio) => studio['name']?.toString() ?? '??')
+          .toList(),
+      characters: [],
+      recommendations: (node['recommendations'] as List<dynamic>)
+          .map((e) => Media.fromMAL(e))
+          .toList(),
+      nextAiringEpisode: null,
+      rankings: [],
+      mediaContent: [],
+      mediaType: node['media_type'] == 'tv' ? ItemType.anime : ItemType.manga,
+      serviceType: ServicesType.mal,
+    );
+  }
 
   factory Media.froDMedia(DMedia anime, ItemType type) {
     return Media(

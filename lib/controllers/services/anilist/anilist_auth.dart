@@ -3,6 +3,8 @@
 import 'dart:convert';
 import 'package:nyantv/utils/logger.dart';
 import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
+import 'package:nyantv/controllers/service_handler/params.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/database/comments_db.dart';
 import 'package:nyantv/models/Anilist/anilist_media_user.dart';
 import 'package:nyantv/models/Anilist/anilist_profile.dart';
@@ -438,6 +440,15 @@ class AnilistAuth extends GetxController {
           'variables': variables,
         }),
       );
+
+      if (malId != null) {
+        serviceHandler.malService.updateListEntry(UpdateListEntryParams(
+            listId: malId,
+            score: score,
+            status: status,
+            progress: progress,
+            isAnime: isAnime));
+      }
 
       if (response.statusCode == 200) {
         final newMedia = currentMedia.value

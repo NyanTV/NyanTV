@@ -62,14 +62,28 @@ class TrackedMedia {
                 .toString());
   }
 
-
-
-
-
-
-
-
-
+  factory TrackedMedia.fromMAL(Map<String, dynamic> json) {
+    return TrackedMedia(
+      id: json['node']['id']?.toString(),
+      title: json['node']['title'],
+      servicesType: ServicesType.mal,
+      poster: json['node']['main_picture']['large'],
+      chapterCount:
+          json['node']?['list_status']?['num_chapters_read']?.toString() ?? '?',
+      episodeCount: json['list_status']?['num_chapters_read']?.toString() ??
+          json['list_status']?['num_episodes_watched']?.toString() ??
+          '?',
+      totalEpisodes: json['node']?['num_episodes']?.toString() ??
+          json['node']?['num_chapters']?.toString() ??
+          '?',
+      rating: json['node']?['mean']?.toString() ?? '?',
+      watchingStatus: returnConvertedStatus(json['list_status']['status']),
+      score: json['list_status']['score']?.toString(),
+      type: null,
+      mediaListId: json['node']['id']?.toString(),
+    );
+  }
+}
 
 String getAniListStatusEquivalent(String status) {
   switch (status.toLowerCase()) {
@@ -104,6 +118,22 @@ String returnConvertedStatus(String status) {
       return 'PLANNING';
     default:
       return 'ALL';
-    }
+  }
+}
+
+String getMALStatusEquivalent(String status, {bool isAnime = true}) {
+  switch (status.toUpperCase()) {
+    case 'CURRENT':
+      return isAnime ? 'watching' : 'reading';
+    case 'COMPLETED':
+      return 'completed';
+    case 'PAUSED':
+      return 'on_hold';
+    case 'DROPPED':
+      return 'dropped';
+    case 'PLANNING':
+      return isAnime ? 'plan_to_watch' : 'plan_to_read';
+    default:
+      return 'unknown';
   }
 }

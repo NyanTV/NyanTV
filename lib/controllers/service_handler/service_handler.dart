@@ -3,6 +3,7 @@ import 'package:nyantv/utils/logger.dart';
 import 'package:nyantv/controllers/cacher/cache_controller.dart';
 import 'package:nyantv/controllers/service_handler/params.dart';
 import 'package:nyantv/controllers/services/anilist/anilist_data.dart';
+import 'package:nyantv/controllers/services/mal/mal_service.dart';
 import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:nyantv/models/Anilist/anilist_media_user.dart';
 import 'package:nyantv/models/Anilist/anilist_profile.dart';
@@ -15,12 +16,15 @@ import 'package:hive/hive.dart';
 
 enum ServicesType {
   anilist,
+  mal,
   extensions;
 
   BaseService get service {
     switch (this) {
       case ServicesType.anilist:
         return Get.find<AnilistData>();
+      case ServicesType.mal:
+        return Get.find<MalService>();
       case ServicesType.extensions:
         return Get.find<SourceController>();
     }
@@ -30,6 +34,8 @@ enum ServicesType {
     switch (this) {
       case ServicesType.anilist:
         return Get.find<AnilistData>();
+      case ServicesType.mal:
+        return Get.find<MalService>();
       default:
         return Get.find<AnilistData>();
     }
@@ -41,12 +47,15 @@ final serviceHandler = Get.find<ServiceHandler>();
 class ServiceHandler extends GetxController {
   final serviceType = ServicesType.anilist.obs;
   final anilistService = Get.find<AnilistData>();
+  final malService = Get.find<MalService>();
   final extensionService = Get.find<SourceController>();
 
   BaseService get service {
     switch (serviceType.value) {
       case ServicesType.anilist:
         return anilistService;
+      case ServicesType.mal:
+        return malService;
       case ServicesType.extensions:
         return extensionService;
     }
@@ -56,6 +65,8 @@ class ServiceHandler extends GetxController {
     switch (serviceType.value) {
       case ServicesType.anilist:
         return anilistService;
+      case ServicesType.mal:
+        return malService;
       default:
         return anilistService;
     }
@@ -74,6 +85,7 @@ class ServiceHandler extends GetxController {
   Future<void> login() => onlineService.login();
   Future<void> logout() => onlineService.logout();
   Future<void> autoLogin() => Future.wait([
+        malService.autoLogin(),
         anilistService.autoLogin(),
       ]);
   @override

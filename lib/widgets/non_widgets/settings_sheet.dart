@@ -11,6 +11,7 @@ import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:iconly/iconly.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -31,6 +32,11 @@ class SettingsSheet extends StatelessWidget {
         'type': ServicesType.anilist,
         'name': "AniList",
         'icon': 'anilist-icon.png',
+      },
+      {
+        'type': ServicesType.mal,
+        'name': "MyAnimeList",
+        'icon': 'mal-icon.png',
       },
       if (serviceHandler.extensionService.installedExtensions.length > 2)
         {
@@ -158,16 +164,16 @@ class SettingsSheet extends StatelessWidget {
             const SizedBox(height: 10),
             if (serviceHandler.isLoggedIn.value &&
                 serviceHandler.serviceType.value == ServicesType.anilist)
-              NyantvOnTap(
-                child: ListTile(
-                  leading: const Icon(Iconsax.user),
-                  title: const Text('View Profile'),
+                NyantvOnTapAdv(
                   onTap: () {
                     Get.back();
                     navigate(() => const ProfilePage());
                   },
+                  child: const ListTile(
+                    leading: Icon(Iconsax.user),
+                    title: Text('View Profile'),
+                  ),
                 ),
-              ),
             Obx(() {
               final shouldShowExts =
                   sourceController.shouldShowExtensions.value;
@@ -182,16 +188,16 @@ class SettingsSheet extends StatelessWidget {
                     )
                   : const SizedBox.shrink();
             }),
-//            NyantvOnTap(
-//              child: ListTile(
-//                leading: const Icon(HugeIcons.strokeRoundedAiSetting),
-//                title: const Text('Change Service'),
-//                onTap: () {
-//                  Get.back();
-//                  showServiceSelector(context);
-//                },
-//              ),
-//            ),
+            NyantvOnTapAdv(
+              onTap: () {
+                Get.back();
+                showServiceSelector(context);
+              },
+              child: const ListTile(
+                leading: Icon(HugeIcons.strokeRoundedAiSetting),
+                title: Text('Change Service'),
+              ),
+            ),
             NyantvOnTap(
               child: ListTile(
                 leading: const Icon(Iconsax.setting),

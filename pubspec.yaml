@@ -1,5 +1,5 @@
 name: nyantv
-description: "An Anilist Client"
+description: "A multi-service Tracking Client"
 publish_to: "GitHub"
 version: 0.2.0+41
 environment:

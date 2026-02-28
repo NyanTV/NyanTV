@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:nyantv/utils/logger.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/models/Media/media.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -11,7 +12,7 @@ Future<void> fetchCalendarData(RxList<Media> callbackData,
   int currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   int startTime = currentTime - 86400;
   int endTime = currentTime + (86400 * 6);
-  const isMAL = false;
+  final isMAL = serviceHandler.serviceType.value == ServicesType.mal;
 
   const String query = '''
     query (\$page: Int, \$startTime: Int, \$endTime: Int) {

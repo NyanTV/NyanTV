@@ -7,7 +7,7 @@ import 'package:nyantv/screens/settings/sub_settings/settings_accounts.dart';
 import 'package:nyantv/utils/function.dart';
 import 'package:nyantv/widgets/common/custom_tiles.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
-//import 'package:nyantv/widgets/non_widgets/settings_sheet.dart';
+import 'package:nyantv/widgets/non_widgets/settings_sheet.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -202,15 +202,15 @@ void showWelcomeDialogg(BuildContext context) {
                                   }
                                 }),
                           ],
-//                          CustomTile(
-//                            description:
-//                                'You may choose AL as Service',
-//                            icon: HugeIcons.strokeRoundedAiSetting,
-//                            title: 'Choose Service',
-//                            onTap: () {
-//                              SettingsSheet().showServiceSelector(context);
-//                            },
-//                          ),
+                          CustomTile(
+                            description:
+                                'Change Service to whichever you prefer! like AL or MAL',
+                            icon: HugeIcons.strokeRoundedAiSetting,
+                            title: 'Change Service',
+                            onTap: () {
+                              SettingsSheet().showServiceSelector(context);
+                            },
+                          ),
                           Container(
                             height: 50,
                             padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
