@@ -51,6 +51,7 @@
 
 ## Upcoming Features
 - [ ] More custom theme flexibility
+- [ ] Skip Buttons (Opening / Ending)
 - [ ] Simkl integration
 - [ ] Apple TV build (with sideloading)
 

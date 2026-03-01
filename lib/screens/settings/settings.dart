@@ -55,7 +55,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     icon: IconlyLight.profile,
                     title: "Accounts",
                     description:
-                        "Manage your Anilist & Discord Account!",
+                        "Manage your Anilist, MAL & Discord Account!",
                     onTap: () {
                       navigate(() => const SettingsAccounts());
                     }),
