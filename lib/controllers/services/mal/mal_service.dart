@@ -7,6 +7,7 @@ import 'package:nyantv/controllers/service_handler/params.dart';
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/controllers/services/widgets/widgets_builders.dart';
 import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:nyantv/models/Anilist/anilist_media_user.dart';
 import 'package:nyantv/models/Anilist/anilist_profile.dart';
 import 'package:nyantv/models/Media/media.dart';
@@ -15,6 +16,7 @@ import 'package:nyantv/models/Service/online_service.dart';
 import 'package:nyantv/screens/home_page.dart';
 import 'package:nyantv/screens/library/online/anime_list.dart';
 import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/widgets/common/reusable_carousel.dart';
 import 'package:nyantv/utils/string_extensions.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
@@ -142,6 +144,12 @@ class MalService extends GetxController implements BaseService, OnlineService {
 
   @override
   RxList<Widget> homeWidgets(BuildContext context) {
+    final settings = Get.find<Settings>();
+    final acceptedLists = settings.homePageCardsMal.entries
+        .where((entry) => entry.value)
+        .map<String>((entry) => entry.key)
+        .toList();
+
     return [
       Obx(() => Column(
             children: [
@@ -158,10 +166,7 @@ class MalService extends GetxController implements BaseService, OnlineService {
                         buttonText: "ANIME LIST",
                         backgroundImage: trendingAnime.isEmpty
                             ? ''
-                            : trendingAnime
-                                    .firstWhere((e) => e.cover != null)
-                                    .cover ??
-                                '',
+                            : trendingAnime.firstWhere((e) => e.cover != null).cover ?? '',
                         borderRadius: 16.multiplyRadius(),
                         onPressed: () {
                           navigate(() => const AnimeList());
@@ -171,6 +176,17 @@ class MalService extends GetxController implements BaseService, OnlineService {
                   );
                 }),
                 const SizedBox(height: 10),
+                if (acceptedLists.isNotEmpty)
+                  Column(
+                    children: acceptedLists.map((e) {
+                      return ReusableCarousel(
+                        data: filterListByLabel(animeList, e),
+                        title: e,
+                        variant: DataVariant.anilist,
+                        type: ItemType.anime,
+                      );
+                    }).toList(),
+                  ),
               ],
               buildSectionIfNotEmpty("Trending Anime", trendingAnime),
               buildSectionIfNotEmpty("Popular Anime", popularAnime),

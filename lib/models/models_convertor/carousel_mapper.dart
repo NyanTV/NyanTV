@@ -53,15 +53,16 @@ extension RelationMapper on Relation {
 }
 
 extension TrackedMediaMapper on TrackedMedia {
-  CarouselData toCarouselData(
-      {DataVariant variant = DataVariant.anilist}) {
+  CarouselData toCarouselData({DataVariant variant = DataVariant.anilist}) {
     return CarouselData(
-        id: id.toString(),
-        title: title,
-        poster: poster,
-        servicesType: servicesType,
-        extraData: "${episodeCount ?? "??"} | ${releasedEpisodes != null ? releasedEpisodes ?? "??" : totalEpisodes ?? "??"}",
-        releasing: mediaStatus == "RELEASING");
+      id: id.toString(),
+      title: title,
+      poster: poster,
+      servicesType: servicesType,
+      extraData: "${episodeCount ?? "??"} | ${releasedEpisodes != null ? releasedEpisodes ?? "??" : totalEpisodes ?? "??"}",
+      source: (rating != null && rating != '0.0' && rating != '?' && rating != '0') ? rating : null, // ← rating statt score
+      releasing: mediaStatus == "RELEASING",
+    );
   }
 }
 
