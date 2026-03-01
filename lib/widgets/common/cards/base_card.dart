@@ -97,9 +97,14 @@ abstract class CarouselCard extends StatelessWidget {
     );
   }
 
-  Widget buildCardBadge(
-      BuildContext context, DataVariant variant, ItemType type) {
+  Widget buildCardBadge(BuildContext context, DataVariant variant, ItemType type) {
     final theme = Theme.of(context);
+    final bool hasRating = variant == DataVariant.anilist &&
+        itemData.source != null &&
+        itemData.source!.isNotEmpty &&
+        itemData.source != '?' &&
+        itemData.source != '0' &&
+        itemData.source != '0.0';
 
     return Positioned(
       right: 0,
@@ -116,11 +121,8 @@ abstract class CarouselCard extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              getIconForVariant(itemData.extraData ?? '', variant),
-              size: 16,
-              color: theme.colorScheme.onPrimary,
-            ),
+            Icon(getIconForVariant(itemData.extraData ?? '', variant),
+                size: 16, color: theme.colorScheme.onPrimary),
             const SizedBox(width: 4),
             NyantvText(
               text: itemData.extraData ?? '',
@@ -128,6 +130,22 @@ abstract class CarouselCard extends StatelessWidget {
               size: 12,
               variant: TextVariant.bold,
             ),
+            if (hasRating) ...[
+              Container(
+                width: 1,
+                height: 11,
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+                color: theme.colorScheme.onPrimary.withOpacity(0.4),
+              ),
+              Icon(Iconsax.star5, size: 13, color: theme.colorScheme.onPrimary),
+              const SizedBox(width: 3),
+              NyantvText(
+                text: itemData.source!,
+                color: theme.colorScheme.onPrimary,
+                size: 12,
+                variant: TextVariant.bold,
+              ),
+            ],
           ],
         ),
       ),

@@ -267,9 +267,8 @@ class ExoticCard extends CarouselCard {
                     ),
                   ] else ...[
                     Icon(
-                      getIconForVariant(
-                          itemData.extraData ?? '', variant,),
-                      size: 16,
+                      getIconForVariant(itemData.extraData ?? '', variant),
+                      size: 12,
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
                     const SizedBox(width: 4),
@@ -279,7 +278,32 @@ class ExoticCard extends CarouselCard {
                       size: 12,
                       variant: TextVariant.bold,
                     ),
-                  ]
+                    if (variant == DataVariant.anilist &&
+                        itemData.source != null &&
+                        itemData.source != '?' &&
+                        itemData.source != '0' &&
+                        itemData.source != '0.0') ...[
+                      Container(
+                        width: 1,
+                        height: 11,
+                        margin: const EdgeInsets.symmetric(horizontal: 5),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onPrimary
+                            .withOpacity(0.4),
+                      ),
+                      Icon(Iconsax.star5,
+                          size: 12,
+                          color: Theme.of(context).colorScheme.onPrimary),
+                      const SizedBox(width: 3),
+                      NyantvText(
+                        text: itemData.source!,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        size: 12,
+                        variant: TextVariant.bold,
+                      ),
+                    ],
+                  ],
                 ],
               ),
             ),
@@ -410,11 +434,11 @@ class MinimalExoticCard extends CarouselCard {
                   ] else ...[
                     Icon(
                       getIconForVariant(
-                          variant == DataVariant.relation
-                              ? itemData.args!
-                              : itemData.extraData ?? '',
-                          variant,
-                          ),
+                        variant == DataVariant.relation
+                            ? itemData.args!
+                            : itemData.extraData ?? '',
+                        variant,
+                      ),
                       size: 16,
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
@@ -425,7 +449,32 @@ class MinimalExoticCard extends CarouselCard {
                       size: 12,
                       variant: TextVariant.bold,
                     ),
-                  ]
+                    if (variant == DataVariant.anilist &&
+                        itemData.source != null &&
+                        itemData.source != '?' &&
+                        itemData.source != '0' &&
+                        itemData.source != '0.0') ...[
+                      Container(
+                        width: 1,
+                        height: 11,
+                        margin: const EdgeInsets.symmetric(horizontal: 5),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onPrimary
+                            .withOpacity(0.4),
+                      ),
+                      Icon(Iconsax.star5,
+                          size: 12,
+                          color: Theme.of(context).colorScheme.onPrimary),
+                      const SizedBox(width: 3),
+                      NyantvText(
+                        text: itemData.source!,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        size: 12,
+                        variant: TextVariant.bold,
+                      ),
+                    ],
+                  ],
                 ],
               ),
             ),
@@ -504,9 +553,14 @@ class BlurCard extends CarouselCard {
   }
 
   @override
-  Widget buildCardBadge(
-      BuildContext context, DataVariant variant, ItemType type) {
+  Widget buildCardBadge(BuildContext context, DataVariant variant, ItemType type) {
     final theme = Theme.of(context);
+    final bool hasRating = variant == DataVariant.anilist &&
+        itemData.source != null &&
+        itemData.source!.isNotEmpty &&
+        itemData.source != '?' &&
+        itemData.source != '0' &&
+        itemData.source != '0.0';
 
     return Positioned(
       top: 6,
@@ -517,10 +571,11 @@ class BlurCard extends CarouselCard {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Blur(
-                  blur: 5,
-                  blurColor: Theme.of(context).colorScheme.surfaceContainer,
-                  colorOpacity: 0.4,
-                  child: Container()),
+                blur: 5,
+                blurColor: Theme.of(context).colorScheme.surfaceContainer,
+                colorOpacity: 0.4,
+                child: Container(),
+              ),
             ),
           ),
           Container(
@@ -543,6 +598,22 @@ class BlurCard extends CarouselCard {
                   size: 12,
                   variant: TextVariant.bold,
                 ),
+                if (hasRating) ...[
+                  Container(
+                    width: 1,
+                    height: 11,
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    color: theme.colorScheme.primary.withOpacity(0.4),
+                  ),
+                  Icon(Iconsax.star5, size: 13, color: theme.colorScheme.primary),
+                  const SizedBox(width: 3),
+                  NyantvText(
+                    text: itemData.source!,
+                    color: theme.colorScheme.primary,
+                    size: 12,
+                    variant: TextVariant.bold,
+                  ),
+                ],
               ],
             ),
           ),
