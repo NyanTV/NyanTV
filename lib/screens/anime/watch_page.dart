@@ -839,7 +839,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         _lastPosition = e;
         currentEpisode.value.timeStampInMilliseconds = e.inMilliseconds;
 
-        if (e.inSeconds % 30 == 0 && isPlaying.value && !isSwitchingEpisode) {
+        if (e.inSeconds % 30 == 0 && e.inSeconds > 0 && isPlaying.value && !isSwitchingEpisode) {
           trackEpisode(e, episodeDuration.value, currentEpisode.value);
         }
 
@@ -1284,9 +1284,19 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     disposeTVScroll();
     setExcludedScreen(false);
 
-    trackEpisode(
-        currentPosition.value, episodeDuration.value, currentEpisode.value,
-        updateAL: false);
+    final savedEpisode = offlineStorage.getWatchedEpisode(
+        widget.anilistData.id, currentEpisode.value.number);
+    final savedMs = savedEpisode?.timeStampInMilliseconds ?? 0;
+    final currentMs = currentPosition.value.inMilliseconds;
+    final shouldSave = currentMs > 5000 && currentMs >= savedMs - 3000;
+
+    if (shouldSave) {
+      trackEpisode(
+          currentPosition.value, episodeDuration.value, currentEpisode.value,
+          updateAL: false);
+    } else {
+      Logger.i('dispose: skip overwrite: currentMs=$currentMs savedMs=$savedMs');
+    }
 
     if (mounted && !isInDVDMode) {
       try {
