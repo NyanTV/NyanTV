@@ -52,7 +52,7 @@ class PlayerSettings {
       this.subtitleSize = 16,
       this.subtitleColor = "White",
       this.subtitleFont = 'Poppins',
-      this.subtitleBackgroundColor = "Black",
+      this.subtitleBackgroundColor = "Transparent",
       this.subtitleOutlineColor = "Black",
       this.showSubtitle = true,
       this.skipDuration = 85,

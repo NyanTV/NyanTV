@@ -23,7 +23,7 @@ class PlayerSettingsAdapter extends TypeAdapter<PlayerSettings> {
         subtitleColor: fields[4] != null ? fields[4] as String : "White",
         subtitleFont: fields[5] != null ? fields[5] as String : "Poppins",
         subtitleBackgroundColor:
-            fields[6] != null ? fields[6] as String : "Black",
+            fields[6] != null ? fields[6] as String : "Transparent",
         subtitleOutlineColor: fields[7] != null ? fields[7] as String : "Black",
         showSubtitle: fields[2] != null ? fields[2] as bool : true,
         skipDuration: fields[8] != null ? fields[8] as int : 85,

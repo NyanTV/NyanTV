@@ -18,12 +18,17 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin {
   final ValueNotifier<bool> _isAppBarVisible = ValueNotifier<bool>(true);
 
   @override
+  ScrollController get scrollController => _scrollController;
+
+  @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    initTVScroll();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Get.find<Settings>().checkForUpdates(context);
       Get.find<Settings>().showWelcomeDialog(context);
-
       _scrollController.addListener(() {
         final statusBarHeight = MediaQuery.of(context).padding.top;
         const appBarHeight = kToolbarHeight + 20;
@@ -31,11 +36,7 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin {
         _isAppBarVisible.value = _scrollController.offset < threshold;
       });
     });
-    _scrollController = ScrollController();
-    initTVScroll();
   }
-
-  ScrollController get scrollController => _scrollController;
 
   @override
   void dispose() {

@@ -22,8 +22,10 @@ import 'package:get/get.dart';
 ///   }
 /// }
 /// ```
+
 mixin TVScrollMixin<T extends StatefulWidget> on State<T> {
-  
+  ScrollController get scrollController;
+
   void initTVScroll() {
     if (Get.find<Settings>().isTV.value) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -31,26 +33,53 @@ mixin TVScrollMixin<T extends StatefulWidget> on State<T> {
       });
     }
   }
-  
+
   void disposeTVScroll() {
     if (Get.find<Settings>().isTV.value) {
       FocusManager.instance.removeListener(_handleTVFocusChange);
     }
   }
-  
+
   void _handleTVFocusChange() {
     if (!mounted) return;
     final focusedContext = FocusManager.instance.primaryFocus?.context;
-    if (focusedContext != null) {
+    if (focusedContext == null) return;
+
+    if (!scrollController.hasClients) return;
+
+    final renderBox = focusedContext.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.attached) return;
+
+    final position = renderBox.localToGlobal(Offset.zero);
+    final currentOffset = scrollController.offset;
+
+    if (position.dy < 200) {
+      scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      return;
+    }
+
+    if (position.dy < currentOffset) {
       Scrollable.ensureVisible(
         focusedContext,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
-        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtStart,
       );
+      return;
     }
+
+    Scrollable.ensureVisible(
+      focusedContext,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+    );
   }
-  
+
   ScrollPhysics getTVScrollPhysics() {
     return Get.find<Settings>().isTV.value
         ? const BouncingScrollPhysics()

@@ -75,6 +75,9 @@ class _MyLibraryState extends State<MyLibrary> with TVScrollMixin {
   }
 
   @override
+  ScrollController get scrollController => _scrollController;
+
+  @override
   void dispose() {
     disposeTVScroll();
     _searchFocusNode.dispose();

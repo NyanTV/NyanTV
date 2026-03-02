@@ -101,6 +101,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final RxString resizeMode = "Cover".obs;
   late PlayerSettings playerSettings;
   late FocusNode _keyboardListenerFocusNode;
+  final ScrollController _scrollController = ScrollController();
   aniskip.EpisodeSkipTimes? skipTimes;
   final isOPSkippedOnce = false.obs;
   final isEDSkippedOnce = false.obs;
@@ -141,6 +142,9 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   RxMap<String, int> customSettings = <String, int>{}.obs;
 
   bool get isMobile => !settings.isTV.value && (Platform.isAndroid || Platform.isIOS);
+
+  @override
+  ScrollController get scrollController => _scrollController;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -1281,6 +1285,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     _periodicDiscordUpdateTimer?.cancel();
     _initialSeekSubscription?.cancel();
     _bufferingDebounceTimer?.cancel();
+    _scrollController.dispose();
     disposeTVScroll();
     setExcludedScreen(false);
 
