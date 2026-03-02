@@ -45,6 +45,8 @@ class PlayerSettings {
   bool transitionSubtitle;
   @HiveField(21)
   bool autoSkipFiller;
+  @HiveField(22)
+  bool autoSkipRecap;
 
   PlayerSettings(
       {this.speed = 1.0,
@@ -66,5 +68,6 @@ class PlayerSettings {
       this.autoSkipOnce = false,
       this.markAsCompleted = 90,
       this.transitionSubtitle = true,
-      this.autoSkipFiller = false});
+      this.autoSkipFiller = false,
+      this.autoSkipRecap = false});
 }

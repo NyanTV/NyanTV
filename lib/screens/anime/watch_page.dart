@@ -69,6 +69,15 @@ class WatchPage extends StatefulWidget {
   State<WatchPage> createState() => _WatchPageState();
 }
 
+class _ActiveSkip {
+  final String label;
+  final int end;
+  final int start;
+  _ActiveSkip({required this.label, required this.end, required this.start});
+}
+
+final Rx<_ActiveSkip?> activeSkip = Rx<_ActiveSkip?>(null);
+
 class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TVScrollMixin, WidgetsBindingObserver {
   late Rx<model.Video> episode;
   late Rx<Episode> currentEpisode;
@@ -102,7 +111,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   late PlayerSettings playerSettings;
   late FocusNode _keyboardListenerFocusNode;
   final ScrollController _scrollController = ScrollController();
-  aniskip.EpisodeSkipTimes? skipTimes;
+  final skipTimes = Rx<aniskip.EpisodeSkipTimes?>(null);
   final isOPSkippedOnce = false.obs;
   final isEDSkippedOnce = false.obs;
 
@@ -138,11 +147,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final _minUpdateInterval = const Duration(seconds: 2);
   final _periodicUpdateInterval = const Duration(seconds: 20);
 
-  final showSkipOpButton = false.obs;
-  final showSkipEdButton = false.obs;
   final _skipOpEdFocusNode = FocusNode(debugLabel: 'skip-oped');
-  bool _wasInOpRange = false;
-  bool _wasInEdRange = false;
+  int _focusGeneration = 0;
   DateTime? _controlsClosedAt;
 
   final currentVisualProfile = 'natural'.obs;
@@ -294,7 +300,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    skipTimes = null;
+    skipTimes.value = null;
     _initRxVariables();
     _initHiveVariables();
     _initPlayer(true);
@@ -311,6 +317,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     
     ever(showControls, (controlsVisible) {
       if (!settings.isTV.value || !mounted) return;
+      final generation = ++_focusGeneration;
 
       if (controlsVisible) {
         if (_keyboardListenerFocusNode.hasFocus) {
@@ -318,16 +325,16 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         }
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted || !showControls.value) return;
+          if (!mounted || !showControls.value || generation != _focusGeneration) return;
 
-          Future.delayed(const Duration(milliseconds: 130), () {
-            if (!mounted || !showControls.value) return;
+          Future.delayed(const Duration(milliseconds: 250), () {
+            if (!mounted || !showControls.value || generation != _focusGeneration) return;
 
-            final skipVisible = showSkipOpButton.value || showSkipEdButton.value;
+            final skipVisible = activeSkip.value != null;
 
             if (skipVisible) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted || !showControls.value) return;
+                if (!mounted || !showControls.value || generation != _focusGeneration) return;
                 if (_skipOpEdFocusNode.canRequestFocus) {
                   _skipOpEdFocusNode.requestFocus();
                 }
@@ -354,19 +361,29 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         _skipOpEdFocusNode.unfocus();
 
         Future.delayed(const Duration(milliseconds: 60), () {
-          if (mounted && !_keyboardListenerFocusNode.hasFocus) {
+          if (mounted && generation == _focusGeneration && !_keyboardListenerFocusNode.hasFocus) {
             FocusScope.of(context).requestFocus(_keyboardListenerFocusNode);
           }
         });
       }
     });
-    
+        
     ever(isBuffering, (buffering) {
       if (showControls.value && !buffering) {
         _startHideControlsTimer();
         if (!settings.isTV.value) {
           _keyboardListenerFocusNode.requestFocus();
         }
+      }
+    });
+
+    ever(activeSkip, (skip) {
+      if (!settings.isTV.value || !mounted || !showControls.value) return;
+      if (skip == null) {
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (!mounted || !showControls.value) return;
+          _skipButtonFocusNode.requestFocus();
+        });
       }
     });
     
@@ -746,7 +763,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         idMAL: widget.anilistData.idMal,
         episodeNumber: currentEpisode.value.number);
     aniskip.AniSkipApi().getSkipTimes(skipQuery).then((skipTimeResult) {
-      skipTimes = skipTimeResult;
+      skipTimes.value = skipTimeResult;
     }).onError((error, stackTrace) {
       debugPrint("An error occurred: $error");
       debugPrint("Stack trace: $stackTrace");
@@ -879,7 +896,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           trackEpisode(e, episodeDuration.value, currentEpisode.value);
         }
 
-        if (isPlaying.value && skipTimes != null && !isSwitchingEpisode) {
+        if (isPlaying.value && skipTimes.value != null && !isSwitchingEpisode) {
           _handleAutoSkip();
         }
       }
@@ -900,41 +917,34 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         }
       }
 
-      if (skipTimes != null && settings.isTV.value) {
+      if (skipTimes.value != null && settings.isTV.value) {
         final pos = e.inSeconds;
         final isAnimating = _controlsClosedAt != null &&
             DateTime.now().difference(_controlsClosedAt!).inMilliseconds < 250;
 
-        final inOp = skipTimes?.op != null &&
-            pos >= skipTimes!.op!.start &&
-            pos < skipTimes!.op!.end;
-        if (inOp && !playerSettings.autoSkipOP) {
-          final secsInOp = pos - skipTimes!.op!.start;
-          if (secsInOp < 15 || showControls.value || isAnimating) {
-            showSkipOpButton.value = true;
-            _wasInOpRange = true;
-          } else {
-            showSkipOpButton.value = false;
+        final candidates = <_ActiveSkip>[];
+
+        void checkSegment(aniskip.SkipIntervals? seg, String label, bool autoSkip) {
+          if (seg == null || autoSkip) return;
+          if (pos >= seg.start && pos < seg.end) {
+            final secsIn = pos - seg.start;
+            if (secsIn < 15 || showControls.value || isAnimating) {
+              candidates.add(_ActiveSkip(label: label, end: seg.end, start: seg.start));
+            }
           }
-        } else {
-          if (_wasInOpRange) _wasInOpRange = false;
-          showSkipOpButton.value = false;
         }
 
-        final inEd = skipTimes?.ed != null &&
-            pos >= skipTimes!.ed!.start &&
-            pos < skipTimes!.ed!.end;
-        if (inEd && !playerSettings.autoSkipED) {
-          final secsInEd = pos - skipTimes!.ed!.start;
-          if (secsInEd < 15 || showControls.value || isAnimating) {
-            showSkipEdButton.value = true;
-            _wasInEdRange = true;
-          } else {
-            showSkipEdButton.value = false;
-          }
+        checkSegment(skipTimes.value!.op,      'Skip Opening', playerSettings.autoSkipOP);
+        checkSegment(skipTimes.value!.mixedOp, 'Skip Opening', playerSettings.autoSkipOP);
+        checkSegment(skipTimes.value!.ed,      'Skip Ending',  playerSettings.autoSkipED);
+        checkSegment(skipTimes.value!.mixedEd, 'Skip Ending',  playerSettings.autoSkipED);
+        checkSegment(skipTimes.value!.recap,   'Skip Recap',   playerSettings.autoSkipRecap);
+
+        if (candidates.isEmpty) {
+          activeSkip.value = null;
         } else {
-          if (_wasInEdRange) _wasInEdRange = false;
-          showSkipEdButton.value = false;
+          candidates.sort((a, b) => b.start.compareTo(a.start));
+          activeSkip.value = candidates.first;
         }
       }
     });
@@ -997,8 +1007,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     player.stream.subtitle.listen((e) {
       subtitleText.value = e;
     });
-  }
-    
+  } 
+  
   void startSeeking() {
     _isSeeking = true;
   }
@@ -1284,36 +1294,34 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   }
 
   void _handleAutoSkip() {
-    if (skipTimes?.op != null && playerSettings.autoSkipOP) {
-      if (playerSettings.autoSkipOnce && isOPSkippedOnce.value) {
-        return;
-      }
-      if (currentPosition.value.inSeconds > skipTimes!.op!.start &&
-          currentPosition.value.inSeconds < skipTimes!.op!.end) {
-        final skipNeeded = skipTimes!.op!.end - currentPosition.value.inSeconds;
-        final duration =
-            Duration(seconds: currentPosition.value.inSeconds + skipNeeded);
-        currentPosition.value = duration;
-        player.seek(duration);
-        isOPSkippedOnce.value = true;
+    void trySkip(aniskip.SkipIntervals? seg, bool enabled, RxBool skippedOnce) {
+      if (seg == null || !enabled) return;
+      if (playerSettings.autoSkipOnce && skippedOnce.value) return;
+      if (currentPosition.value.inSeconds > seg.start &&
+          currentPosition.value.inSeconds < seg.end) {
+        final dur = Duration(seconds: seg.end);
+        currentPosition.value = dur;
+        player.seek(dur);
+        skippedOnce.value = true;
       }
     }
-    if (skipTimes?.ed != null && playerSettings.autoSkipED) {
-      if (playerSettings.autoSkipOnce && isEDSkippedOnce.value) {
-        return;
-      }
-      if (currentPosition.value.inSeconds > skipTimes!.ed!.start &&
-          currentPosition.value.inSeconds < skipTimes!.ed!.end) {
-        final skipNeeded = skipTimes!.ed!.end - currentPosition.value.inSeconds;
-        final duration =
-            Duration(seconds: currentPosition.value.inSeconds + skipNeeded);
-        currentPosition.value = duration;
-        player.seek(duration);
-        isEDSkippedOnce.value = true;
+
+    trySkip(skipTimes.value?.op,      playerSettings.autoSkipOP,  isOPSkippedOnce);
+    trySkip(skipTimes.value?.mixedOp, playerSettings.autoSkipOP,  isOPSkippedOnce);
+    trySkip(skipTimes.value?.ed,      playerSettings.autoSkipED,  isEDSkippedOnce);
+    trySkip(skipTimes.value?.mixedEd, playerSettings.autoSkipED,  isEDSkippedOnce);
+
+    if (skipTimes.value?.recap != null && playerSettings.autoSkipRecap) {
+      final seg = skipTimes.value!.recap!;
+      if (currentPosition.value.inSeconds > seg.start &&
+          currentPosition.value.inSeconds < seg.end) {
+        final dur = Duration(seconds: seg.end);
+        currentPosition.value = dur;
+        player.seek(dur);
       }
     }
   }
-
+    
   void toggleControls({bool? val}) {
     showControls.value = val ?? !showControls.value;
 
@@ -2033,6 +2041,22 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         });
   }
 
+  void _executeSkipOpEd(_ActiveSkip skip) {
+    final dur = Duration(seconds: skip.end);
+    player.seek(dur);
+    currentPosition.value = dur;
+    _scheduleDiscordUpdate(isPaused: false);
+
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (!mounted) return;
+      if (activeSkip.value != null) {
+        _skipOpEdFocusNode.requestFocus();
+      } else {
+        _skipButtonFocusNode.requestFocus();
+      }
+    });
+  }
+
   Widget subtitleTile(String text, IconData icon, bool isSelected) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0),
@@ -2227,7 +2251,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   const SizedBox(width: 8),
-                                  if (!isLocked.value && !showSkipOpButton.value && !showSkipEdButton.value) _buildSkipButton(false),
+                                  if (!isLocked.value && activeSkip.value == null) _buildSkipButton(false),
                                 ],
                               ),
                             ],
@@ -2236,7 +2260,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                             ignoring: isLocked.value,
                             child: SizedBox(
                               height: 27,
-                              child: VideoSliderTheme(
+                              child: Stack(
+                              children: [ VideoSliderTheme(
                                 color: themeFgColor.value,
                                 inactiveTrackColor:
                                     _getBgColor().withOpacity(0.1),
@@ -2297,6 +2322,13 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                     }
                                   },
                                 ),
+                              ),
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: Obx(() => _buildSegmentOverlay()),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -2607,7 +2639,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                   return KeyEventResult.handled;
                 }
                 if (key == LogicalKeyboardKey.arrowDown) {
-                  if (showSkipOpButton.value || showSkipEdButton.value) {
+                  if (activeSkip.value != null) {
                     _skipOpEdFocusNode.requestFocus();
                   } else {
                     _skipButtonFocusNode.requestFocus();
@@ -2911,7 +2943,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                 return KeyEventResult.handled;
               }
               if (key == LogicalKeyboardKey.arrowDown) {
-                if (showSkipOpButton.value || showSkipEdButton.value) {
+                if (activeSkip.value != null) {
                   _skipOpEdFocusNode.requestFocus();
                 } else {
                   _skipButtonFocusNode.requestFocus();
@@ -2990,22 +3022,77 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     );
   }
 
-Widget _buildIcon({VoidCallback? onTap, IconData? icon}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3),
-    child: NyantvOnTap(
-      onTap: () {
-        onTap?.call();
-      },
-      child: IconButton(
-          onPressed: onTap,
-          icon: Icon(
-            icon,
-            color: Colors.white,
-          )),
-    ),
-  );
-}
+  Widget _buildIcon({VoidCallback? onTap, IconData? icon}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3),
+      child: NyantvOnTap(
+        onTap: () {
+          onTap?.call();
+        },
+        child: IconButton(
+            onPressed: onTap,
+            icon: Icon(
+              icon,
+              color: Colors.white,
+            )),
+      ),
+    );
+  }
+
+  Color rotateHue(Color base, double degrees) {
+    final hsl = HSLColor.fromColor(base);
+    return hsl.withHue((hsl.hue + degrees) % 360).toColor();
+  }
+
+  Widget _buildSegmentOverlay() {
+    if (skipTimes.value == null) return const SizedBox.shrink();
+    final totalMs = episodeDuration.value.inMilliseconds.toDouble();
+    if (totalMs <= 0) return const SizedBox.shrink();
+
+    return LayoutBuilder(builder: (context, constraints) {
+      const hPad = 10.0;
+      final trackWidth = constraints.maxWidth - hPad * 2;
+      const markerH = 7.0;
+      final markerTop = (constraints.maxHeight - markerH) / 2;
+
+      final cs = Theme.of(context).colorScheme;
+      final currentSecs = currentPosition.value.inSeconds;
+
+      final segments = <(aniskip.SkipIntervals?, Color)>[
+        (skipTimes.value?.op,      rotateHue(cs.primary, 45)),
+        (skipTimes.value?.mixedOp, rotateHue(cs.primary, 45)),
+        (skipTimes.value?.ed,      cs.secondary),
+        (skipTimes.value?.mixedEd, cs.secondary),
+        (skipTimes.value?.recap,   cs.tertiary),
+      ];
+
+      final markers = <Widget>[];
+      for (final (seg, color) in segments) {
+        if (seg == null) continue;
+        if (seg.end <= currentSecs) continue;
+        final effectiveStart = seg.start < currentSecs ? currentSecs : seg.start;
+        final startPx = hPad + (effectiveStart * 1000 / totalMs) * trackWidth;
+        final endPx   = hPad + (seg.end       * 1000 / totalMs) * trackWidth;
+        final w = endPx - startPx;
+        if (w <= 0) continue;
+        markers.add(Positioned(
+          left: startPx,
+          width: w,
+          top: markerTop,
+          height: markerH,
+          child: Container(
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ));
+      }
+
+      if (markers.isEmpty) return const SizedBox.shrink();
+      return Stack(children: markers);
+    });
+  }
 
   void showColorProfileSheet(BuildContext context) {
     showModalBottomSheet(
@@ -3030,12 +3117,8 @@ Widget _buildIcon({VoidCallback? onTap, IconData? icon}) {
 
   Widget _buildSkipOpEdButton() {
     return Obx(() {
-      final showOp = showSkipOpButton.value;
-      final showEd = showSkipEdButton.value;
-      if (!showOp && !showEd) return const SizedBox.shrink();
-
-      final label = showOp ? 'Skip Opening' : 'Skip Ending';
-      final skipEnd = showOp ? skipTimes?.op?.end : skipTimes?.ed?.end;
+      final skip = activeSkip.value;
+      if (skip == null) return const SizedBox.shrink();
 
       final borderRadius = BorderRadius.circular(20.multiplyRoundness());
 
@@ -3048,12 +3131,7 @@ Widget _buildIcon({VoidCallback? onTap, IconData? icon}) {
             final key = event.logicalKey;
             if (key == LogicalKeyboardKey.enter ||
                 key == LogicalKeyboardKey.select) {
-              if (skipEnd != null) {
-                final dur = Duration(seconds: skipEnd);
-                player.seek(dur);
-                currentPosition.value = dur;
-                _scheduleDiscordUpdate(isPaused: false);
-              }
+              _executeSkipOpEd(skip);
               return KeyEventResult.handled;
             }
             return KeyEventResult.ignored;
@@ -3065,12 +3143,7 @@ Widget _buildIcon({VoidCallback? onTap, IconData? icon}) {
             borderRadius: borderRadius,
             backgroundColor: Colors.transparent,
             onTap: () {
-              if (skipEnd != null) {
-                final dur = Duration(seconds: skipEnd);
-                player.seek(dur);
-                currentPosition.value = dur;
-                _scheduleDiscordUpdate(isPaused: false);
-              }
+              _executeSkipOpEd(skip);
             },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -3078,7 +3151,7 @@ Widget _buildIcon({VoidCallback? onTap, IconData? icon}) {
                 const Icon(Icons.fast_forward_rounded, color: Colors.white),
                 const SizedBox(width: 5),
                 NyantvText(
-                  text: label,
+                  text: skip.label,
                   variant: TextVariant.semiBold,
                   color: Colors.white,
                 ),

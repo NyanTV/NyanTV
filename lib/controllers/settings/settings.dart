@@ -309,6 +309,11 @@ class Settings extends GetxController {
   set autoSkipFiller(bool value) =>
       _setPlayerSetting((s) => s?.autoSkipFiller = value);
 
+
+  bool get autoSkipRecap => _getPlayerSetting((s) => s.autoSkipRecap);
+  set autoSkipRecap(bool value) =>
+      _setPlayerSetting((s) => s?.autoSkipRecap = value);
+
   int get markAsCompleted => _getPlayerSetting((s) => s.markAsCompleted);
   set markAsCompleted(int value) =>
       _setPlayerSetting((s) => s?.markAsCompleted = value);
