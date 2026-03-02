@@ -1,27 +1,21 @@
 // ignore_for_file: invalid_use_of_protected_member
-
 import 'package:nyantv/widgets/header.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:nyantv/utils/tv_scroll_mixin.dart';
 import 'package:get/get.dart';
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
-import 'package:nyantv/widgets/common/scroll_aware_app_bar.dart';
 
 class AnimeHomePage extends StatefulWidget {
-  const AnimeHomePage({
-    super.key,
-  });
+  const AnimeHomePage({super.key});
 
   @override
   State<AnimeHomePage> createState() => _AnimeHomePageState();
 }
 
-class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin{
+class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin {
   late ScrollController _scrollController;
-  final ValueNotifier<bool> _isAppBarVisibleExternally =
-      ValueNotifier<bool>(true);
+  final ValueNotifier<bool> _isAppBarVisible = ValueNotifier<bool>(true);
 
   @override
   void initState() {
@@ -29,6 +23,13 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin{
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Get.find<Settings>().checkForUpdates(context);
       Get.find<Settings>().showWelcomeDialog(context);
+
+      _scrollController.addListener(() {
+        final statusBarHeight = MediaQuery.of(context).padding.top;
+        const appBarHeight = kToolbarHeight + 20;
+        final threshold = statusBarHeight + appBarHeight;
+        _isAppBarVisible.value = _scrollController.offset < threshold;
+      });
     });
     _scrollController = ScrollController();
     initTVScroll();
@@ -39,7 +40,7 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin{
   @override
   void dispose() {
     _scrollController.dispose();
-    _isAppBarVisibleExternally.dispose();
+    _isAppBarVisible.dispose();
     disposeTVScroll();
     super.dispose();
   }
@@ -77,28 +78,22 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin{
               ],
             ),
           ),
-          CustomAnimatedAppBar(
-            isVisible: _isAppBarVisibleExternally,
-            scrollController: _scrollController,
-            headerContent: const Header(type: PageType.anime),
-            visibleStatusBarStyle: SystemUiOverlayStyle(
-              statusBarIconBrightness:
-                  Theme.of(context).brightness == Brightness.light
-                      ? Brightness.dark
-                      : Brightness.light,
-              statusBarBrightness: Theme.of(context).brightness,
-              statusBarColor: Colors.transparent,
-            ),
-            hiddenStatusBarStyle: SystemUiOverlayStyle(
-              statusBarIconBrightness:
-                  Theme.of(context).brightness == Brightness.light
-                      ? Brightness.light
-                      : Brightness.dark,
-              statusBarBrightness:
-                  Theme.of(context).brightness == Brightness.light
-                      ? Brightness.dark
-                      : Brightness.light,
-              statusBarColor: Colors.transparent,
+          ValueListenableBuilder<bool>(
+            valueListenable: _isAppBarVisible,
+            builder: (context, isVisible, _) => Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: isVisible
+                  ? Container(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      padding: EdgeInsets.only(
+                        top: statusBarHeight,
+                        bottom: 10,
+                      ),
+                      child: const Header(type: PageType.anime),
+                    )
+                  : const SizedBox.shrink(),
             ),
           ),
         ],
