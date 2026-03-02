@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
+import 'package:nyantv/widgets/common/glow.dart';
 
 class ThemeProvider extends ChangeNotifier {
   bool isLightMode;
@@ -137,6 +138,7 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   void _updateTheme() {
+    Glow.clearColorSchemeCache();
     final variant = dynamicSchemeVariantList[selectedVariantIndex];
     _lightTheme = lightMode.copyWith(
       scaffoldBackgroundColor: isOled ? Colors.white : Colors.transparent,

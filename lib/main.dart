@@ -288,6 +288,8 @@ class MainApp extends StatelessWidget {
             }
           },
           child: GetMaterialApp(
+            defaultTransition: Transition.noTransition,
+            transitionDuration: Duration.zero,
             scrollBehavior: MyCustomScrollBehavior(),
             debugShowCheckedModeBanner: false,
             title: "NyanTV",

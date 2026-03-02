@@ -26,18 +26,16 @@ class GradientPoster extends StatelessWidget {
       children: [
         SizedBox(
           height: isDesktop ? 460 : 400,
-          child: Obx(() {
-            return NetworkSizedImage(
-              imageUrl: data?.cover ?? posterUrl,
-              errorImage: data?.poster,
-              radius: 0,
-              height: 300,
-              width: double.infinity,
-              color: settingsController.liquidMode
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.8)
-                  : null,
-            );
-          }),
+          child: NetworkSizedImage(
+            imageUrl: data?.cover ?? posterUrl,
+            errorImage: data?.poster,
+            radius: 0,
+            height: 300,
+            width: double.infinity,
+            color: settingsController.liquidMode
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.8)
+                : null,
+          ),
         ),
         Container(
           height: isDesktop ? 460 : 400,

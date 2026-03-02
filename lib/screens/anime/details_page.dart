@@ -9,6 +9,7 @@ import 'package:nyantv/database/comments_db.dart';
 import 'package:nyantv/database/model/comment.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_button.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
+import 'package:nyantv/controllers/cacher/cache_controller.dart';
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/controllers/services/anilist/anilist_auth.dart';
 import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
@@ -111,14 +112,24 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
     if (sourceController.installedExtensions.isEmpty) {
       showAnify.value = false;
     }
-    Future.delayed(const Duration(milliseconds: 500), () {
-      _checkAnimePresence();
-    });
-    _fetchAnilistData();
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && anilistData != null) {
-        DiscordRPCController.instance.updateMediaPresence(media: anilistData!);
+      final isCached = Get.find<CacheController>()
+          .getStoredAnime()
+          .any((m) => m.id == widget.media.id);
+
+      if (isCached) {
+        _fetchAnilistData();
+        _checkAnimePresence();
+      } else {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (!mounted) return;
+          _fetchAnilistData();
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (!mounted) return;
+            _checkAnimePresence();
+          });
+        });
       }
     });
   }

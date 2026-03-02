@@ -212,7 +212,7 @@ class SmoothPageEntrance extends StatelessWidget {
         return PageAnimationWrapper(
           duration: const Duration(milliseconds: 600),
           delay: delay,
-          animationType: AnimationType.slideUpFade,
+          animationType: AnimationType.fade,
           curve: Curves.easeOutCubic,
           child: child,
         );
