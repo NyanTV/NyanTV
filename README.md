@@ -51,7 +51,6 @@
 
 ## Upcoming Features
 - [ ] More custom theme flexibility
-- [ ] Skip Buttons (Opening / Ending)
 - [ ] Simkl integration
 - [ ] Apple TV build (with sideloading)
 
@@ -62,6 +61,7 @@
 - [x] Watch next widget for Android Home Launcher
 - [x] MAL integration
 - [x] Smoother experience on low-end devices
+- [x] Skip Buttons (Opening / Ending)
 
 </details>
 
