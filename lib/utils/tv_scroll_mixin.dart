@@ -23,6 +23,7 @@ import 'package:get/get.dart';
 /// }
 /// ```
 
+
 mixin TVScrollMixin<T extends StatefulWidget> on State<T> {
   ScrollController get scrollController;
 
@@ -53,7 +54,7 @@ mixin TVScrollMixin<T extends StatefulWidget> on State<T> {
     final position = renderBox.localToGlobal(Offset.zero);
     final currentOffset = scrollController.offset;
 
-    if (position.dy < 200) {
+    if (currentOffset < 300 && position.dy < 200) {
       scrollController.animateTo(
         0.0,
         duration: const Duration(milliseconds: 300),

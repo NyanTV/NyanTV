@@ -389,11 +389,12 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                 title: 'Subtitle Background Color',
                                 onTap: () {
                                   _showColorSelectionDialog(
-                                      'Select Subtitle Background Color',
-                                      colorOptions[settings
-                                          .subtitleBackgroundColor]!, (color) {
-                                    settings.subtitleBackgroundColor = color;
-                                  });
+                                    'Select Subtitle Background Color',
+                                    colorOptions[settings.subtitleBackgroundColor] ?? Colors.transparent,
+                                    (color) {
+                                      settings.subtitleBackgroundColor = color;
+                                    },
+                                  );
                                 },
                               ),
                               // Subtitle Preview
