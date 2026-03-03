@@ -90,15 +90,18 @@ Join our community to stay updated and contribute to the discussion:
 
 
 <a href="https://t.me/NyanSupport" style="display: inline-block;"><img src="https://files.catbox.moe/z66xwr.png" alt="Telegram" height="40" style="vertical-align: middle;"></a>
-<a href="https://discord.gg/kFrnJfRm" style="display: inline-block;"><img src="https://files.catbox.moe/tb0004.png" alt="Discord" height="40" style="vertical-align: middle;"></a>
 <a href="https://stoat.chat/invite/fKzse8yy" style="display: inline-block;"><img src="./assets/images/stoat-icon.png" alt="Stoat" height="40" style="vertical-align: middle;"></a>
+
+<a href="https://discord.gg/y2vaFPXs4F">
+<img src="https://invite.casperiv.dev?inviteCode=y2vaFPXs4F" alt="Discord">
+</a>
 
 
 ## Contribute
 
 We welcome contributions, from translations to new features.  
 Our development environment setup guide is available [here](./DEVELOPMENT.md).  
-For inquiries, join our [Telegram group](https://t.me/NyanSupport) / [Discord server](https://discord.gg/kFrnJfRm) / [Stoat server](https://stoat.chat/invite/fKzse8yy).  
+For inquiries, join our [Telegram group](https://t.me/NyanSupport) / [Discord server](https://discord.gg/y2vaFPXs4F) / [Stoat server](https://stoat.chat/invite/fKzse8yy).  
 Pull requests are welcome; check the [open issues](https://github.com/NyanTV/NyanTV/issues) for guidance on major changes.
 
 <!--<details>

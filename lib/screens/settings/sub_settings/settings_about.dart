@@ -152,19 +152,23 @@ class AboutPage extends StatelessWidget {
                   ),
                   CustomListTile(
                     onTap: () async {
-                      await launchUrlHelper('https://discord.gg/kFrnJfRm');
+                      await launchUrlHelper('https://discord.gg/y2vaFPXs4F');
                     },
                     leading: const Icon(HugeIcons.strokeRoundedDiscord),
                     title: "Discord",
                   ),
                   CustomListTile(
                     onTap: () async {
-                      await launchUrlHelper('https://stoat.chat/invite/fKzse8yy');
+                      await launchUrlHelper(
+                          'https://stoat.chat/invite/fKzse8yy');
                     },
                     leading: CircleAvatar(
                       backgroundColor: theme.colorScheme.surfaceContainer,
                       radius: 15,
-                      child: Image.asset('assets/images/stoat-icon.png', fit: BoxFit.cover,),
+                      child: Image.asset(
+                        'assets/images/stoat-icon.png',
+                        fit: BoxFit.cover,
+                      ),
                     ),
                     title: "Stoat",
                   ),
@@ -185,8 +189,7 @@ class AboutPage extends StatelessWidget {
                 items: [
                   CustomListTile(
                     onTap: () async {
-                      await launchUrlHelper(
-                          'https://github.com/NyanTV/NyanTV');
+                      await launchUrlHelper('https://github.com/NyanTV/NyanTV');
                     },
                     leading: const Icon(HugeIcons.strokeRoundedGithub),
                     title: "GitHub",
@@ -220,34 +223,35 @@ class AboutPage extends StatelessWidget {
                   CustomListTile(
                     onTap: () async {
                       snackBar('Checking for updates!');
-                      Get.find<Settings>().checkForUpdates(context, manualCheck: true);
+                      Get.find<Settings>()
+                          .checkForUpdates(context, manualCheck: true);
                     },
                     leading: const Icon(Icons.system_update),
                     title: "Check for Updates",
                   ),
-                    CustomListTile(
-                      onTap: () {
-                        DiscordRPCController.instance.updateBrowsingPresence(
-                          activity: 'NyanDVD',
-                          details: 'Idle',
-                        );
-                        Get.to(
-                          () => const InitialisingScreen(
-                            dvdMode: true,
-                            child: SizedBox.shrink(),
-                          ),
-                          transition: Transition.fadeIn,
-                        )?.then((_) {
+                  CustomListTile(
+                    onTap: () {
+                      DiscordRPCController.instance.updateBrowsingPresence(
+                        activity: 'NyanDVD',
+                        details: 'Idle',
+                      );
+                      Get.to(
+                        () => const InitialisingScreen(
+                          dvdMode: true,
+                          child: SizedBox.shrink(),
+                        ),
+                        transition: Transition.fadeIn,
+                      )?.then((_) {
                         DiscordRPCController.instance.updateBrowsingPresence(
                           activity: 'Browsing Stuff',
                           details: 'Idle',
                         );
                       });
-                      },
-                      leading: const Icon(Icons.tv_rounded),
-                      title: 'NyanDVD',
-                      subtitle: 'The most important feature.',
-                    ),
+                    },
+                    leading: const Icon(Icons.tv_rounded),
+                    title: 'NyanDVD',
+                    subtitle: 'The most important feature.',
+                  ),
                 ],
               ),
             ),
