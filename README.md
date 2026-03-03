@@ -19,7 +19,7 @@
 
 # NyanTV: Multi-Service Tracking Client
 
-**NyanTV** is a multi-service tracking client designed exclusively for managing and tracking anime progress across [**AniList**](https://anilist.co/) & [**MyAnimeList**](https://myanimelist.net/) on Android TV.
+[**NyanTV**](https://nyantv.vercel.app/) is a multi-service tracking client designed exclusively for managing and tracking anime progress across [**AniList**](https://anilist.co/) & [**MyAnimeList**](https://myanimelist.net/) on Android TV.
 
 **NyanTV** is a fork of [**AnymeX**](https://github.com/RyanYuuki/AnymeX), if you are using a platform other than Android TV, use their repo.
 

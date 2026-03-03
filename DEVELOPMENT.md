@@ -37,6 +37,8 @@ To do so, create a `.env` file with the following content:
 ```env
 AL_CLIENT_ID: 0
 AL_CLIENT_SECRET: 0
+MAL_CLIENT_ID: 0
+MAL_CLIENT_SECRET: 0
 CALLBACK_SCHEME: nyantv://callback
 ```
 
