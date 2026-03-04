@@ -1,17 +1,23 @@
 ### 🌟 Features
--   add myanimelist as a tracking service
--   accelerated hold-to-seek with progressive speed stages
+-   auto-skip recap and skip recap button and colored segments - migrate to aniskip v2
+-   skip opening and ending button
 
 ### 🔧 Bug Fixes & Improvements
--   buffering animation will only show when actually buffering
--   extension download button unresponsive
+-   snapping too early and subtitle background fallback to clear
+-   library watch history dpad duplicated input and myanime list searchbar not showing
+-   apply new style on all card types
+-   watch state being overwritten with 0 seconds
+
+### 🎨 Style Changes
+-   auto-hide skip button after 15s
+-   always show rating, even on own lists such as continue watching
 
 ### 🚀 Performance Improvements
--   overall better player performance, smoother playback on low end devices
--   remove unused player gestures
+-   remove redundant header animation and blur on anime home page
+-   smoother page transitions
 
 ### 🧹 Chores & Documentation
--   update tos
--   add discord support server
+-   aaand increase the build size again for the sake of performance
+-   reduce build size and add v8 architecture
 
  
