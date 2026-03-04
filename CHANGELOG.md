@@ -1,22 +1,29 @@
 ### 🆕 Changelog
 ### 🌟 Features
-- [֍](https://github.com/NyanTV/NyanTV/commit/26b6132)  add myanimelist as a tracking service
-- [֍](https://github.com/NyanTV/NyanTV/commit/3308e4c)  accelerated hold-to-seek with progressive speed stages
+- [֍](https://github.com/NyanTV/NyanTV/commit/210e47c)  auto-skip recap and skip recap button and colored segments - migrate to aniskip v2
+- [֍](https://github.com/NyanTV/NyanTV/commit/5c4e201)  skip opening and ending button
 
 
 ### 🔧 Bug Fixes & Improvements
-- [֍](https://github.com/NyanTV/NyanTV/commit/f62ce7e)  buffering animation will only show when actually buffering
-- [֍](https://github.com/NyanTV/NyanTV/commit/3247306)  extension download button unresponsive
+- [֍](https://github.com/NyanTV/NyanTV/commit/6078a25)  snapping too early and subtitle background fallback to clear
+- [֍](https://github.com/NyanTV/NyanTV/commit/4738300)  library watch history dpad duplicated input and myanime list searchbar not showing
+- [֍](https://github.com/NyanTV/NyanTV/commit/a1a13b3)  apply new style on all card types
+- [֍](https://github.com/NyanTV/NyanTV/commit/09fa4cf)  watch state being overwritten with 0 seconds
+
+
+### 🎨 Style Changes
+- [֍](https://github.com/NyanTV/NyanTV/commit/5718246)  auto-hide skip button after 15s
+- [֍](https://github.com/NyanTV/NyanTV/commit/4957721)  always show rating, even on own lists such as continue watching
 
 
 ### 🚀 Performance Improvements
-- [֍](https://github.com/NyanTV/NyanTV/commit/29a02f2)  overall better player performance, smoother playback on low end devices
-- [֍](https://github.com/NyanTV/NyanTV/commit/e712bd3)  remove unused player gestures
+- [֍](https://github.com/NyanTV/NyanTV/commit/fe883e7)  remove redundant header animation and blur on anime home page
+- [֍](https://github.com/NyanTV/NyanTV/commit/30bbb55)  smoother page transitions
 
 
 ### 🧹 Chores & Documentation
-- [֍](https://github.com/NyanTV/NyanTV/commit/45386d1)  update tos
-- [֍](https://github.com/NyanTV/NyanTV/commit/896aa1c)  add discord support server
+- [֍](https://github.com/NyanTV/NyanTV/commit/2813fa1)  aaand increase the build size again for the sake of performance
+- [֍](https://github.com/NyanTV/NyanTV/commit/cb63e34)  reduce build size and add v8 architecture
 
 
-![Total Downloads](https://img.shields.io/github/downloads/NyanTV/NyanTV/total?style=for-the-badge&label=TOTAL%20DOWNLOADS&labelColor=black&color=white) ![Current Release](https://img.shields.io/github/downloads/NyanTV/NyanTV/v0.2.1/total?style=for-the-badge&label=CURRENT%20RELEASE&labelColor=black&color=white)
+![Total Downloads](https://img.shields.io/github/downloads/NyanTV/NyanTV/total?style=for-the-badge&label=TOTAL%20DOWNLOADS&labelColor=black&color=white) ![Current Release](https://img.shields.io/github/downloads/NyanTV/NyanTV/v0.2.2/total?style=for-the-badge&label=CURRENT%20RELEASE&labelColor=black&color=white)
