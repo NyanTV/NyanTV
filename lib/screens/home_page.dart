@@ -47,6 +47,7 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
     initTVScroll();
   }
 
+  @override
   ScrollController get scrollController => _scrollController;
 
   @override
