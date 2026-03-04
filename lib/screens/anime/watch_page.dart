@@ -347,13 +347,16 @@ class _WatchPageState extends State<WatchPage>
         }
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted || !showControls.value || generation != _focusGeneration)
+          if (!mounted || !showControls.value || generation != _focusGeneration) {
             return;
+          }
 
           Future.delayed(const Duration(milliseconds: 250), () {
             if (!mounted ||
                 !showControls.value ||
-                generation != _focusGeneration) return;
+                generation != _focusGeneration) {
+              return;
+            }
 
             final skipVisible = activeSkip.value != null;
 
@@ -361,7 +364,9 @@ class _WatchPageState extends State<WatchPage>
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted ||
                     !showControls.value ||
-                    generation != _focusGeneration) return;
+                    generation != _focusGeneration) {
+                  return;
+                }
                 if (_skipOpEdFocusNode.canRequestFocus) {
                   _skipOpEdFocusNode.requestFocus();
                 }
