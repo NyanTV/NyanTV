@@ -30,6 +30,8 @@ class Settings extends GetxController {
   final _selectedProfile = 'MID-END'.obs;
   final Rx<BufferProfile> tvBufferProfile = BufferProfile.medium.obs;
   final mpvPath = ''.obs;
+  DateTime? _lastUpdateCheck;
+  static const _updateCheckCooldown = Duration(hours: 1);
 
   // Flag to track initialization
   bool _isInitialized = false;
@@ -90,7 +92,7 @@ class Settings extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    
+
     // Initialize Hive box
     try {
       preferences = Hive.box('preferences');
@@ -100,7 +102,8 @@ class Settings extends GetxController {
       rethrow;
     }
 
-    final savedProfile = preferences.get('tv_buffer_profile', defaultValue: BufferProfile.medium.index);
+    final savedProfile = preferences.get('tv_buffer_profile',
+        defaultValue: BufferProfile.medium.index);
     if (savedProfile >= 0 && savedProfile < BufferProfile.values.length) {
       tvBufferProfile.value = BufferProfile.values[savedProfile];
     } else {
@@ -113,11 +116,13 @@ class Settings extends GetxController {
     playerSettings =
         Rx<PlayerSettings>(playerBox.get('settings') ?? PlayerSettings());
 
-    _selectedShader.value = preferences.get('selected_shader', defaultValue: '');
-    _selectedProfile.value = preferences.get('selected_profile', defaultValue: 'MID-END');
+    _selectedShader.value =
+        preferences.get('selected_shader', defaultValue: '');
+    _selectedProfile.value =
+        preferences.get('selected_profile', defaultValue: 'MID-END');
 
     isTv().then((e) {
-      isTV.value = true;//e;
+      isTV.value = true; //e;
     });
 
     // Initialize player shaders
@@ -128,8 +133,18 @@ class Settings extends GetxController {
   }
 
   void checkForUpdates(BuildContext context, {bool manualCheck = false}) {
+    if (!manualCheck) {
+      final now = DateTime.now();
+      if (_lastUpdateCheck != null &&
+          now.difference(_lastUpdateCheck!) < _updateCheckCooldown) {
+        return;
+      }
+      _lastUpdateCheck = now;
+    }
+
     canShowUpdate.value = true;
-    UpdateManager().checkForUpdates(context, canShowUpdate, manualCheck: manualCheck);
+    UpdateManager()
+        .checkForUpdates(context, canShowUpdate, manualCheck: manualCheck);
   }
 
   void showWelcomeDialog(BuildContext context) {
@@ -308,7 +323,6 @@ class Settings extends GetxController {
   bool get autoSkipFiller => _getPlayerSetting((s) => s.autoSkipFiller);
   set autoSkipFiller(bool value) =>
       _setPlayerSetting((s) => s?.autoSkipFiller = value);
-
 
   bool get autoSkipRecap => _getPlayerSetting((s) => s.autoSkipRecap);
   set autoSkipRecap(bool value) =>

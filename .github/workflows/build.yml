@@ -205,10 +205,12 @@ jobs:
           generate_release_notes: true
           body: |
             ## 📦 Downloads
-            | APK | Devices |
-            |-----|---------|
-            | `NyanTV-Android-arm64-v8a.apk` | Shield, Fire TV 4K, Mi Box S, Chromecast GTV |
-            | `NyanTV-Android-armeabi-v7a.apk` | Older / budget devices |
+            | APK | Compatible Devices |
+            |-----|--------------------|
+            | `NyanTV-Android-arm64-v8a.apk` | Nvidia Shield TV (2015), Shield TV Pro (2015–2019) |
+            | `NyanTV-Android-armeabi-v7a.apk` | Everything else — Fire TV, Chromecast, Google TV Streamer, Onn, TiVo, Shield TV Tube (2019) |
+
+            > **Not sure which to pick?** Use `armeabi-v7a` — it works on all devices.
 
             ## 🚀 Build Stats
             - 🏗️ **Build Number:** `${{ github.run_number }}`

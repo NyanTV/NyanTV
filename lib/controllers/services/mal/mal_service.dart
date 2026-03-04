@@ -21,12 +21,17 @@ import 'package:nyantv/utils/string_extensions.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart';
+
+List<TrackedMedia> _parseTrackedMedia(List<dynamic> data) {
+  return data.map((e) => TrackedMedia.fromMAL(e)).toList();
+}
 
 class MalService extends GetxController implements BaseService, OnlineService {
   final storage = Hive.box('auth');
@@ -77,7 +82,6 @@ class MalService extends GetxController implements BaseService, OnlineService {
                 ],
               )),
       ].obs;
-
 
   @override
   Future<void> fetchHomePage() async {
@@ -166,7 +170,10 @@ class MalService extends GetxController implements BaseService, OnlineService {
                         buttonText: "ANIME LIST",
                         backgroundImage: trendingAnime.isEmpty
                             ? ''
-                            : trendingAnime.firstWhere((e) => e.cover != null).cover ?? '',
+                            : trendingAnime
+                                    .firstWhere((e) => e.cover != null)
+                                    .cover ??
+                                '',
                         borderRadius: 16.multiplyRadius(),
                         onPressed: () {
                           navigate(() => const AnimeList());
@@ -202,18 +209,13 @@ class MalService extends GetxController implements BaseService, OnlineService {
   Rx<Profile> profileData = Profile().obs;
 
   Future<void> fetchUserAnimeList() async {
-    final data = await fetchMAL(
-        'https://api.myanimelist.net/v2/users/@me/animelist?fields=num_episodes,mean,list_status&limit=1000&sort=list_updated_at&nsfw=1',
-        auth: false,
-        useAuthHeader: true);
-    animeList.value = (data['data'] as List<dynamic>)
-        .map((e) => TrackedMedia.fromMAL(e))
-        .toList();
+    final data = await fetchMAL('...&limit=1000...');
+    final rawList = data['data'] as List<dynamic>;
+    animeList.value = await compute(_parseTrackedMedia, rawList);
     continueWatching.value = animeList
         .where((e) => e.watchingStatus?.toUpperCase().trim() == "CURRENT")
         .toList();
   }
-
 
   Future<void> fetchUserInfo({String? token}) async {
     final tokenn = token ?? storage.get('mal_auth_token');
@@ -449,7 +451,6 @@ class MalService extends GetxController implements BaseService, OnlineService {
       currentMedia.value = newMedia;
       Logger.i('$isAnime: $body');
       fetchUserAnimeList();
-
     } else {
       Logger.i('Error: ${req.body}');
       Logger.i('$isAnime: $body');
@@ -477,7 +478,6 @@ class MalService extends GetxController implements BaseService, OnlineService {
 
       currentMedia.value = TrackedMedia();
       fetchUserAnimeList();
-
     } else {
       Logger.i('Error deleting entry: ${req.body}');
       snackBar(
@@ -499,8 +499,7 @@ class MalService extends GetxController implements BaseService, OnlineService {
     final number = savedAnime?.currentEpisode?.number.toInt() ?? 0;
     currentMedia.value = animeList.firstWhere((el) => el.id == id,
         orElse: () => TrackedMedia(
-            episodeCount: number.toString(),
-            chapterCount: number.toString()));
+            episodeCount: number.toString(), chapterCount: number.toString()));
   }
 
   @override

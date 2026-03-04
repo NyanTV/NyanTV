@@ -1,5 +1,5 @@
 // ignore_for_file: deprecated_member_use
-
+//lib/screens/search/widgets/inline_search_history.dart
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -57,14 +57,14 @@ class _InlineSearchHistoryState extends State<InlineSearchHistory> {
     for (int i = 0; i < displayedTerms.length; i++) {
       final termNode = FocusNode();
       final deleteNode = FocusNode();
-      
+
       termNode.addListener(() {
         setState(() {});
       });
       deleteNode.addListener(() {
         setState(() {});
       });
-      
+
       _termFocusNodes.add(termNode);
       _deleteFocusNodes.add(deleteNode);
     }
@@ -112,7 +112,7 @@ class _InlineSearchHistoryState extends State<InlineSearchHistory> {
     if (widget.searchTerms.isEmpty) {
       return const SizedBox.shrink();
     }
-    
+
     final displayedTerms = widget.searchTerms.reversed.toList();
 
     return Container(
@@ -171,12 +171,14 @@ class _InlineSearchHistoryState extends State<InlineSearchHistory> {
                           event.logicalKey == LogicalKeyboardKey.enter) {
                         _clearAllHistory();
                         return KeyEventResult.handled;
-                      } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                      } else if (event.logicalKey ==
+                          LogicalKeyboardKey.arrowDown) {
                         if (_termFocusNodes.isNotEmpty) {
                           _termFocusNodes.first.requestFocus();
                         }
                         return KeyEventResult.handled;
-                      } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                      } else if (event.logicalKey ==
+                          LogicalKeyboardKey.arrowUp) {
                         widget.onNavigateBack();
                         return KeyEventResult.handled;
                       }
@@ -186,9 +188,13 @@ class _InlineSearchHistoryState extends State<InlineSearchHistory> {
                   child: GestureDetector(
                     onTap: _clearAllHistory,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .error
+                            .withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: widget.clearAllFocusNode.hasFocus
@@ -293,10 +299,8 @@ class _InlineSearchHistoryState extends State<InlineSearchHistory> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: Theme.of(context)
-                  .colorScheme
-                  .surfaceVariant
-                  .withOpacity(0.3),
+              color:
+                  Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: _termFocusNodes[index].hasFocus
@@ -312,19 +316,15 @@ class _InlineSearchHistoryState extends State<InlineSearchHistory> {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withOpacity(0.1),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Iconsax.search_normal_1,
                     size: 14,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withOpacity(0.7),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.7),
                   ),
                 ),
 
@@ -351,17 +351,20 @@ class _InlineSearchHistoryState extends State<InlineSearchHistory> {
                           event.logicalKey == LogicalKeyboardKey.enter) {
                         _deleteTerm(term);
                         return KeyEventResult.handled;
-                      } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                      } else if (event.logicalKey ==
+                          LogicalKeyboardKey.arrowLeft) {
                         _termFocusNodes[index].requestFocus();
                         return KeyEventResult.handled;
-                      } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                      } else if (event.logicalKey ==
+                          LogicalKeyboardKey.arrowUp) {
                         if (index > 0) {
                           _deleteFocusNodes[index - 1].requestFocus();
                         } else {
                           widget.clearAllFocusNode.requestFocus();
                         }
                         return KeyEventResult.handled;
-                      } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                      } else if (event.logicalKey ==
+                          LogicalKeyboardKey.arrowDown) {
                         if (index < totalItems - 1) {
                           _deleteFocusNodes[index + 1].requestFocus();
                         }

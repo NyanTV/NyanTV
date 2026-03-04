@@ -1,5 +1,5 @@
 // ignore_for_file: invalid_use_of_protected_member, deprecated_member_use
-
+// lib/screens/home_page.dart
 import 'package:nyantv/widgets/header.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +19,6 @@ import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
 import 'package:nyantv/utils/tv_scroll_mixin.dart';
 import 'package:nyantv/widgets/history/tap_history_cards.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
-
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -67,8 +66,7 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
       return KeyEventResult.ignored;
     }
 
-    if (_scrollController.hasClients &&
-        _scrollController.offset > 0) {
+    if (_scrollController.hasClients && _scrollController.offset > 0) {
       final target = (_scrollController.offset - _tvScrollStep).clamp(
         0.0,
         _scrollController.position.maxScrollExtent,
@@ -132,7 +130,6 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
                 ),
               ),
             ),
-
             if (!isDesktop)
               CustomAnimatedAppBar(
                 isVisible: _isAppBarVisibleExternally,
@@ -176,9 +173,8 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
     double bottomNavBarHeight,
   ) {
     return Column(
-      crossAxisAlignment: isMobile
-          ? CrossAxisAlignment.center
-          : CrossAxisAlignment.start,
+      crossAxisAlignment:
+          isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       children: [
         SizedBox(
           height: isDesktop ? 10 : statusBarHeight + appBarHeight,
@@ -191,9 +187,7 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
               fontSize: 27,
               spans: [
                 const NyantvTextSpan(
-                    text: 'Hey ',
-                    size: 30,
-                    variant: TextVariant.bold),
+                    text: 'Hey ', size: 30, variant: TextVariant.bold),
                 NyantvTextSpan(
                     text:
                         '${serviceHandler.isLoggedIn.value ? serviceHandler.profileData.value.name : 'Guest'}',
@@ -210,9 +204,8 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
           ),
         ),
         Column(
-          crossAxisAlignment: isMobile
-              ? CrossAxisAlignment.center
-              : CrossAxisAlignment.start,
+          crossAxisAlignment:
+              isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 10),
             Padding(
@@ -230,8 +223,8 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
             ),
             const SizedBox(height: 30),
             Obx(() {
-              final children = List<Widget>.from(
-                  serviceHandler.homeWidgets(context));
+              final children =
+                  List<Widget>.from(serviceHandler.homeWidgets(context));
               final data = cacheController.getStoredAnime();
               if (data.isNotEmpty && children.length > 2) {
                 children.insert(
@@ -242,13 +235,10 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
                       height: 100,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount:
-                            cacheController.getStoredAnime().length,
+                        itemCount: cacheController.getStoredAnime().length,
                         itemBuilder: (context, i) {
-                          final media =
-                              cacheController.getStoredAnime()[i];
-                          return RecentlyOpenedAnimeCard(
-                              media: media);
+                          final media = cacheController.getStoredAnime()[i];
+                          return RecentlyOpenedAnimeCard(media: media);
                         },
                       ),
                     ),
@@ -263,13 +253,10 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
                       height: 100,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount:
-                            cacheController.getStoredAnime().length,
+                        itemCount: cacheController.getStoredAnime().length,
                         itemBuilder: (context, i) {
-                          final media =
-                              cacheController.getStoredAnime()[i];
-                          return RecentlyOpenedAnimeCard(
-                              media: media);
+                          final media = cacheController.getStoredAnime()[i];
+                          return RecentlyOpenedAnimeCard(media: media);
                         },
                       ),
                     ),

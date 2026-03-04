@@ -78,7 +78,8 @@ class _ActiveSkip {
 
 final Rx<_ActiveSkip?> activeSkip = Rx<_ActiveSkip?>(null);
 
-class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TVScrollMixin, WidgetsBindingObserver {
+class _WatchPageState extends State<WatchPage>
+    with TickerProviderStateMixin, TVScrollMixin, WidgetsBindingObserver {
   late Rx<model.Video> episode;
   late Rx<Episode> currentEpisode;
   late RxList<model.Video> episodeTracks;
@@ -132,9 +133,9 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   final sourceController = Get.find<SourceController>();
   final isEpisodeDialogOpen = false.obs;
   late bool isLoggedIn;
-  final _prevEpFocusNode  = FocusNode(debugLabel: 'prev-ep');
+  final _prevEpFocusNode = FocusNode(debugLabel: 'prev-ep');
   final _playPauseFocusNode = FocusNode(debugLabel: 'play-pause');
-  final _nextEpFocusNode  = FocusNode(debugLabel: 'next-ep');
+  final _nextEpFocusNode = FocusNode(debugLabel: 'next-ep');
   final _skipButtonFocusNode = FocusNode(debugLabel: 'skip-btn');
   late TVRemoteHandler? _tvRemoteHandler;
 
@@ -153,8 +154,10 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   final currentVisualProfile = 'natural'.obs;
   RxMap<String, int> customSettings = <String, int>{}.obs;
+  final _activeSegmentKey = Rx<String?>(null);
 
-  bool get isMobile => !settings.isTV.value && (Platform.isAndroid || Platform.isIOS);
+  bool get isMobile =>
+      !settings.isTV.value && (Platform.isAndroid || Platform.isIOS);
 
   @override
   ScrollController get scrollController => _scrollController;
@@ -168,9 +171,25 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     }
   }
 
+  String? _computeSegmentKey(int secs) {
+    if (skipTimes.value == null) return null;
+    final segs = [
+      skipTimes.value!.op,
+      skipTimes.value!.mixedOp,
+      skipTimes.value!.ed,
+      skipTimes.value!.mixedEd,
+      skipTimes.value!.recap,
+    ];
+    for (final seg in segs) {
+      if (seg != null && secs >= seg.start && secs < seg.end) {
+        return '${seg.start}-${seg.end}';
+      }
+    }
+    return null;
+  }
+
   void applySavedProfile() => ColorProfileManager()
       .applyColorProfile(currentVisualProfile.value, player);
-
 
   void navigateToNextEpisode() {
     if (playerSettings.autoSkipFiller) {
@@ -188,25 +207,27 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   }
 
   bool _hasNextEpisode() {
-    return currentEpisode.value.number.toInt() < episodeList.value.last.number.toInt();
+    return currentEpisode.value.number.toInt() <
+        episodeList.value.last.number.toInt();
   }
 
   Episode? _getNextEpisode() {
     final currentIndex = episodeList.value.indexOf(currentEpisode.value);
-    return currentIndex < episodeList.value.length - 1 
-        ? episodeList.value[currentIndex + 1] 
+    return currentIndex < episodeList.value.length - 1
+        ? episodeList.value[currentIndex + 1]
         : null;
   }
 
   Episode? _getNextNonFillerEpisode() {
     final currentIndex = episodeList.value.indexOf(currentEpisode.value);
     int skippedCount = 0;
-    
+
     for (int i = currentIndex + 1; i < episodeList.value.length; i++) {
       final episode = episodeList.value[i];
       if (episode.filler != true) {
         if (skippedCount > 0) {
-          snackBar('Skipped $skippedCount filler episode${skippedCount > 1 ? 's' : ''}');
+          snackBar(
+              'Skipped $skippedCount filler episode${skippedCount > 1 ? 's' : ''}');
         }
         return episode;
       }
@@ -217,17 +238,18 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   Future<void> _switchToEpisode(Episode episode) async {
     isSwitchingEpisode = true;
-    
-    trackEpisode(currentPosition.value, episodeDuration.value, currentEpisode.value);
-    
+
+    trackEpisode(
+        currentPosition.value, episodeDuration.value, currentEpisode.value);
+
     setState(() {
       player.open(Media(''));
     });
-    
+
     currentEpisode.value = episode;
     final resp = await sourceController.activeSource.value!.methods
-        .getVideoList(d.DEpisode(
-            episodeNumber: episode.number, url: episode.link));
+        .getVideoList(
+            d.DEpisode(episodeNumber: episode.number, url: episode.link));
     final video = resp.map((e) => model.Video.fromVideo(e)).toList();
     final preferredStream = video.firstWhere(
       (e) => e.quality == this.episode.value.quality,
@@ -249,9 +271,9 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
             .setCurrentMedia(widget.anilistData.id.toString());
       } catch (_) {}
     }
-    
+
     _initPlayer(false);
-    
+
     _waitForPlayerReady().then((_) {
       if (mounted) {
         isSwitchingEpisode = false;
@@ -273,7 +295,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     final settings = Get.find<Settings>();
     mediaService = widget.anilistData.serviceType;
     discordRPC = DiscordRPCController.instance;
-    
+
     if (settings.isTV.value) {
       resizeMode.value = "Contain";
       final tempDir = Directory.systemTemp;
@@ -283,7 +305,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           cacheDir.createSync(recursive: true);
         }
       }
-      
+
       settings.preferences.put('shaders_enabled', false);
     }
     if (settings.isTV.value) {
@@ -314,7 +336,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       canRequestFocus: !settings.isTV.value,
       skipTraversal: settings.isTV.value,
     );
-    
+
     ever(showControls, (controlsVisible) {
       if (!settings.isTV.value || !mounted) return;
       final generation = ++_focusGeneration;
@@ -325,16 +347,21 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         }
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted || !showControls.value || generation != _focusGeneration) return;
+          if (!mounted || !showControls.value || generation != _focusGeneration)
+            return;
 
           Future.delayed(const Duration(milliseconds: 250), () {
-            if (!mounted || !showControls.value || generation != _focusGeneration) return;
+            if (!mounted ||
+                !showControls.value ||
+                generation != _focusGeneration) return;
 
             final skipVisible = activeSkip.value != null;
 
             if (skipVisible) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted || !showControls.value || generation != _focusGeneration) return;
+                if (!mounted ||
+                    !showControls.value ||
+                    generation != _focusGeneration) return;
                 if (_skipOpEdFocusNode.canRequestFocus) {
                   _skipOpEdFocusNode.requestFocus();
                 }
@@ -361,13 +388,15 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         _skipOpEdFocusNode.unfocus();
 
         Future.delayed(const Duration(milliseconds: 60), () {
-          if (mounted && generation == _focusGeneration && !_keyboardListenerFocusNode.hasFocus) {
+          if (mounted &&
+              generation == _focusGeneration &&
+              !_keyboardListenerFocusNode.hasFocus) {
             FocusScope.of(context).requestFocus(_keyboardListenerFocusNode);
           }
         });
       }
     });
-        
+
     ever(isBuffering, (buffering) {
       if (showControls.value && !buffering) {
         _startHideControlsTimer();
@@ -386,7 +415,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         });
       }
     });
-    
+
     if (settings.isTV.value) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -404,7 +433,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         }
       });
     }
-    
+
     if (settings.isTV.value) {
       _tvRemoteHandler = TVRemoteHandler(
         player: player,
@@ -422,7 +451,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
             _startHideControlsTimer();
             return;
           }
-          
+
           toggleControls();
           Future.delayed(const Duration(milliseconds: 100), () {
             if (mounted) {
@@ -451,7 +480,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         isLocked: () => isLocked.value,
         onPlayPause: () => player.playOrPause(),
         onNextEpisode: () {
-          if (currentEpisode.value.number.toInt() < episodeList.value.last.number.toInt()) {
+          if (currentEpisode.value.number.toInt() <
+              episodeList.value.last.number.toInt()) {
             isSwitchingEpisode = true;
             player.pause().then((_) => fetchEpisode(false));
           }
@@ -470,14 +500,15 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   void _scheduleDiscordUpdate({bool isPaused = false}) {
     _discordUpdateTimer?.cancel();
-    
+
     if (_isUpdatingDiscord) {
       Logger.i('Discord update already in progress, skipping...');
       return;
     }
-    
+
     if (_lastDiscordUpdate != null) {
-      final timeSinceLastUpdate = DateTime.now().difference(_lastDiscordUpdate!);
+      final timeSinceLastUpdate =
+          DateTime.now().difference(_lastDiscordUpdate!);
       if (timeSinceLastUpdate < _minUpdateInterval) {
         Logger.i('Discord update too soon, waiting...');
         final waitTime = _minUpdateInterval - timeSinceLastUpdate;
@@ -487,7 +518,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         return;
       }
     }
-    
+
     _discordUpdateTimer = Timer(const Duration(milliseconds: 300), () {
       _performDiscordUpdate(isPaused: isPaused);
     });
@@ -496,39 +527,40 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   Future<void> _waitForPlayerReady() async {
     int attempts = 0;
     while (attempts < 30) {
-      if (episodeDuration.value.inMilliseconds > 0 && 
+      if (episodeDuration.value.inMilliseconds > 0 &&
           currentEpisode.value.durationInMilliseconds != null &&
           currentEpisode.value.durationInMilliseconds! > 0) {
         await Future.delayed(const Duration(milliseconds: 300));
-        Logger.i('Player ready check passed: Duration=${episodeDuration.value.inSeconds}s, Episode Duration=${currentEpisode.value.durationInMilliseconds}ms');
+        Logger.i(
+            'Player ready check passed: Duration=${episodeDuration.value.inSeconds}s, Episode Duration=${currentEpisode.value.durationInMilliseconds}ms');
         return;
       }
       await Future.delayed(const Duration(milliseconds: 200));
       attempts++;
     }
-    Logger.i('Warning: Player ready timeout after ${attempts * 200}ms - proceeding anyway');
+    Logger.i(
+        'Warning: Player ready timeout after ${attempts * 200}ms - proceeding anyway');
   }
 
   Future<void> _performDiscordUpdate({bool isPaused = false}) async {
-    
     if (_isUpdatingDiscord) {
       Logger.i('Skipping Discord update - already updating');
       return;
     }
-    
+
     if (episodeDuration.value.inMilliseconds == 0) {
-      Logger.i('Skipping Discord update - duration not ready yet (episodeDuration=0)');
+      Logger.i(
+          'Skipping Discord update - duration not ready yet (episodeDuration=0)');
       return;
     }
-    
+
     _isUpdatingDiscord = true;
     _lastDiscordUpdate = DateTime.now();
-    
+
     try {
-      final totalEps = episodeList.isNotEmpty 
-          ? 'Total: ${episodeList.length} Episodes' 
-          : '';
-      
+      final totalEps =
+          episodeList.isNotEmpty ? 'Total: ${episodeList.length} Episodes' : '';
+
       if (isPaused) {
         Logger.i('Calling updateAnimePresencePaused...');
         await discordRPC.updateAnimePresencePaused(
@@ -544,7 +576,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           totalEpisodes: totalEps,
         );
       }
-      
     } catch (e, stackTrace) {
       Logger.i('Error: $e');
       Logger.i('Stack: $stackTrace');
@@ -555,24 +586,25 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   void _startPeriodicDiscordUpdates() {
     _stopPeriodicDiscordUpdates();
-    
+
     if (!isPlaying.value || isSwitchingEpisode) {
       return;
     }
-    
-    
-    _periodicDiscordUpdateTimer = Timer.periodic(_periodicUpdateInterval, (timer) {
+
+    _periodicDiscordUpdateTimer =
+        Timer.periodic(_periodicUpdateInterval, (timer) {
       if (!mounted || !isPlaying.value || isSwitchingEpisode) {
         _stopPeriodicDiscordUpdates();
         return;
       }
-      
+
       if (_lastDiscordUpdate != null) {
-        final timeSinceLastUpdate = DateTime.now().difference(_lastDiscordUpdate!);
-        if (timeSinceLastUpdate >= _periodicUpdateInterval && !_isManualSeeking) {
+        final timeSinceLastUpdate =
+            DateTime.now().difference(_lastDiscordUpdate!);
+        if (timeSinceLastUpdate >= _periodicUpdateInterval &&
+            !_isManualSeeking) {
           _scheduleDiscordUpdate(isPaused: false);
-        } else {
-        }
+        } else {}
       } else {
         if (!_isManualSeeking) {
           _scheduleDiscordUpdate(isPaused: false);
@@ -630,7 +662,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       final config = DeviceRamHelper.getConfig(profile);
       final useHW = config.cacheSecs < 120;
 
-      Logger.i('TV buffer profile : ${DeviceRamHelper.getProfileName(profile)}');
+      Logger.i(
+          'TV buffer profile : ${DeviceRamHelper.getProfileName(profile)}');
       Logger.i('Buffer            : ${config.bufferMB}MB');
       Logger.i('Cache             : ${config.cacheSecs}s');
       Logger.i('HW accel          : $useHW');
@@ -640,8 +673,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           // ── Rendering ──────────────────────────────────────────────────
           // Do NOT force "vo: gpu" or "gpu-context: android" here.
           // media_kit sets a sane default; overriding it breaks Amlogic/MTK.
-          if (useHW) "hwdec": "auto-safe" else "hwdec": "no",
-          "vd-lavc-threads": "0",          // auto thread count
+          if (useHW) "hwdec": "mediacodec-copy" else "hwdec": "no",
+          "vd-lavc-threads": "0", // auto thread count
 
           // ── Cache / demuxer ────────────────────────────────────────────
           "cache": "yes",
@@ -663,16 +696,16 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
           // ── Network ────────────────────────────────────────────────────
           "stream-buffer-size": "${config.bufferBytes}",
-          "network-timeout":    config.extraMpvOptions['network-timeout'] ?? '20',
-          "tcp-nodelay": "yes",     // disables Nagle → lower latency per chunk
-          "tls-verify": "no",       // faster TLS handshake on Android TV
+          "network-timeout": config.extraMpvOptions['network-timeout'] ?? '20',
+          "tcp-nodelay": "yes", // disables Nagle → lower latency per chunk
+          "tls-verify": "no", // faster TLS handshake on Android TV
 
           // ── Seek quality ───────────────────────────────────────────────
-          "hr-seek": "yes",         // accurate seek → less A/V gap after resume
-          "audio-buffer": "0.2",    // small audio buffer → less desync
+          "hr-seek": "yes", // accurate seek → less A/V gap after resume
+          "audio-buffer": "0.2", // small audio buffer → less desync
 
           // ── Playlist pre-fetch ─────────────────────────────────────────
-          "prefetch-playlist": "yes",  // pre-opens next segment URL
+          "prefetch-playlist": "yes", // pre-opens next segment URL
 
           // ── Spread any remaining profile-specific overrides ────────────
           ...config.extraMpvOptions,
@@ -680,7 +713,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         bufferSize: config.bufferBytes,
       );
     }
-    
+
     if (shadersEnabled) {
       return const PlayerConfiguration();
     }
@@ -693,49 +726,48 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         settings.preferences.get('shaders_enabled', defaultValue: false);
     Episode? savedEpisode = offlineStorage.getWatchedEpisode(
         widget.anilistData.id, currentEpisode.value.number);
-    
-    int savedMs =
-        (savedEpisode?.number ?? 0) == currentEpisode.value.number
-            ? savedEpisode?.timeStampInMilliseconds ?? 0
-            : 0;
-    
+
+    int savedMs = (savedEpisode?.number ?? 0) == currentEpisode.value.number
+        ? savedEpisode?.timeStampInMilliseconds ?? 0
+        : 0;
+
     final savedDuration = savedEpisode?.durationInMilliseconds ?? 0;
     final isNearEnd = savedDuration > 0 && (savedMs / savedDuration) >= 0.99;
 
     int startTimeMilliseconds = isNearEnd ? 0 : savedMs;
     final bool hasInitialSeek = startTimeMilliseconds > 0;
-    
+
     if (firstTime) {
       // IMPORTANT: Use the buffer profile configuration
       player = Player(
         configuration: getPlayerConfig(areShadersEnabled),
       );
-      
+
       if (settings.isTV.value) {
         // Log the active buffer configuration
         final profile = settings.tvBufferProfile.value;
         final config = DeviceRamHelper.getConfig(profile);
         Logger.i('=== TV PLAYER INITIALIZED ===');
         Logger.i('Profile: ${DeviceRamHelper.getProfileName(profile)}');
-        Logger.i('Buffer Size: ${config.bufferMB}MB (${config.bufferBytes} bytes)');
+        Logger.i(
+            'Buffer Size: ${config.bufferMB}MB (${config.bufferBytes} bytes)');
         Logger.i('Cache Duration: ${config.cacheSecs}s');
         Logger.i('Demuxer Max: ${config.demuxerMax}');
         Logger.i('Demuxer Back: ${config.demuxerBack}');
         Logger.i('=============================');
 
         if (config.cacheSecs >= 120) {
-           playerController = VideoController(player,
-            configuration: const VideoControllerConfiguration(
-              androidAttachSurfaceAfterVideoParameters: false,
-              enableHardwareAcceleration: false,
-            ));
-        }
-        else {
           playerController = VideoController(player,
-            configuration: const VideoControllerConfiguration(
-              androidAttachSurfaceAfterVideoParameters: false,
-              enableHardwareAcceleration: true,
-            ));
+              configuration: const VideoControllerConfiguration(
+                androidAttachSurfaceAfterVideoParameters: false,
+                enableHardwareAcceleration: false,
+              ));
+        } else {
+          playerController = VideoController(player,
+              configuration: const VideoControllerConfiguration(
+                androidAttachSurfaceAfterVideoParameters: false,
+                enableHardwareAcceleration: true,
+              ));
         }
       } else {
         playerController = VideoController(player,
@@ -747,18 +779,18 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       episodeDuration.value = Duration.zero;
       bufferred.value = Duration.zero;
     }
-    
+
     player.open(Media(episode.value.url,
         httpHeaders: episode.value.headers ??
             {'Referer': sourceController.activeSource.value?.baseUrl ?? ''}));
-    
+
     await _performInitialSeek(startTimeMilliseconds);
-    
+
     _initSubs();
     player.setRate(prevRate.value);
     isOPSkippedOnce.value = false;
     isEDSkippedOnce.value = false;
-    
+
     final skipQuery = aniskip.SkipSearchQuery(
         idMAL: widget.anilistData.idMal,
         episodeNumber: currentEpisode.value.number);
@@ -768,7 +800,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       debugPrint("An error occurred: $error");
       debugPrint("Stack trace: $stackTrace");
     });
-    
+
     if (areShadersEnabled) {
       final key = (PlayerShaders.getShaders()
           .indexWhere((e) => e == settings.selectedShader));
@@ -778,19 +810,20 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     if (firstTime) {
       StreamSubscription? initSub;
       bool discordUpdateHandled = false;
-      
+
       initSub = player.stream.duration.listen((duration) {
         if (duration.inMilliseconds > 0 && !discordUpdateHandled) {
           discordUpdateHandled = true;
           Logger.i('Player ready with duration: ${duration.inSeconds}s');
           initSub?.cancel();
-          
+
           _waitForPlayerReady().then((_) {
             if (mounted) {
               if (!hasInitialSeek) {
                 _waitForBufferingAfterSeek().then((_) {
                   if (mounted && !isSwitchingEpisode) {
-                    Logger.i('Player fully ready (no initial seek), performing Discord update...');
+                    Logger.i(
+                        'Player fully ready (no initial seek), performing Discord update...');
                     isSwitchingEpisode = false;
                     _performDiscordUpdate(isPaused: false);
                   }
@@ -803,7 +836,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           });
         }
       });
-      
+
       Future.delayed(const Duration(seconds: 10), () {
         if (!discordUpdateHandled && mounted) {
           Logger.i('Duration stream timeout, forcing Discord update');
@@ -815,7 +848,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       });
     }
   }
-    
+
   StreamSubscription? _initialSeekSubscription;
   //bool _hasPerformedInitialSeek = false;
 
@@ -839,19 +872,23 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       _initialSeekSubscription?.cancel();
 
       await Future.delayed(const Duration(milliseconds: 200));
-      if (!mounted) { completer.complete(); return; }
+      if (!mounted) {
+        completer.complete();
+        return;
+      }
 
       final seekPos = Duration(milliseconds: startTimeMilliseconds);
       Logger.i('Seeking to ${seekPos.inSeconds}s …');
       player.seek(seekPos);
 
       await Future.delayed(const Duration(milliseconds: 600));
-      if (mounted && currentPosition.value.inMilliseconds < startTimeMilliseconds - 2000) {
+      if (mounted &&
+          currentPosition.value.inMilliseconds < startTimeMilliseconds - 2000) {
         Logger.i('Seek retry …');
         player.seek(seekPos);
       }
 
-     // _hasPerformedInitialSeek = true;
+      // _hasPerformedInitialSeek = true;
       Logger.i('Initial seek done');
 
       if (mounted) {
@@ -874,7 +911,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
     return completer.future;
   }
-    
+
   int lastProcessedMinute = 0;
   bool isSwitchingEpisode = false;
   StreamSubscription<Duration>? _positionSubscription;
@@ -892,7 +929,15 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
         _lastPosition = e;
         currentEpisode.value.timeStampInMilliseconds = e.inMilliseconds;
 
-        if (e.inSeconds % 30 == 0 && e.inSeconds > 0 && isPlaying.value && !isSwitchingEpisode) {
+        final newKey = _computeSegmentKey(e.inSeconds);
+        if (newKey != _activeSegmentKey.value) {
+          _activeSegmentKey.value = newKey;
+        }
+
+        if (e.inSeconds % 30 == 0 &&
+            e.inSeconds > 0 &&
+            isPlaying.value &&
+            !isSwitchingEpisode) {
           trackEpisode(e, episodeDuration.value, currentEpisode.value);
         }
 
@@ -924,21 +969,28 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
         final candidates = <_ActiveSkip>[];
 
-        void checkSegment(aniskip.SkipIntervals? seg, String label, bool autoSkip) {
+        void checkSegment(
+            aniskip.SkipIntervals? seg, String label, bool autoSkip) {
           if (seg == null || autoSkip) return;
           if (pos >= seg.start && pos < seg.end) {
             final secsIn = pos - seg.start;
             if (secsIn < 15 || showControls.value || isAnimating) {
-              candidates.add(_ActiveSkip(label: label, end: seg.end, start: seg.start));
+              candidates.add(
+                  _ActiveSkip(label: label, end: seg.end, start: seg.start));
             }
           }
         }
 
-        checkSegment(skipTimes.value!.op,      'Skip Opening', playerSettings.autoSkipOP);
-        checkSegment(skipTimes.value!.mixedOp, 'Skip Opening', playerSettings.autoSkipOP);
-        checkSegment(skipTimes.value!.ed,      'Skip Ending',  playerSettings.autoSkipED);
-        checkSegment(skipTimes.value!.mixedEd, 'Skip Ending',  playerSettings.autoSkipED);
-        checkSegment(skipTimes.value!.recap,   'Skip Recap',   playerSettings.autoSkipRecap);
+        checkSegment(
+            skipTimes.value!.op, 'Skip Opening', playerSettings.autoSkipOP);
+        checkSegment(skipTimes.value!.mixedOp, 'Skip Opening',
+            playerSettings.autoSkipOP);
+        checkSegment(
+            skipTimes.value!.ed, 'Skip Ending', playerSettings.autoSkipED);
+        checkSegment(
+            skipTimes.value!.mixedEd, 'Skip Ending', playerSettings.autoSkipED);
+        checkSegment(
+            skipTimes.value!.recap, 'Skip Recap', playerSettings.autoSkipRecap);
 
         if (candidates.isEmpty) {
           activeSkip.value = null;
@@ -1007,8 +1059,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     player.stream.subtitle.listen((e) {
       subtitleText.value = e;
     });
-  } 
-  
+  }
+
   void startSeeking() {
     _isSeeking = true;
   }
@@ -1119,20 +1171,20 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   Future<void> fetchEpisode(bool prev) async {
     trackEpisode(
         currentPosition.value, episodeDuration.value, currentEpisode.value);
-    
+
     isSwitchingEpisode = true;
-    
+
     setState(() {
       player.open(Media(''));
     });
-    
+
     final episodeToNav = navEpisode(prev);
     if (episodeToNav == null) {
       snackBar("No Streams Found");
       isSwitchingEpisode = false;
       return;
     }
-    
+
     currentEpisode.value = episodeToNav;
     if (settings.isTV.value) {
       try {
@@ -1157,9 +1209,9 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     currentEpisode.value.source = sourceController.activeSource.value!.name;
     currentEpisode.value.currentTrack = preferredStream;
     currentEpisode.value.videoTracks = video;
-    
+
     _initPlayer(false);
-    
+
     _waitForPlayerReady().then((_) {
       if (mounted) {
         isSwitchingEpisode = false;
@@ -1172,7 +1224,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     });
   }
 
-
   void _handleDoubleTap(TapDownDetails details) {
     final screenWidth = MediaQuery.of(context).size.width;
     final tapPosition = details.globalPosition;
@@ -1182,7 +1233,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   void _skipSegments(bool isLeft) {
     _isManualSeeking = true;
-    
+
     player.pause();
     if (isLeftSide.value != isLeft) {
       doubleTapLabel.value = 0;
@@ -1215,7 +1266,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       _rightAnimationController.reset();
       doubleTapLabel.value = 0;
       skipDuration.value = 0;
-      
+
       player.play();
 
       _waitForBufferingAfterSeek().then((_) {
@@ -1250,23 +1301,23 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   Future<void> _waitForBufferingAfterSeek() async {
     if (!isPlaying.value) return;
-    
+
     int attempts = 0;
     const maxAttempts = 75;
-    
+
     while (isBuffering.value && attempts < maxAttempts) {
       await Future.delayed(const Duration(milliseconds: 100));
       attempts++;
     }
-    
+
     await Future.delayed(const Duration(milliseconds: 200));
-    
+
     Logger.i('Buffering complete after seek (${attempts * 100}ms)');
   }
 
   void _megaSkip(bool invert) {
     _isManualSeeking = true;
-    
+
     if (invert) {
       final duration = Duration(
           seconds: currentPosition.value.inSeconds - settings.skipDuration);
@@ -1306,10 +1357,12 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       }
     }
 
-    trySkip(skipTimes.value?.op,      playerSettings.autoSkipOP,  isOPSkippedOnce);
-    trySkip(skipTimes.value?.mixedOp, playerSettings.autoSkipOP,  isOPSkippedOnce);
-    trySkip(skipTimes.value?.ed,      playerSettings.autoSkipED,  isEDSkippedOnce);
-    trySkip(skipTimes.value?.mixedEd, playerSettings.autoSkipED,  isEDSkippedOnce);
+    trySkip(skipTimes.value?.op, playerSettings.autoSkipOP, isOPSkippedOnce);
+    trySkip(
+        skipTimes.value?.mixedOp, playerSettings.autoSkipOP, isOPSkippedOnce);
+    trySkip(skipTimes.value?.ed, playerSettings.autoSkipED, isEDSkippedOnce);
+    trySkip(
+        skipTimes.value?.mixedEd, playerSettings.autoSkipED, isEDSkippedOnce);
 
     if (skipTimes.value?.recap != null && playerSettings.autoSkipRecap) {
       final seg = skipTimes.value!.recap!;
@@ -1321,7 +1374,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       }
     }
   }
-    
+
   void toggleControls({bool? val}) {
     showControls.value = val ?? !showControls.value;
 
@@ -1378,14 +1431,16 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
           currentPosition.value, episodeDuration.value, currentEpisode.value,
           updateAL: false);
     } else {
-      Logger.i('dispose: skip overwrite: currentMs=$currentMs savedMs=$savedMs');
+      Logger.i(
+          'dispose: skip overwrite: currentMs=$currentMs savedMs=$savedMs');
     }
 
     if (mounted && !isInDVDMode) {
       try {
         discordRPC.updateMediaPresence(media: anilistData.value);
       } catch (e) {
-        Logger.i('Discord update on dispose failed (expected on app close): $e');
+        Logger.i(
+            'Discord update on dispose failed (expected on app close): $e');
       }
     }
 
@@ -1420,7 +1475,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
   KeyEventResult handlePlayerKeyEvent(FocusNode node, KeyEvent e) {
     if (settings.isTV.value) {
-     return _tvRemoteHandler!.handleKeyEvent(node, e);
+      return _tvRemoteHandler!.handleKeyEvent(node, e);
     }
 
     if (e is! KeyDownEvent) return KeyEventResult.ignored;
@@ -1457,9 +1512,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final canFocus = settings.isTV.value
-          ? !showControls.value
-          : true;
+      final canFocus = settings.isTV.value ? !showControls.value : true;
 
       return Focus(
         focusNode: _keyboardListenerFocusNode,
@@ -1504,12 +1557,12 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                     ? _buildBufferingIndicator()
                     : const SizedBox.shrink()),
                 Obx(() => AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  bottom: showControls.value ? 95 : 40,
-                  right: 20,
-                  child: _buildSkipOpEdButton(),
-                )),
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      bottom: showControls.value ? 95 : 40,
+                      right: 20,
+                      child: _buildSkipOpEdButton(),
+                    )),
               ],
             ),
           ),
@@ -1554,7 +1607,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       if (settings.isTV.value) {
         return _buildTVPlayer(context);
       }
-      
+
       return Row(
         children: [
           AnimatedContainer(
@@ -1619,40 +1672,42 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                       mobileSize: 0.4, desktopSize: 0.3, isStrict: true)
               : 0,
           child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onLongPressStart: (e) {
-                pressed2x.value = true;
-                player.setRate(prevRate.value * 2);
-              },
-              onLongPressEnd: (e) {
-                pressed2x.value = false;
-                player.setRate(prevRate.value);
-              },
-              onTap: () {
-                if (settings.isTV.value) {
-                  if (!_keyboardListenerFocusNode.hasFocus && !showControls.value) {
-                    FocusScope.of(context).requestFocus(_keyboardListenerFocusNode);
-                  }
-                  
-                  if (!showControls.value) {
-                    toggleControls(val: true);
-                  } else {
-                    toggleControls(val: false);
-                  }
-                } else {
-                  toggleControls();
+            behavior: HitTestBehavior.opaque,
+            onLongPressStart: (e) {
+              pressed2x.value = true;
+              player.setRate(prevRate.value * 2);
+            },
+            onLongPressEnd: (e) {
+              pressed2x.value = false;
+              player.setRate(prevRate.value);
+            },
+            onTap: () {
+              if (settings.isTV.value) {
+                if (!_keyboardListenerFocusNode.hasFocus &&
+                    !showControls.value) {
+                  FocusScope.of(context)
+                      .requestFocus(_keyboardListenerFocusNode);
                 }
-              },
-              onDoubleTapDown: (e) => _handleDoubleTap(e),
-              child: AnimatedOpacity(
-                curve: Curves.easeInOut,
-                duration: const Duration(milliseconds: 300),
-                opacity: showControls.value ? 1 : 0,
-                child: Container(
-                  color: Colors.black.withOpacity(0.5),
-                ),
+
+                if (!showControls.value) {
+                  toggleControls(val: true);
+                } else {
+                  toggleControls(val: false);
+                }
+              } else {
+                toggleControls();
+              }
+            },
+            onDoubleTapDown: (e) => _handleDoubleTap(e),
+            child: AnimatedOpacity(
+              curve: Curves.easeInOut,
+              duration: const Duration(milliseconds: 300),
+              opacity: showControls.value ? 1 : 0,
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
               ),
-            )),
+            ),
+          )),
     );
   }
 
@@ -2128,12 +2183,10 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         transform: Matrix4.identity()
-                          ..translate(
-                              0.0, showControls.value ? 0.0 : -100.0),
+                          ..translate(0.0, showControls.value ? 0.0 : -100.0),
                         padding: EdgeInsets.symmetric(
                             vertical: 15.0,
-                            horizontal:
-                                isEpisodeDialogOpen.value ? 0 : 10),
+                            horizontal: isEpisodeDialogOpen.value ? 0 : 10),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -2164,11 +2217,10 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                       color: themeFgColor.value,
                                     ),
                                     NyantvText(
-                                      text: anilistData.value.title
-                                          .toUpperCase(),
+                                      text:
+                                          anilistData.value.title.toUpperCase(),
                                       variant: TextVariant.bold,
-                                      color:
-                                          Colors.white.withOpacity(0.8),
+                                      color: Colors.white.withOpacity(0.8),
                                     ),
                                   ],
                                 ),
@@ -2191,19 +2243,17 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                             _startHideControlsTimer();
                                           }
                                         },
-                                        icon: HugeIcons
-                                            .strokeRoundedFolder03),
+                                        icon: HugeIcons.strokeRoundedFolder03),
                                     _buildIcon(
                                         onTap: () {
                                           _pauseForMenuInteraction();
                                           showPlaybackSpeedDialog(context);
                                         },
-                                        icon: HugeIcons
-                                            .strokeRoundedClock01),
+                                        icon: HugeIcons.strokeRoundedClock01),
                                   ],
                                   _buildIcon(
-                                      onTap: () => isLocked.value =
-                                          !isLocked.value,
+                                      onTap: () =>
+                                          isLocked.value = !isLocked.value,
                                       icon: isLocked.value
                                           ? Icons.lock
                                           : Icons.lock_open),
@@ -2214,14 +2264,11 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                         ),
                       ),
                     ),
-
                     const Spacer(),
-
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       transform: Matrix4.identity()
-                        ..translate(
-                            0.0, showControls.value ? 0.0 : 100.0),
+                        ..translate(0.0, showControls.value ? 0.0 : 100.0),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20.0, vertical: 10),
                       child: Column(
@@ -2229,8 +2276,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                         children: [
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               NyantvTextSpans(
                                 maxLines: 1,
@@ -2238,12 +2284,11 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                   NyantvTextSpan(
                                       text: '${formattedTime.value} ',
                                       variant: TextVariant.semiBold,
-                                      color: themeFgColor.value
-                                          .withOpacity(0.8)),
+                                      color:
+                                          themeFgColor.value.withOpacity(0.8)),
                                   NyantvTextSpan(
                                     variant: TextVariant.semiBold,
-                                    text:
-                                        ' /  ${formattedDuration.value}',
+                                    text: ' /  ${formattedDuration.value}',
                                   ),
                                 ],
                               ),
@@ -2251,7 +2296,9 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   const SizedBox(width: 8),
-                                  if (!isLocked.value && activeSkip.value == null) _buildSkipButton(false),
+                                  if (!isLocked.value &&
+                                      activeSkip.value == null)
+                                    _buildSkipButton(false),
                                 ],
                               ),
                             ],
@@ -2261,71 +2308,73 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                             child: SizedBox(
                               height: 27,
                               child: Stack(
-                              children: [ VideoSliderTheme(
-                                color: themeFgColor.value,
-                                inactiveTrackColor:
-                                    _getBgColor().withOpacity(0.1),
-                                child: Slider(
-                                  focusNode: FocusNode(
-                                      canRequestFocus: false,
-                                      skipTraversal: true),
-                                  min: 0,
-                                  value: currentPosition
-                                      .value.inMilliseconds
-                                      .toDouble(),
-                                  max: (currentPosition
-                                                  .value.inMilliseconds >
-                                              episodeDuration
+                                children: [
+                                  VideoSliderTheme(
+                                    color: themeFgColor.value,
+                                    inactiveTrackColor:
+                                        _getBgColor().withOpacity(0.1),
+                                    child: Slider(
+                                      focusNode: FocusNode(
+                                          canRequestFocus: false,
+                                          skipTraversal: true),
+                                      min: 0,
+                                      value: currentPosition
+                                          .value.inMilliseconds
+                                          .toDouble(),
+                                      max: (currentPosition
+                                                      .value.inMilliseconds >
+                                                  episodeDuration
+                                                      .value.inMilliseconds
+                                              ? currentPosition
                                                   .value.inMilliseconds
-                                          ? currentPosition
-                                              .value.inMilliseconds
-                                          : episodeDuration
-                                              .value.inMilliseconds)
-                                      .toDouble(),
-                                  secondaryTrackValue: bufferred
-                                      .value.inMilliseconds
-                                      .toDouble(),
-                                  onChangeStart: (_) {
-                                    startSeeking();
-                                    _isManualSeeking = true;
-                                  },
-                                  onChangeEnd: (val) async {
-                                    if (episodeDuration.value
-                                            .inMilliseconds
-                                            .toDouble() !=
-                                        0.0) {
-                                      final newPosition = Duration(
-                                          milliseconds: val.toInt());
-                                      player.seek(newPosition);
-                                      endSeeking(newPosition);
-                                      await _waitForBufferingAfterSeek();
-                                      _isManualSeeking = false;
-                                      if (mounted &&
-                                          !isSwitchingEpisode &&
-                                          isPlaying.value) {
-                                        Logger.i(
-                                            'Slider seek complete, updating Discord');
-                                        _scheduleDiscordUpdate(
-                                            isPaused: false);
-                                      }
-                                    }
-                                  },
-                                  onChanged: (val) {
-                                    if (episodeDuration.value
-                                            .inMilliseconds
-                                            .toDouble() !=
-                                        0.0) {
-                                      currentPosition.value = Duration(
-                                          milliseconds: val.toInt());
-                                      formattedTime.value = formatDuration(
-                                          currentPosition.value);
-                                    }
-                                  },
-                                ),
-                              ),
-                              Positioned.fill(
-                                child: IgnorePointer(
-                                  child: Obx(() => _buildSegmentOverlay()),
+                                              : episodeDuration
+                                                  .value.inMilliseconds)
+                                          .toDouble(),
+                                      secondaryTrackValue: bufferred
+                                          .value.inMilliseconds
+                                          .toDouble(),
+                                      onChangeStart: (_) {
+                                        startSeeking();
+                                        _isManualSeeking = true;
+                                      },
+                                      onChangeEnd: (val) async {
+                                        if (episodeDuration.value.inMilliseconds
+                                                .toDouble() !=
+                                            0.0) {
+                                          final newPosition = Duration(
+                                              milliseconds: val.toInt());
+                                          player.seek(newPosition);
+                                          endSeeking(newPosition);
+                                          await _waitForBufferingAfterSeek();
+                                          _isManualSeeking = false;
+                                          if (mounted &&
+                                              !isSwitchingEpisode &&
+                                              isPlaying.value) {
+                                            Logger.i(
+                                                'Slider seek complete, updating Discord');
+                                            _scheduleDiscordUpdate(
+                                                isPaused: false);
+                                          }
+                                        }
+                                      },
+                                      onChanged: (val) {
+                                        if (episodeDuration.value.inMilliseconds
+                                                .toDouble() !=
+                                            0.0) {
+                                          currentPosition.value = Duration(
+                                              milliseconds: val.toInt());
+                                          formattedTime.value = formatDuration(
+                                              currentPosition.value);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  Positioned.fill(
+                                    child: IgnorePointer(
+                                      child: Obx(() {
+                                        _activeSegmentKey.value;
+                                        return _buildSegmentOverlay();
+                                      }),
                                     ),
                                   ),
                                 ],
@@ -2335,8 +2384,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                           const SizedBox(height: 5),
                           if (!isLocked.value)
                             Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 BlurWrapper(
@@ -2361,8 +2409,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                             _pauseForMenuInteraction();
                                             showSubtitleSelector();
                                           },
-                                          icon: HugeIcons
-                                              .strokeRoundedSubtitle),
+                                          icon:
+                                              HugeIcons.strokeRoundedSubtitle),
                                       if (episode.value.audios != null &&
                                           episode.value.audios!.isNotEmpty)
                                         _buildIcon(
@@ -2388,15 +2436,13 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                                           onTap: () {
                                             final newIndex =
                                                 (resizeModeList.indexOf(
-                                                            resizeMode
-                                                                .value) +
+                                                            resizeMode.value) +
                                                         1) %
                                                     resizeModeList.length;
                                             resizeMode.value =
                                                 resizeModeList[newIndex];
                                           },
-                                          icon:
-                                              Icons.aspect_ratio_rounded),
+                                          icon: Icons.aspect_ratio_rounded),
                                       if (!Platform.isAndroid &&
                                           !Platform.isIOS)
                                         _buildIcon(
@@ -2434,7 +2480,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       );
     });
   }
-  
+
   void showPlaybackSpeedDialog(BuildContext context) async {
     showDialog(
       context: context,
@@ -2578,7 +2624,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     );
   }
 
-
   Widget buildPlayButton({
     required RxBool isPlaying,
     FocusNode? focusNode,
@@ -2587,8 +2632,8 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
   }) {
     final isMobile =
         !settings.isTV.value && (Platform.isAndroid || Platform.isIOS);
-    final padding =
-        getResponsiveSize(context, mobileSize: 10, desktopSize: 20, isStrict: true);
+    final padding = getResponsiveSize(context,
+        mobileSize: 10, desktopSize: 20, isStrict: true);
     final radius = getResponsiveSize(context,
         mobileSize: 20.multiplyRadius(),
         desktopSize: 40.multiplyRadius(),
@@ -2653,7 +2698,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                   _startHideControlsTimer();
                   return KeyEventResult.handled;
                 }
-                
+
                 if (key == LogicalKeyboardKey.arrowLeft) {
                   if (currentEpisode.value.number.toInt() > 1) {
                     _prevEpFocusNode.requestFocus();
@@ -2661,15 +2706,16 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                   _startHideControlsTimer();
                   return KeyEventResult.handled;
                 }
-                
+
                 if (key == LogicalKeyboardKey.arrowRight) {
-                  if (currentEpisode.value.number.toInt() < episodeList.value.last.number.toInt()) {
+                  if (currentEpisode.value.number.toInt() <
+                      episodeList.value.last.number.toInt()) {
                     _nextEpFocusNode.requestFocus();
                   }
                   _startHideControlsTimer();
                   return KeyEventResult.handled;
                 }
-                
+
                 return KeyEventResult.ignored;
               },
               child: GestureDetector(
@@ -2702,7 +2748,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       );
     });
   }
-    
+
   Future<void> _doSkip(bool invert) async {
     _isManualSeeking = true;
     if (invert) {
@@ -2798,31 +2844,28 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
 
     return btn;
   }
-    
+
   Widget _buildTVPlayer(BuildContext context) {
     final view = View.of(context);
     final physicalSize = view.physicalSize;
     final devicePixelRatio = view.devicePixelRatio;
     final realWidth = physicalSize.width / devicePixelRatio;
-    
+
     final settings = Get.find<Settings>();
     final scale = settings.uiScale;
     final effectiveWidth = scale != 1.0 ? realWidth / scale : realWidth;
-    
+
     return Row(
       children: [
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          width: isEpisodeDialogOpen.value
-              ? effectiveWidth * 0.7
-              : effectiveWidth,
+          width:
+              isEpisodeDialogOpen.value ? effectiveWidth * 0.7 : effectiveWidth,
           child: _buildTVVideoWidget(),
         ),
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          width: isEpisodeDialogOpen.value
-              ? effectiveWidth * 0.3
-              : 0,
+          width: isEpisodeDialogOpen.value ? effectiveWidth * 0.3 : 0,
           child: Focus(
             focusNode: FocusNode(
                 canRequestFocus: isEpisodeDialogOpen.value,
@@ -2851,7 +2894,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     final shouldBypassScale = uiScaleBypass?.bypassScale ?? false;
 
     if (shouldBypassScale) {
-
       return SizedBox(
         width: double.infinity,
         height: double.infinity,
@@ -2918,7 +2960,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
     if (settings.isTV.value) {
       final isPrev = icon == Icons.skip_previous_rounded;
       final isNext = icon == Icons.skip_next_rounded;
-      
+
       final tvInner = Container(
         decoration: BoxDecoration(
           color: isPlay ? color : Colors.transparent,
@@ -2952,24 +2994,23 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
                 return KeyEventResult.handled;
               }
               if (key == LogicalKeyboardKey.arrowUp) {
-                FocusScope.of(context)
-                    .focusInDirection(TraversalDirection.up);
+                FocusScope.of(context).focusInDirection(TraversalDirection.up);
                 _startHideControlsTimer();
                 return KeyEventResult.handled;
               }
-              
+
               if (isPrev && key == LogicalKeyboardKey.arrowRight) {
                 _playPauseFocusNode.requestFocus();
                 _startHideControlsTimer();
                 return KeyEventResult.handled;
               }
-              
+
               if (isNext && key == LogicalKeyboardKey.arrowLeft) {
                 _playPauseFocusNode.requestFocus();
                 _startHideControlsTimer();
                 return KeyEventResult.handled;
               }
-              
+
               return KeyEventResult.ignored;
             },
             child: GestureDetector(
@@ -3010,7 +3051,7 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       ),
     );
   }
-    
+
   Widget _buildBufferingIndicator() {
     final size = getResponsiveSize(context, mobileSize: 50, desktopSize: 70);
     return Padding(
@@ -3059,20 +3100,21 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       final currentSecs = currentPosition.value.inSeconds;
 
       final segments = <(aniskip.SkipIntervals?, Color)>[
-        (skipTimes.value?.op,      rotateHue(cs.primary, 45)),
+        (skipTimes.value?.op, rotateHue(cs.primary, 45)),
         (skipTimes.value?.mixedOp, rotateHue(cs.primary, 45)),
-        (skipTimes.value?.ed,      cs.secondary),
+        (skipTimes.value?.ed, cs.secondary),
         (skipTimes.value?.mixedEd, cs.secondary),
-        (skipTimes.value?.recap,   cs.tertiary),
+        (skipTimes.value?.recap, cs.tertiary),
       ];
 
       final markers = <Widget>[];
       for (final (seg, color) in segments) {
         if (seg == null) continue;
         if (seg.end <= currentSecs) continue;
-        final effectiveStart = seg.start < currentSecs ? currentSecs : seg.start;
+        final effectiveStart =
+            seg.start < currentSecs ? currentSecs : seg.start;
         final startPx = hPad + (effectiveStart * 1000 / totalMs) * trackWidth;
-        final endPx   = hPad + (seg.end       * 1000 / totalMs) * trackWidth;
+        final endPx = hPad + (seg.end * 1000 / totalMs) * trackWidth;
         final w = endPx - startPx;
         if (w <= 0) continue;
         markers.add(Positioned(
@@ -3168,7 +3210,6 @@ class _WatchPageState extends State<WatchPage> with TickerProviderStateMixin, TV
       );
     });
   }
-
 }
 
 class _TVFocusGlass extends StatefulWidget {
@@ -3222,17 +3263,17 @@ class _TVFocusGlassState extends State<_TVFocusGlass> {
       decoration: BoxDecoration(
         borderRadius: widget.borderRadius,
         border: Border.all(
-          color: _focused
-              ? Colors.white.withOpacity(0.75)
-              : Colors.transparent,
+          color: _focused ? Colors.white.withOpacity(0.75) : Colors.transparent,
           width: 2,
         ),
         color: _focused ? Colors.white.withOpacity(0.12) : Colors.transparent,
         boxShadow: _focused
-            ? [BoxShadow(
-                color: Colors.white.withOpacity(0.08),
-                blurRadius: 10,
-                spreadRadius: 1)]
+            ? [
+                BoxShadow(
+                    color: Colors.white.withOpacity(0.08),
+                    blurRadius: 10,
+                    spreadRadius: 1)
+              ]
             : null,
       ),
       child: widget.child,

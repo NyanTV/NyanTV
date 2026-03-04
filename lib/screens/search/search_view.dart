@@ -1,5 +1,5 @@
 // ignore_for_file: deprecated_member_use
-
+//lib/screens/search/search_view.dart
 import 'package:nyantv/utils/logger.dart';
 
 import 'package:nyantv/controllers/service_handler/params.dart';
@@ -64,7 +64,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   final FocusNode _gridModeFocusNode = FocusNode();
   final FocusNode _listModeFocusNode = FocusNode();
   final FocusNode _clearAllHistoryFocusNode = FocusNode();
-  
+
   final List<FocusNode> _resultFocusNodes = [];
   final ScrollController _scrollController = ScrollController();
 
@@ -127,12 +127,12 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   void _scrollToIndex(int index) {
     if (!_scrollController.hasClients) return;
-    
+
     final itemHeight = _currentViewMode == ViewMode.list ? 132.0 : 252.0;
     final crossAxisCount = _getCrossAxisCount();
     final row = index ~/ crossAxisCount;
     final position = row * itemHeight;
-    
+
     _scrollController.animateTo(
       position.clamp(0.0, _scrollController.position.maxScrollExtent),
       duration: const Duration(milliseconds: 300),
@@ -198,7 +198,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         _searchState =
             results.isEmpty ? SearchState.empty : SearchState.success;
       });
-      
+
       _initializeResultFocusNodes();
     } catch (e) {
       setState(() {
@@ -249,16 +249,19 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         if (event is KeyDownEvent && _searchFocusNode.hasFocus) {
           if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
             // Check if history is visible
-            if (_searchState == SearchState.initial && _searchedTerms.isNotEmpty) {
+            if (_searchState == SearchState.initial &&
+                _searchedTerms.isNotEmpty) {
               _clearAllHistoryFocusNode.requestFocus();
-            } else if (serviceHandler.serviceType.value == ServicesType.anilist) {
+            } else if (serviceHandler.serviceType.value ==
+                ServicesType.anilist) {
               _adultToggleFocusNode.requestFocus();
             }
             return;
           } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
             if (_searchController.text.isNotEmpty) {
               _clearIconFocusNode.requestFocus();
-            } else if (serviceHandler.serviceType.value == ServicesType.anilist) {
+            } else if (serviceHandler.serviceType.value ==
+                ServicesType.anilist) {
               _searchBarFilterIconFocusNode.requestFocus();
             }
             return;
@@ -272,7 +275,8 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           boxShadow: _searchFocusNode.hasFocus
               ? [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
@@ -291,7 +295,8 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 Theme.of(context).colorScheme.surfaceContainer.withOpacity(.5),
             hintText: 'Search anime...',
             hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                 ),
             prefixIcon: Icon(
               Iconsax.search_normal,
@@ -472,7 +477,8 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             return KeyEventResult.handled;
           } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
             // Navigate to history if visible, otherwise to view mode toggle or results
-            if (_searchState == SearchState.initial && _searchedTerms.isNotEmpty) {
+            if (_searchState == SearchState.initial &&
+                _searchedTerms.isNotEmpty) {
               _clearAllHistoryFocusNode.requestFocus();
             } else if (_searchState == SearchState.success) {
               _gridModeFocusNode.requestFocus();
@@ -490,7 +496,10 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           decoration: BoxDecoration(
             color: isActive
                 ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                : Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+                : Theme.of(context)
+                    .colorScheme
+                    .surfaceContainer
+                    .withOpacity(0.3),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: focusNode.hasFocus
@@ -578,7 +587,8 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             return KeyEventResult.handled;
           } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
             // Navigate to history if visible, otherwise to view mode toggle or results
-            if (_searchState == SearchState.initial && _searchedTerms.isNotEmpty) {
+            if (_searchState == SearchState.initial &&
+                _searchedTerms.isNotEmpty) {
               _clearAllHistoryFocusNode.requestFocus();
             } else if (_searchState == SearchState.success) {
               _gridModeFocusNode.requestFocus();
@@ -596,7 +606,10 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           decoration: BoxDecoration(
             color: isActive
                 ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                : Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.3),
+                : Theme.of(context)
+                    .colorScheme
+                    .surfaceContainer
+                    .withOpacity(0.3),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: focusNode.hasFocus
@@ -646,14 +659,17 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildViewModeButton(ViewMode.grid, Iconsax.grid_1, _gridModeFocusNode),
-          _buildViewModeButton(ViewMode.list, Iconsax.menu_1, _listModeFocusNode),
+          _buildViewModeButton(
+              ViewMode.grid, Iconsax.grid_1, _gridModeFocusNode),
+          _buildViewModeButton(
+              ViewMode.list, Iconsax.menu_1, _listModeFocusNode),
         ],
       ),
     );
   }
 
-  Widget _buildViewModeButton(ViewMode mode, IconData icon, FocusNode focusNode) {
+  Widget _buildViewModeButton(
+      ViewMode mode, IconData icon, FocusNode focusNode) {
     final isActive = _currentViewMode == mode;
     return Focus(
       focusNode: focusNode,
@@ -995,22 +1011,22 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   Widget _buildResultItem(Media media, int index, int crossAxisCount) {
     final focusNode = _resultFocusNodes[index];
-    
+
     return Focus(
       focusNode: focusNode,
       onKeyEvent: (node, event) {
         if (event is! KeyDownEvent) return KeyEventResult.ignored;
-        
+
         if (event.logicalKey == LogicalKeyboardKey.select ||
             event.logicalKey == LogicalKeyboardKey.enter) {
           _navigateToDetails(media);
           return KeyEventResult.handled;
         }
-        
+
         // Calculate navigation targets
         final currentRow = index ~/ crossAxisCount;
         final currentCol = index % crossAxisCount;
-        
+
         if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
           if (currentRow > 0) {
             final targetIndex = index - crossAxisCount;
@@ -1020,7 +1036,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           }
           return KeyEventResult.handled;
         }
-        
+
         if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
           final targetIndex = index + crossAxisCount;
           if (targetIndex < _resultFocusNodes.length) {
@@ -1028,21 +1044,22 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           }
           return KeyEventResult.handled;
         }
-        
+
         if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
           if (currentCol > 0) {
             _resultFocusNodes[index - 1].requestFocus();
           }
           return KeyEventResult.handled;
         }
-        
+
         if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-          if (currentCol < crossAxisCount - 1 && index + 1 < _resultFocusNodes.length) {
+          if (currentCol < crossAxisCount - 1 &&
+              index + 1 < _resultFocusNodes.length) {
             _resultFocusNodes[index + 1].requestFocus();
           }
           return KeyEventResult.handled;
         }
-        
+
         return KeyEventResult.ignored;
       },
       child: AnimationConfiguration.staggeredGrid(

@@ -15,7 +15,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+
+Map<String, dynamic> _parseAnilistAnimeList(String body) {
+  return jsonDecode(body) as Map<String, dynamic>;
+}
 
 class AnilistAuth extends GetxController {
   RxBool isLoggedIn = false.obs;
@@ -27,7 +32,6 @@ class AnilistAuth extends GetxController {
 
   RxList<TrackedMedia> currentlyWatching = <TrackedMedia>[].obs;
   RxList<TrackedMedia> animeList = <TrackedMedia>[].obs;
-
 
   Future<void> tryAutoLogin() async {
     final token = await storage.get('auth_token');
@@ -285,24 +289,13 @@ class AnilistAuth extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = await compute(_parseAnilistAnimeList, response.body);
         if (data['data'] != null &&
             data['data']['MediaListCollection'] != null) {
           final lists =
               data['data']['MediaListCollection']['lists'] as List<dynamic>;
-
           final animeListt =
               lists.expand((list) => list['entries'] as List<dynamic>).toList();
-
-          currentlyWatching.value = animeListt
-              .where((animeEntry) => animeEntry['status'] == 'CURRENT')
-              .map((animeEntry) => TrackedMedia.fromJson(animeEntry))
-              .toList()
-              .reversed
-              .toList()
-              .removeDupes();
-
-          currentlyWatching.value = currentlyWatching.value.removeDupes();
 
           animeList.value = animeListt
               .map((animeEntry) => TrackedMedia.fromJson(animeEntry))
@@ -310,6 +303,10 @@ class AnilistAuth extends GetxController {
               .reversed
               .toList()
               .removeDupes();
+
+          currentlyWatching.value =
+              animeList.where((e) => e.watchingStatus == 'CURRENT').toList();
+
           Logger.i("Anime List Fetched Successfully!");
         } else {
           Logger.i('Unexpected response structure: ${response.body}');
@@ -522,7 +519,6 @@ class AnilistAuth extends GetxController {
     }
   }
 
-
   TrackedMedia returnAvailAnime(String id) {
     return animeList.value
         .firstWhere((el) => el.id == id, orElse: () => TrackedMedia());
@@ -532,10 +528,8 @@ class AnilistAuth extends GetxController {
     final savedAnime = offlineStorage.getAnimeById(id);
     final number = savedAnime?.currentEpisode?.number.toInt() ?? 0;
     currentMedia.value = animeList.value.firstWhere((el) => el.id == id,
-        orElse: () => TrackedMedia(
-            episodeCount: number.toString()));
+        orElse: () => TrackedMedia(episodeCount: number.toString()));
   }
-
 
   Future<void> logout() async {
     await storage.delete('auth_token');

@@ -16,7 +16,7 @@ import 'package:get/get.dart';
 
 class AIRecommendation extends StatefulWidget {
   const AIRecommendation({super.key});
-  
+
   @override
   State<AIRecommendation> createState() => _AIRecommendationState();
 }
@@ -29,10 +29,13 @@ class _AIRecommendationState extends State<AIRecommendation> {
   TextEditingController textEditingController = TextEditingController();
   RxBool isLoading = false.obs;
   RxBool isGrid = false.obs;
+  late final Set<String?> _existingIds;
 
   @override
   void initState() {
     super.initState();
+    _existingIds =
+        Get.find<ServiceHandler>().animeList.map((e) => e.id).toSet();
     _scrollController.addListener(_scrollListener);
     if (serviceHandler.isLoggedIn.value) {
       fetchAiRecommendations(currentPage);
@@ -58,12 +61,10 @@ class _AIRecommendationState extends State<AIRecommendation> {
     isLoading.value = true;
 
     try {
-      final listData = Get.find<ServiceHandler>().animeList;
-      final existingIds = listData.map((e) => e.id).toSet();
       final data = await getAiRecommendations(false, page,
           username: username, isAdult: isAdult.value);
 
-      recItems.addAll(data.where((e) => !existingIds.contains(e.id)));
+      recItems.addAll(data.where((e) => !_existingIds.contains(e.id)));
     } finally {
       isLoading.value = false;
     }

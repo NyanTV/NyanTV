@@ -33,6 +33,10 @@ Map<String, dynamic> _parseJson(String body) {
   return jsonDecode(body) as Map<String, dynamic>;
 }
 
+Map<String, dynamic> _parseAnilistHome(String body) {
+  return jsonDecode(body)['data'] as Map<String, dynamic>;
+}
+
 class AnilistData extends GetxController implements BaseService, OnlineService {
   final anilistAuth = Get.find<AnilistAuth>();
 
@@ -42,7 +46,6 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
   RxList<Media> trendingAnime = <Media>[].obs;
   RxList<Media> latestAnime = <Media>[].obs;
   RxList<Media> recentlyUpdatedAnime = <Media>[].obs;
-
 
   @override
   RxList<Widget> homeWidgets(BuildContext context) {
@@ -54,9 +57,7 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
     final isDesktop = Get.width > 600;
     final recAnimes =
         (popularAnime + trendingAnime + latestAnime).removeDupes();
-    final ids = [
-      animeList.map((e) => e.id).toSet()
-    ];
+    final ids = [animeList.map((e) => e.id).toSet()];
     return [
       if (anilistAuth.isLoggedIn.value) ...[
         LayoutBuilder(builder: (context, constraints) {
@@ -87,9 +88,7 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
           return Column(
             children: acceptedLists.map((e) {
               return ReusableCarousel(
-                data: filterListByLabel(
-                    anilistAuth.animeList,
-                    e),
+                data: filterListByLabel(anilistAuth.animeList, e),
                 title: e,
                 variant: DataVariant.anilist,
                 type: ItemType.anime,
@@ -136,7 +135,6 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
       popularAnime.value = fb.popularAnimes;
       trendingAnime.value = fb.trendingAnimes;
       latestAnime.value = fb.latestAnimes;
-
     }
   }
 
@@ -252,23 +250,20 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
     );
 
     if (response.statusCode == 200) {
-      final responseData = json.decode(response.body)['data'];
+      final responseData = await compute(_parseAnilistHome, response.body);
       upcomingAnime.value =
           parseMediaList(responseData['upcomingAnimes']['media']);
       popularAnime.value =
           parseMediaList(responseData['popularAnimes']['media']);
       trendingAnime.value =
           parseMediaList(responseData['trendingAnimes']['media']);
-      latestAnime.value =
-          parseMediaList(responseData['latestAnimes']['media']);
+      latestAnime.value = parseMediaList(responseData['latestAnimes']['media']);
       recentlyUpdatedAnime.value =
           parseMediaList(responseData['recentlyUpdatedAnimes']['media']);
     } else {
       throw Exception('Failed to load AniList data: ${response.statusCode}');
     }
   }
-
-
 
   List<Media> parseMediaList(List<dynamic> mediaList) {
     return mediaList
@@ -440,8 +435,7 @@ averageScore
         return [];
       }
     } catch (e) {
-      Logger.i(
-          'Error occurred while fetching anime data: $e');
+      Logger.i('Error occurred while fetching anime data: $e');
       return [];
     }
   }
@@ -525,7 +519,6 @@ averageScore
   @override
   void setCurrentMedia(String id, {bool isManga = false}) =>
       anilistAuth.setCurrentMedia(id, isManga: false);
-
 
   @override
   Future<void> login() async => anilistAuth.login();

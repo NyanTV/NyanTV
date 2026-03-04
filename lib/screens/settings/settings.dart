@@ -1,3 +1,4 @@
+//lib/screens/settings/settings.dart
 import 'package:nyantv/screens/settings/sub_settings/settings_about.dart';
 import 'package:nyantv/screens/settings/sub_settings/settings_accounts.dart';
 import 'package:nyantv/screens/settings/sub_settings/settings_common.dart';
@@ -54,8 +55,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 CustomTile(
                     icon: IconlyLight.profile,
                     title: "Accounts",
-                    description:
-                        "Manage your Anilist, MAL & Discord Account!",
+                    description: "Manage your Anilist, MAL & Discord Account!",
                     onTap: () {
                       navigate(() => const SettingsAccounts());
                     }),

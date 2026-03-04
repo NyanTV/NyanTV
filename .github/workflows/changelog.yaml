@@ -3,7 +3,7 @@ name: changelog
 on:
   workflow_run:
     workflows:
-      - "Build and Release NyanTV"
+      - "Build & Release Android (NyanTV)"
     types:
       - completed
   workflow_dispatch:
@@ -32,43 +32,27 @@ jobs:
             exit 0
           fi
 
-          # For auto-trigger, fetch job details from the triggering workflow
           echo "Fetching jobs for workflow run ID: $RUN_ID"
-          
+
           JOBS_DATA=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/jobs")
-          
+
           echo "Jobs data retrieved"
-          
-          # Only check build-all-platforms jobs, ignore post-release jobs
-          REQUIRED_JOBS=("build-all-platforms (android, ubuntu-latest)" "build-all-platforms (linux, ubuntu-latest)" "build-all-platforms (windows, windows-latest)" "build-all-platforms (macos, macos-latest)" "build-all-platforms (ios, macos-latest)")
-          
-          ALL_SUCCESS=true
-          
-          for REQUIRED_JOB in "${REQUIRED_JOBS[@]}"; do
-            JOB_STATUS=$(echo "$JOBS_DATA" | jq -r --arg job "$REQUIRED_JOB" '.jobs[] | select(.name == $job) | .conclusion')
-            
-            if [ -z "$JOB_STATUS" ]; then
-              echo "⚠️ Job '$REQUIRED_JOB' not found in workflow run"
-              ALL_SUCCESS=false
-              break
-            elif [ "$JOB_STATUS" != "success" ]; then
-              echo "❌ Job '$REQUIRED_JOB' failed with status: $JOB_STATUS"
-              ALL_SUCCESS=false
-              break
-            else
-              echo "✅ Job '$REQUIRED_JOB' succeeded"
-            fi
-          done
-          
-          if [ "$ALL_SUCCESS" = true ]; then
-            echo "✅ All required build jobs succeeded"
+
+          # Check that the release job succeeded (which implies both build jobs succeeded)
+          JOB_STATUS=$(echo "$JOBS_DATA" | jq -r '.jobs[] | select(.name == "release") | .conclusion')
+
+          if [ -z "$JOB_STATUS" ]; then
+            echo "⚠️ Release job not found in workflow run"
+            echo "all_jobs_success=false" >> $GITHUB_OUTPUT
+          elif [ "$JOB_STATUS" != "success" ]; then
+            echo "❌ Release job failed with status: $JOB_STATUS"
+            echo "all_jobs_success=false" >> $GITHUB_OUTPUT
           else
-            echo "❌ Some required build jobs failed, skipping changelog generation"
+            echo "✅ Release job succeeded"
+            echo "all_jobs_success=true" >> $GITHUB_OUTPUT
           fi
-          
-          echo "all_jobs_success=$ALL_SUCCESS" >> $GITHUB_OUTPUT
 
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -203,13 +187,13 @@ jobs:
       - name: Generate Plaintext Changelog for F-Droid/Izzy
         if: ${{ steps.check_jobs.outputs.all_jobs_success == 'true' }}
         run: |
-         mkdir -p fastlane/metadata/android/en-US/changelogs
-         awk '/^### 🆕 Changelog/{flag=1; next}/^![Tt]otal/{flag=0}flag' CHANGELOG.md \
-         | sed -E 's/!\[[^]]*\]\([^)]*\)//g' \
-         | sed -E 's/\[[^]]*\]\([^)]*\)//g' \
-         | sed 's/^֍[[:space:]]*/- /' \
-         | sed '/^$/N;/^\n$/D' \
-         > fastlane/metadata/android/en-US/changelogs/default.txt
+          mkdir -p fastlane/metadata/android/en-US/changelogs
+          awk '/^### 🆕 Changelog/{flag=1; next}/^![Tt]otal/{flag=0}flag' CHANGELOG.md \
+          | sed -E 's/!\[[^]]*\]\([^)]*\)//g' \
+          | sed -E 's/\[[^]]*\]\([^)]*\)//g' \
+          | sed 's/^֍[[:space:]]*/- /' \
+          | sed '/^$/N;/^\n$/D' \
+          > fastlane/metadata/android/en-US/changelogs/default.txt
 
       - name: Debug default.txt
         if: ${{ steps.check_jobs.outputs.all_jobs_success == 'true' }}
@@ -224,11 +208,36 @@ jobs:
           git commit --allow-empty -m "Update default.txt for version ${{ env.current_tag }}"
           git push origin HEAD:main
 
-      - name: Create or Update Release
+      - name: Fetch existing release body and append changelog
+        if: ${{ steps.check_jobs.outputs.all_jobs_success == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # ============================================================
+          # FIX: Instead of overwriting the release body (which would
+          # destroy the download table + build stats from build.yml),
+          # we fetch the existing body and append the changelog to it.
+          # ============================================================
+          EXISTING_BODY=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.current_tag }}" \
+            | jq -r '.body // ""')
+
+          CHANGELOG_CONTENT=$(cat CHANGELOG.md)
+
+          COMBINED_BODY="${CHANGELOG_CONTENT}
+
+          ---
+
+          ${EXISTING_BODY}"
+
+          echo "$COMBINED_BODY" > combined_body.md
+
+      - name: Update Release with Changelog
         if: ${{ steps.check_jobs.outputs.all_jobs_success == 'true' }}
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          bodyFile: CHANGELOG.md
+          bodyFile: combined_body.md
           tag: ${{ env.current_tag }}
           allowUpdates: true

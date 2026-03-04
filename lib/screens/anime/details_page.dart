@@ -1,4 +1,5 @@
 // ignore_for_file: invalid_use_of_protected_member
+//lib/screens/anime/details_page.dart
 import 'dart:async';
 import 'package:nyantv/controllers/discord/discord_rpc.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
@@ -88,8 +89,7 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
   // Tracker's Controller
   PageController controller = PageController();
 
-
-  // for fast parallel filler fetching 
+  // for fast parallel filler fetching
   Map<String, bool> fillerEpisodes = {};
 
   // Extensions Controller
@@ -147,7 +147,6 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
     }
   }
 
-
   Future<void> _fetchFillerInfo() async {
     final malId = anilistData?.idMal ?? widget.media.idMal;
     if (malId == '0') return;
@@ -161,7 +160,6 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
       }
     } catch (_) {}
   }
-
 
   void _applyFillerInfo() {
     if (fillerEpisodes.isEmpty || episodeList.isEmpty) return;
@@ -180,12 +178,12 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
   @override
   void dispose() {
     controller.dispose();
-    
+
     DiscordRPCController.instance.updateBrowsingPresence(
       activity: 'Browsing Anime',
       details: 'Exploring the library',
     );
-    
+
     super.dispose();
   }
 
