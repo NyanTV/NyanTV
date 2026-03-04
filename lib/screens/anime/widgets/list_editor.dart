@@ -314,8 +314,8 @@ class _ListEditorModalState extends State<ListEditorModal> {
     final colorScheme = Theme.of(context).colorScheme;
 
     bool isUnknownTotal() {
-      final String? total = widget.media.totalEpisodes;
-      return total == '?' || total == '??' || total == null || total.isEmpty;
+      final String total = widget.media.totalEpisodes;
+      return total == '?' || total == '??' || total.isEmpty;
     }
 
     int? getMaxTotal() {

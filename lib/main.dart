@@ -89,8 +89,8 @@ void _resetAutoIdleTimer() {
       if (!_isInExcludedScreen.value) {
         setDVDMode(true);
         Get.to(() => const InitialisingScreen(
-          child: FilterScreen(),
           dvdMode: true,
+          child: FilterScreen(),
         ));
       }
     });
