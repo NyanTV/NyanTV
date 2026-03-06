@@ -226,8 +226,15 @@ class SimklService extends GetxController
           //   chipLabel: ("MOVIES"),
           //   hintText: "Search Movie...",
           // ),
-          buildBigCarousel(trendingMovies.value.sublist(0, 10), false,
-              type: CarouselType.simkl),
+          buildBigCarousel(
+            [
+              ...trendingMovies.value.sublist(0, 5),
+              ...trendingSeries.value.sublist(0, 5),
+            ]..sort((a, b) => (int.tryParse(a.popularity) ?? 999)
+                .compareTo(int.tryParse(b.popularity) ?? 999)),
+            false,
+            type: CarouselType.simkl,
+          ),
           ReusableCarousel(
               data: trendingMovies.value.sublist(0, 10),
               title: "Trending Movies"),
