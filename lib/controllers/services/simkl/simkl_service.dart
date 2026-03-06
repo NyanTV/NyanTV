@@ -175,7 +175,7 @@ class SimklService extends GetxController
               onPressed: () {
                 navigate(() => AnimeList(
                       title: "Shows",
-                      data: mangaList.value,
+                      data: showList.value,
                     ));
               },
             ),
@@ -280,7 +280,7 @@ class SimklService extends GetxController
       }
 
       final alrExist =
-          (isMovie ? animeList : mangaList).any((e) => e.id == listId);
+          (isMovie ? animeList : showList).any((e) => e.id == listId);
 
       final url = Uri.parse(alrExist
           ? 'https://api.simkl.com/sync/history'
@@ -375,7 +375,7 @@ class SimklService extends GetxController
     final isMovie = id.split('*').last == "MOVIE";
     if (!isMovie) {
       currentMedia.value =
-          mangaList.firstWhere((e) => e.id == id, orElse: () => TrackedMedia());
+          showList.firstWhere((e) => e.id == id, orElse: () => TrackedMedia());
     } else {
       currentMedia.value = animeList.firstWhere((e) {
         Logger.i('Searching: $id ${e.id}');
@@ -386,7 +386,7 @@ class SimklService extends GetxController
 
   // Series
   @override
-  RxList<TrackedMedia> mangaList = <TrackedMedia>[].obs;
+  RxList<TrackedMedia> showList = <TrackedMedia>[].obs;
 
   @override
   Future<void> login() async {
@@ -572,10 +572,9 @@ class SimklService extends GetxController
         return e;
       }).toList();
 
-      mangaList.value =
-          shows.map((e) => TrackedMedia.fromSimklShow(e)).toList();
+      showList.value = shows.map((e) => TrackedMedia.fromSimklShow(e)).toList();
       continueWatchingSeries.value =
-          mangaList.where((e) => e.watchingStatus == "CURRENT").toList();
+          showList.where((e) => e.watchingStatus == "CURRENT").toList();
     } else {
       Logger.i(results[1].body);
     }

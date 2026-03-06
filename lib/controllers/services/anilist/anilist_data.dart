@@ -47,6 +47,14 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
   RxList<Media> latestAnime = <Media>[].obs;
   RxList<Media> recentlyUpdatedAnime = <Media>[].obs;
 
+  static const malBannerQuery = '''
+query (\$idMal: Int) {
+  Media(idMal: \$idMal, type: ANIME) {
+    bannerImage
+  }
+}
+''';
+
   @override
   RxList<Widget> homeWidgets(BuildContext context) {
     final settings = Get.find<Settings>();
@@ -136,6 +144,26 @@ class AnilistData extends GetxController implements BaseService, OnlineService {
       trendingAnime.value = fb.trendingAnimes;
       latestAnime.value = fb.latestAnimes;
     }
+  }
+
+  Future<String?> fetchBannerByMal(int malId) async {
+    const url = 'https://graphql.anilist.co';
+
+    final response = await post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'query': malBannerQuery,
+        'variables': {'idMal': malId}
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['data']?['Media']?['bannerImage'];
+    }
+
+    return null;
   }
 
   Future<void> fetchAnilistHomepage() async {

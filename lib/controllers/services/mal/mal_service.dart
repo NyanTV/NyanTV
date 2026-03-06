@@ -5,6 +5,7 @@ import 'package:nyantv/controllers/cacher/cache_controller.dart';
 import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
 import 'package:nyantv/controllers/service_handler/params.dart';
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
+import 'package:nyantv/controllers/services/anilist/anilist_data.dart';
 import 'package:nyantv/controllers/services/widgets/widgets_builders.dart';
 import 'package:nyantv/controllers/settings/methods.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
@@ -44,12 +45,6 @@ class MalService extends GetxController implements BaseService, OnlineService {
   RxList<Media> topAnime = <Media>[].obs;
   RxList<Media> upcomingAnime = <Media>[].obs;
 
-  // Manga Lists
-  RxList<Media> trendingManga = <Media>[].obs;
-  RxList<Media> topManhwa = <Media>[].obs;
-  RxList<Media> topManga = <Media>[].obs;
-  RxList<Media> topManhua = <Media>[].obs;
-
   static const field = "fields=mean,status,media_type,synopsis";
 
   Future<List<Media>> fetchDataFromApi(String url,
@@ -61,12 +56,13 @@ class MalService extends GetxController implements BaseService, OnlineService {
         .toList();
   }
 
-  Widget buildSectionIfNotEmpty(String title, RxList<Media> list,
-      {bool isManga = false}) {
+  Widget buildSectionIfNotEmpty(
+    String title,
+    RxList<Media> list,
+  ) {
     return list.isEmpty
         ? const NyantvProgressIndicator()
-        : buildSection(title, list,
-            type: isManga ? ItemType.manga : ItemType.anime);
+        : buildSection(title, list, type: ItemType.anime);
   }
 
   @override
@@ -94,15 +90,6 @@ class MalService extends GetxController implements BaseService, OnlineService {
           'https://api.myanimelist.net/v2/anime/ranking?ranking_type=tv&limit=15');
       upcomingAnime.value = await fetchDataFromApi(
           'https://api.myanimelist.net/v2/anime/ranking?ranking_type=upcoming&limit=15');
-
-      trendingManga.value = await fetchDataFromApi(
-          'https://api.myanimelist.net/v2/manga/ranking?ranking_type=all&limit=15');
-      topManga.value = await fetchDataFromApi(
-          'https://api.myanimelist.net/v2/manga/ranking?ranking_type=manga&limit=15');
-      topManhwa.value = await fetchDataFromApi(
-          'https://api.myanimelist.net/v2/manga/ranking?ranking_type=manhwa&limit=15');
-      topManhua.value = await fetchDataFromApi(
-          'https://api.myanimelist.net/v2/manga/ranking?ranking_type=manhua&limit=15');
     } catch (e) {
       Logger.i('Error fetching home page data: $e');
     }
@@ -114,17 +101,16 @@ class MalService extends GetxController implements BaseService, OnlineService {
       final animeData = await fetchWithToken(
         'https://api.myanimelist.net/v2/anime/${params.id}',
       );
+
+      final banner =
+          await Get.find<AnilistData>().fetchBannerByMal(int.parse(params.id));
+
+      animeData.cover = banner;
+
       return animeData;
     } catch (animeError) {
-      try {
-        final mangaData = await fetchWithToken(
-          'https://api.myanimelist.net/v2/manga/${params.id}',
-        );
-        return mangaData;
-      } catch (mangaError) {
-        throw Exception(
-            'Failed to fetch details for both anime and manga with ID: ${params.id}');
-      }
+      throw Exception(
+          'Failed to fetch details for anime and with ID: ${params.id}');
     }
   }
 
@@ -139,9 +125,8 @@ class MalService extends GetxController implements BaseService, OnlineService {
 
   @override
   Future<List<Media>> search(SearchParams params) async {
-    final mediaType = params.isManga ? 'manga' : 'anime';
     final data = await fetchDataFromApi(
-      'https://api.myanimelist.net/v2/$mediaType?q=${params.query}&limit=30',
+      'https://api.myanimelist.net/v2/anime?q=${params.query}&limit=30',
     );
     return data;
   }
@@ -444,9 +429,6 @@ class MalService extends GetxController implements BaseService, OnlineService {
     }
 
     if (req.statusCode == 200) {
-      // snackBar(
-      //     "${isAnime ? 'Anime' : 'Manga'} Tracked to ${isAnime ? 'Episode' : 'Chapter'} $progress Successfully!");
-
       final newMedia = currentMedia.value
         ..episodeCount = progress.toString()
         ..watchingStatus = status
@@ -465,7 +447,7 @@ class MalService extends GetxController implements BaseService, OnlineService {
     final token = await storage.get('mal_auth_token');
 
     final url = Uri.parse(
-        'https://api.myanimelist.net/v2/${isAnime ? 'anime' : 'manga'}/$listId/my_list_status');
+        'https://api.myanimelist.net/v2/anime/$listId/my_list_status');
 
     final req = await delete(
       url,
@@ -476,15 +458,13 @@ class MalService extends GetxController implements BaseService, OnlineService {
     );
 
     if (req.statusCode == 200) {
-      snackBar(
-          "${isAnime ? "Anime" : "Manga"} successfully deleted from your list!");
+      snackBar("Anime successfully deleted from your list!");
 
       currentMedia.value = TrackedMedia();
       fetchUserAnimeList();
     } else {
       Logger.i('Error deleting entry: ${req.body}');
-      snackBar(
-          "Failed to delete ${isAnime ? "anime" : "manga"} from your list.");
+      snackBar("Failed to delete anime from your list.");
     }
   }
 
@@ -511,8 +491,6 @@ class MalService extends GetxController implements BaseService, OnlineService {
     storage.delete('mal_refresh_token');
     isLoggedIn.value = false;
     profileData.value = Profile();
-    // animeList.value = [];
-    // mangaList.value = [];
     continueWatching.value = [];
     continueReading.value = [];
   }
