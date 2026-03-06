@@ -5,9 +5,11 @@ import 'package:nyantv/utils/tv_scroll_mixin.dart';
 import 'package:get/get.dart';
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/main.dart';
 
 class AnimeHomePage extends StatefulWidget {
-  const AnimeHomePage({super.key});
+  final bool isActive;
+  const AnimeHomePage({super.key, this.isActive = true});
 
   @override
   State<AnimeHomePage> createState() => _AnimeHomePageState();
@@ -26,6 +28,8 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin {
     _scrollController = ScrollController();
     initTVScroll();
 
+    isAnimePageActive.value = widget.isActive;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Get.find<Settings>().checkForUpdates(context);
       _scrollController.addListener(() {
@@ -33,12 +37,32 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin {
         const appBarHeight = kToolbarHeight + 20;
         final threshold = statusBarHeight + appBarHeight;
         _isAppBarVisible.value = _scrollController.offset < threshold;
+        final carouselHeight =
+            MediaQuery.of(context).size.width > 600 ? 450.0 : 270.0;
+        final carouselVisible = _scrollController.offset < carouselHeight;
+        isAnimePageActive.value = widget.isActive && carouselVisible;
       });
     });
   }
 
   @override
+  void didUpdateWidget(AnimeHomePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive != oldWidget.isActive) {
+      if (!widget.isActive) {
+        isAnimePageActive.value = false;
+      } else {
+        final carouselHeight =
+            MediaQuery.of(context).size.width > 600 ? 450.0 : 270.0;
+        final carouselVisible = _scrollController.offset < carouselHeight;
+        isAnimePageActive.value = carouselVisible;
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    isAnimePageActive.value = false;
     _scrollController.dispose();
     _isAppBarVisible.dispose();
     disposeTVScroll();
@@ -66,11 +90,9 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin {
               children: [
                 SizedBox(height: statusBarHeight + appBarHeight),
                 const SizedBox(height: 10),
-                Obx(() {
-                  return Column(
-                    children: serviceHandler.animeWidgets(context),
-                  );
-                }),
+                Obx(() => Column(
+                      children: serviceHandler.animeWidgets(context),
+                    )),
                 if (!isDesktop)
                   SizedBox(height: bottomNavBarHeight)
                 else

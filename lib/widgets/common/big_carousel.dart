@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:nyantv/controllers/settings/methods.dart';
@@ -15,17 +16,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:get/get.dart';
+import 'package:nyantv/main.dart';
 
 enum CarouselType { anime, simkl }
 
 class BigCarousel extends StatefulWidget {
   final List<Media> data;
   final CarouselType carouselType;
+  final bool isActive;
 
   const BigCarousel({
     super.key,
     required this.data,
     this.carouselType = CarouselType.anime,
+    this.isActive = true,
   });
 
   @override
@@ -34,7 +39,77 @@ class BigCarousel extends StatefulWidget {
 
 class BigCarouselState extends State<BigCarousel> {
   int activeIndex = 0;
+  int _pendingIndex = 0;
+  Timer? _animationDebounce;
+  final FocusNode _carouselFocusNode = FocusNode();
   final CarouselSliderController controller = CarouselSliderController();
+
+  @override
+  void didUpdateWidget(BigCarousel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive != oldWidget.isActive) {
+      if (widget.isActive) {
+        controller.startAutoPlay();
+        _pendingIndex = activeIndex;
+      } else {
+        controller.stopAutoPlay();
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    ever(isAnimePageActive, (active) {
+      if (!mounted) return;
+      if (active) {
+        controller.startAutoPlay();
+      } else {
+        controller.stopAutoPlay();
+        _animationDebounce?.cancel();
+        _animationDebounce = null;
+        _pendingIndex = activeIndex;
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (isAnimePageActive.value) controller.startAutoPlay();
+    });
+
+    _carouselFocusNode.addListener(() {
+      if (!_carouselFocusNode.hasFocus) {
+        _animationDebounce?.cancel();
+        _animationDebounce = null;
+        if (mounted) setState(() => _pendingIndex = activeIndex);
+      } else {
+        if (_animationDebounce == null || !_animationDebounce!.isActive) {
+          if (mounted) setState(() => _pendingIndex = activeIndex);
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationDebounce?.cancel();
+    _carouselFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _scheduleAnimation() {
+    _animationDebounce?.cancel();
+    controller.stopAutoPlay();
+    _animationDebounce = Timer(const Duration(milliseconds: 150), () {
+      if (!mounted) return;
+      if (!isAnimePageActive.value) return;
+      controller.animateToPage(_pendingIndex);
+      Future.delayed(const Duration(milliseconds: 850), () {
+        if (!mounted) return;
+        if (isAnimePageActive.value) controller.startAutoPlay();
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,191 +129,209 @@ class BigCarouselState extends State<BigCarousel> {
               }
             },
             child: NyantvOnTapAdv(
+              focusNode: _carouselFocusNode,
               onKeyEvent: (node, event) {
                 if (event is KeyDownEvent) {
                   if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
                     setState(() {
-                      controller.animateToPage(
-                          (activeIndex - 1).clamp(0, newData.length - 1));
+                      _pendingIndex = _pendingIndex == 0
+                          ? newData.length - 1
+                          : _pendingIndex - 1;
                     });
+                    _scheduleAnimation();
                   } else if (event.logicalKey ==
                       LogicalKeyboardKey.arrowRight) {
                     setState(() {
-                      controller
-                          .animateToPage((activeIndex + 1) % newData.length);
+                      _pendingIndex = (_pendingIndex + 1) % newData.length;
                     });
-                  } else if (event.logicalKey == LogicalKeyboardKey.arrowUp ||
-                      event.logicalKey == LogicalKeyboardKey.arrowDown) {
-                    return KeyEventResult.ignored;
+                    _scheduleAnimation();
+                  } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                    FocusScope.of(context)
+                        .focusInDirection(TraversalDirection.up);
+                    return KeyEventResult.handled;
+                  } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                    FocusScope.of(context)
+                        .focusInDirection(TraversalDirection.down);
+                    return KeyEventResult.handled;
                   } else if (event.logicalKey == LogicalKeyboardKey.enter ||
                       event.logicalKey == LogicalKeyboardKey.space ||
                       event.logicalKey == LogicalKeyboardKey.select) {
-                    navigateToDetailsPage(newData[activeIndex],
-                        '${newData[activeIndex].title}-$activeIndex');
+                    navigateToDetailsPage(
+                      newData[_pendingIndex],
+                      '${newData[_pendingIndex].title}-$_pendingIndex',
+                    );
                   }
                 }
                 return KeyEventResult.handled;
               },
               scale: 1,
-              child: CarouselSlider.builder(
-                itemCount: newData.length,
-                disableGesture: false,
-                itemBuilder: (context, index, realIndex) {
-                  final anime = newData[index];
-                  final String posterUrl = anime.cover!;
-                  final title = anime.title;
-                  final randNum = Random().nextInt(100000);
-                  final tag = '$randNum$index${anime.title}';
-                  String extraData = anime.rating.toString();
+              child: ExcludeFocus(
+                child: CarouselSlider.builder(
+                  itemCount: newData.length,
+                  disableGesture: false,
+                  itemBuilder: (context, index, realIndex) {
+                    final anime = newData[index];
+                    final String posterUrl = anime.cover!;
+                    final title = anime.title;
+                    final randNum = Random().nextInt(100000);
+                    final tag = '$randNum$index${anime.title}';
+                    String extraData = anime.rating.toString();
 
-                  return Stack(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          GestureDetector(
-                            onTap: () => navigateToDetailsPage(anime, tag),
-                            child: _buildItem(context, tag, posterUrl),
-                          ),
-                          const SizedBox(height: 10),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 10.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    title,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 20),
-                                Container(
-                                  padding: const EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(
-                                      (8.multiplyRadius()),
-                                    ),
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .secondaryContainer,
-                                  ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Iconsax.star5,
-                                        size: 16,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        extraData,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontFamily: "Poppins-Bold",
-                                        ),
-                                      ),
-                                      const SizedBox(width: 3),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                    return Stack(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              onTap: () => navigateToDetailsPage(anime, tag),
+                              child: _buildItem(context, tag, posterUrl),
                             ),
-                          ),
-                          const SizedBox(height: 10),
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 8),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0, vertical: 8.0),
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .surface
-                                  .withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: GestureDetector(
-                              onTap: () => _showDescriptionModal(
-                                  context, anime.description),
+                            const SizedBox(height: 10),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 10.0),
                               child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Expanded(
-                                    child: NyantvText(
-                                      text: anime.description
-                                              .replaceAll(
-                                                  RegExp(r'<[^>]*>'), '')
-                                              .replaceAll(RegExp(r'\s+'), ' ')
-                                              .trim()
-                                              .isNotEmpty
-                                          ? anime.description
-                                              .replaceAll(
-                                                  RegExp(r'<[^>]*>'), '')
-                                              .replaceAll(RegExp(r'\s+'), ' ')
-                                              .trim()
-                                          : 'Tap to read description',
-                                      size: 12,
-                                      maxLines: 2,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withOpacity(0.7),
+                                    child: Text(
+                                      title,
                                       overflow: TextOverflow.ellipsis,
-                                      stripHtml: true,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Icon(
-                                    Icons.info_outline,
-                                    size: 16,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withOpacity(0.7),
+                                  const SizedBox(width: 20),
+                                  Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(
+                                        (8.multiplyRadius()),
+                                      ),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondaryContainer,
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Iconsax.star5,
+                                          size: 16,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                        ),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          extraData,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontFamily: "Poppins-Bold",
+                                          ),
+                                        ),
+                                        const SizedBox(width: 3),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                          )
-                        ],
-                      ),
-                    ],
-                  );
-                },
-                options: CarouselOptions(
-                  height: getResponsiveSize(context,
-                      mobileSize: 270, desktopSize: 450),
-                  viewportFraction: 1,
-                  initialPage: 0,
-                  enableInfiniteScroll: true,
-                  reverse: false,
-                  autoPlay: true,
-                  autoPlayInterval: const Duration(seconds: 5),
-                  autoPlayAnimationDuration: const Duration(milliseconds: 800),
-                  autoPlayCurve: Curves.fastOutSlowIn,
-                  enlargeCenterPage: false,
-                  scrollDirection: Axis.horizontal,
-                  onPageChanged: (index, reason) {
-                    setState(() {
-                      activeIndex = index;
-                    });
+                            const SizedBox(height: 10),
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 8.0),
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surface
+                                    .withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: GestureDetector(
+                                onTap: () => _showDescriptionModal(
+                                    context, anime.description),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: NyantvText(
+                                        text: anime.description
+                                                .replaceAll(
+                                                    RegExp(r'<[^>]*>'), '')
+                                                .replaceAll(RegExp(r'\s+'), ' ')
+                                                .trim()
+                                                .isNotEmpty
+                                            ? anime.description
+                                                .replaceAll(
+                                                    RegExp(r'<[^>]*>'), '')
+                                                .replaceAll(RegExp(r'\s+'), ' ')
+                                                .trim()
+                                            : 'Tap to read description',
+                                        size: 12,
+                                        maxLines: 2,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
+                                        overflow: TextOverflow.ellipsis,
+                                        stripHtml: true,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.info_outline,
+                                      size: 16,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withOpacity(0.7),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      ],
+                    );
                   },
+                  options: CarouselOptions(
+                    height: getResponsiveSize(context,
+                        mobileSize: 270, desktopSize: 450),
+                    viewportFraction: 1,
+                    initialPage: 0,
+                    enableInfiniteScroll: true,
+                    reverse: false,
+                    autoPlay: isAnimePageActive.value,
+                    autoPlayInterval: const Duration(seconds: 5),
+                    autoPlayAnimationDuration:
+                        const Duration(milliseconds: 800),
+                    autoPlayCurve: Curves.fastOutSlowIn,
+                    enlargeCenterPage: false,
+                    scrollDirection: Axis.horizontal,
+                    onPageChanged: (index, reason) {
+                      setState(() {
+                        activeIndex = index;
+                        if (_animationDebounce == null ||
+                            !_animationDebounce!.isActive) {
+                          _pendingIndex = index;
+                        }
+                      });
+                    },
+                  ),
+                  carouselController: controller,
                 ),
-                carouselController: controller,
               ),
             ),
           ),
           const SizedBox(height: 16),
           AnimatedSmoothIndicator(
-            activeIndex: activeIndex,
+            activeIndex: _pendingIndex,
             count: newData.length,
             effect: WormEffect(
               dotHeight: 8,

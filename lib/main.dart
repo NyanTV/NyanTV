@@ -63,6 +63,7 @@ bool isAndroidTV = false;
 
 final _isInExcludedScreen = false.obs;
 final _isInDVDMode = false.obs;
+final isAnimePageActive = false.obs;
 final RxBool isWelcomeDialogOpen = false.obs;
 Timer? _autoIdleTimer;
 
@@ -429,6 +430,7 @@ class _FilterScreenState extends State<FilterScreen> {
     setState(() {
       _firstLoad = false;
       _selectedIndex = index;
+      isAnimePageActive.value = index == 2;
     });
   }
 
@@ -452,7 +454,7 @@ class _FilterScreenState extends State<FilterScreen> {
 
     final Widget route = switch (index) {
       1 => const HomePage(),
-      2 => const AnimeHomePage(),
+      2 => AnimeHomePage(isActive: _selectedIndex == 2),
       3 => const MyLibrary(),
       4 => const ExtensionScreen(disableGlow: true),
       _ => const SizedBox.shrink(),
@@ -464,7 +466,7 @@ class _FilterScreenState extends State<FilterScreen> {
 
   Widget _buildRouteFresh(int index) => switch (index) {
         1 => const HomePage(),
-        2 => const AnimeHomePage(),
+        2 => AnimeHomePage(isActive: _selectedIndex == 2),
         3 => const MyLibrary(),
         4 => const ExtensionScreen(disableGlow: true),
         _ => const SizedBox.shrink(),
@@ -527,7 +529,7 @@ class _FilterScreenState extends State<FilterScreen> {
                           child: const HomePage()),
                       ExcludeFocus(
                           excluding: _selectedIndex != 2,
-                          child: const AnimeHomePage()),
+                          child: AnimeHomePage(isActive: _selectedIndex == 2)),
                       ExcludeFocus(
                           excluding: _selectedIndex != 3,
                           child: const MyLibrary()),
