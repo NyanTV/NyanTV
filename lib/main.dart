@@ -164,8 +164,8 @@ void main(List<String> args) async {
 
     HttpOverrides.global = MyHttpoverrides();
     await initializeHive();
-    _initializeGetxController(); // ← zuerst Controller
-    initDeepLinkListener(); // ← dann Deep Link (Get.find ist jetzt sicher)
+    _initializeGetxController();
+    initDeepLinkListener();
     initializeDateFormatting();
 
     if (!Platform.isAndroid && !Platform.isIOS) {

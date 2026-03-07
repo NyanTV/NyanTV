@@ -53,12 +53,8 @@ Container buildChip(String label) {
 }
 
 Widget buildBigCarousel(List<Media> data, bool isManga, {CarouselType? type}) {
-  return BigCarousel(
-      data: data,
-      carouselType:
-          type ?? (isManga ? CarouselType.anime : CarouselType.anime));
+  return BigCarousel(data: data, carouselType: type ?? (CarouselType.anime));
 }
-
 
 Widget buildFutureSection(
   String title,

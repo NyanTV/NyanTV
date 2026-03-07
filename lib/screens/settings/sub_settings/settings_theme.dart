@@ -253,7 +253,7 @@ class _SettingsThemeState extends State<SettingsTheme> {
                                           HugeIcons.strokeRoundedImageDownload,
                                       title: "Use Poster Color",
                                       description:
-                                          "Applies anime/manga poster color on details page",
+                                          "Applies anime poster color on details page",
                                       onChanged: (e) =>
                                           settings.usePosterColor = e,
                                     ),

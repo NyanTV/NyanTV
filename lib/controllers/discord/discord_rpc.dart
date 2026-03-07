@@ -707,8 +707,7 @@ class DiscordRPCController extends GetxController with WidgetsBindingObserver {
       return;
     }
 
-    final anilistUrl =
-        'https://anilist.co/${media.mediaType.isAnime ? 'anime' : 'manga'}/${media.id}';
+    final anilistUrl = 'https://anilist.co/anime/${media.id}';
     final animeTitle = media.title;
     final type = media.mediaType.name.capitalizeFirst ?? '';
 

@@ -121,12 +121,6 @@ class AnilistAuth extends GetxController {
           meanScore
           minutesWatched
         }
-        manga {
-          count
-          chaptersRead
-          volumesRead
-          meanScore
-        }
       }
     }
   }
@@ -361,8 +355,7 @@ class AnilistAuth extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        snackBar(
-            "${isAnime ? "Anime" : "Manga"} successfully deleted from your list!");
+        snackBar("Anime successfully deleted from your list!");
         currentMedia.value = TrackedMedia();
         if (isAnime) {
           fetchUserAnimeList();
