@@ -152,11 +152,14 @@ class _InitialisingScreenState extends State<InitialisingScreen>
     final isFirstTime =
         Hive.box('themeData').get('isFirstTime', defaultValue: true);
     if (!isFirstTime) return;
+
     if (!mounted) return;
-
     await precacheImage(
-        const AssetImage('assets/images/logo_transparent.png'), context);
+      const AssetImage('assets/images/logo_transparent.png'),
+      context,
+    );
 
+    if (!mounted) return;
     await Future.wait([
       precacheImage(
           const AssetImage('assets/images/anilist-icon.png'), context),
