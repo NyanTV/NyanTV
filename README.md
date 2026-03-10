@@ -19,7 +19,7 @@
 
 # NyanTV: Multi-Service Tracking Client
 
-[**NyanTV**](https://nyantv.vercel.app/) is a multi-service tracking client designed exclusively for managing and tracking anime progress across [**AniList**](https://anilist.co/) & [**MyAnimeList**](https://myanimelist.net/) on Android TV.
+[**NyanTV**](https://nyantv.vercel.app/) is a multi-service tracking client for Android TV. It combines **anime tracking** (via [**AniList**](https://anilist.co/) & [**MyAnimeList**](https://myanimelist.net/)) with **TV show and movie tracking** (through [**Simkl**](https://simkl.com/)) in one seamless interface.
 
 **NyanTV** is a fork of [**AnymeX**](https://github.com/RyanYuuki/AnymeX), if you are using a platform other than Android TV, use their repo.
 
@@ -30,9 +30,9 @@
 >  
 > **No Liability:** The developers of NyanTV disclaim all liability for misuse, legal issues, or violations arising from user actions. Legal concerns, including DMCA claims, should be directed to the respective third-party services, not NyanTV. The app is provided "as-is" without warranties.  
 >  
-> **Services:** NyanTV integrates only with the official APIs of supported services (AniList, MyAnimeList). Third-party extensions are the responsibility of their creators, not the NyanTV developers.  
+> **Services:** NyanTV integrates only with the official APIs of supported services (AniList, MyAnimeList & Simkl). Third-party extensions are the responsibility of their creators, not the NyanTV developers.  
 >  
-> **By using NyanTV, you agree to comply with our [Terms of Service](./TOS.md). Please review the ToS to understand our DMCA-compliant, tracking functionality and our non-involvement with any content or services beyond AniList and MyAnimeList.**
+> **By using NyanTV, you agree to comply with our [Terms of Service](./TOS.md). Please review the ToS to understand our DMCA-compliant, tracking functionality and our non-involvement with any content or services beyond AniList, MyAnimeList and Simkl.**
 
 ## Downloads
 

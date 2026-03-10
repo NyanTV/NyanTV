@@ -199,7 +199,16 @@ class _SourcePreferenceScreenState extends State<SourcePreferenceScreen> {
                           ..setCustomView(
                             TextFormField(
                               initialValue: p.value ?? p.text,
+                              autofocus: true,
+                              textInputAction: TextInputAction.done,
                               onChanged: (val) => value = val,
+                              onFieldSubmitted: (_) {
+                                p.value = value;
+                                widget.source.methods
+                                    .setPreference(pref, value);
+                                setState(() {});
+                                Navigator.of(context).pop();
+                              },
                             ),
                           )
                           ..setPositiveButton(
