@@ -15,6 +15,18 @@ class CacheController extends GetxController {
 
   RxString detailsData = ''.obs;
 
+  final Map<String, Media> _detailCache = {};
+  static const int _maxDetailCache = 15;
+
+  void cacheDetail(String id, Media media) {
+    if (_detailCache.length >= _maxDetailCache) {
+      _detailCache.remove(_detailCache.keys.first);
+    }
+    _detailCache[id] = media;
+  }
+
+  Media? getDetailById(String id) => _detailCache[id];
+
   RxList<String> get currentPool => getCacheContainer();
 
   void addCache(Map<String, dynamic> data) {

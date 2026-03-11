@@ -118,7 +118,9 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
     _visitedIds.add(widget.media.id);
     if (isCached) {
       _heroComplete = true;
-      anilistData = Get.find<CacheController>().getCacheById(widget.media.id);
+      final cached = Get.find<CacheController>().getDetailById(widget.media.id);
+      anilistData = cached;
+      posterColor = cached?.color ?? '';
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -192,7 +194,9 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
     animeProgress.value = currentAnime.value?.episodeCount?.toInt() ?? 0;
     animeScore.value = currentAnime.value?.score?.toDouble() ?? 0.0;
     animeStatus.value = currentAnime.value?.watchingStatus ?? "";
-    setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   void _checkAnimePresence() {
@@ -231,6 +235,7 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
           anilistData = tempData;
           posterColor = tempData.color;
         }
+        Get.find<CacheController>().cacheDetail(widget.media.id, anilistData!);
       });
       DiscordRPCController.instance
           .updateMediaPresence(media: anilistData ?? widget.media);
