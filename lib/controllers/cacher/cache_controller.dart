@@ -36,6 +36,9 @@ class CacheController extends GetxController {
 
     if (index == -1) {
       if (!currentPool.any((item) => jsonDecode(item)['id'] == id)) {
+        if (currentPool.length >= 15) {
+          currentPool.removeAt(0);
+        }
         currentPool.add(encodedData);
         Logger.i('Added new entry to cache: ID $id');
       } else {

@@ -100,6 +100,10 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
 
   String posterColor = '';
 
+  bool _heroComplete = false;
+
+  static final Set<String> _visitedIds = {};
+
   void _onPageSelected(int index) {
     selectedPage.value = index;
     controller.animateToPage(index,
@@ -109,26 +113,23 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
   @override
   void initState() {
     super.initState();
-    if (sourceController.installedExtensions.isEmpty) {
-      showAnify.value = false;
+
+    final isCached = _visitedIds.contains(widget.media.id);
+    _visitedIds.add(widget.media.id);
+    if (isCached) {
+      _heroComplete = true;
+      anilistData = Get.find<CacheController>().getCacheById(widget.media.id);
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final isCached = Get.find<CacheController>()
-          .getStoredAnime()
-          .any((m) => m.id == widget.media.id);
+      if (!mounted) return;
+      _fetchAnilistData();
+      _checkAnimePresence();
 
-      if (isCached) {
-        _fetchAnilistData();
-        _checkAnimePresence();
-      } else {
-        Future.delayed(const Duration(milliseconds: 300), () {
+      if (!isCached) {
+        Future.delayed(const Duration(milliseconds: 350), () {
           if (!mounted) return;
-          _fetchAnilistData();
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (!mounted) return;
-            _checkAnimePresence();
-          });
+          setState(() => _heroComplete = true);
         });
       }
     });
@@ -398,10 +399,57 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_heroComplete) {
+      return PlatformBuilder(
+        strictMode: true,
+        androidBuilder: _buildShellLayout(context),
+        desktopBuilder: _buildShellLayout(context),
+      );
+    }
     return PlatformBuilder(
       strictMode: true,
       androidBuilder: _buildAndroidLayout(context),
       desktopBuilder: _buildDesktopLayout(context),
+    );
+  }
+
+  Widget _buildShellLayout(BuildContext context) {
+    bool isTV = Get.find<Settings>().isTV.value;
+    final isDesktop = isTV ? true : MediaQuery.of(context).size.width > 600;
+
+    return Glow(
+      color: posterColor,
+      child: Scaffold(
+        extendBody: true,
+        bottomNavigationBar:
+            !isDesktop && sourceController.shouldShowExtensions.value
+                ? _buildMobiledNav()
+                : null,
+        body: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isDesktop) _buildDesktopNav(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 120),
+                child: Column(
+                  children: [
+                    GradientPoster(
+                      data: null,
+                      tag: widget.tag,
+                      posterUrl: widget.media.poster,
+                    ),
+                    const SizedBox(
+                      height: 400,
+                      child: Center(child: NyantvProgressIndicator()),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
