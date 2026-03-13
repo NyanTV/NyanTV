@@ -144,6 +144,7 @@ class _ExtensionListState extends State<ExtensionList>
 
   Future<void> _refreshData() async {
     await sourceController.fetchRepos();
+    if (!mounted) return;
     _computeAllData();
   }
 
@@ -247,8 +248,7 @@ class _ExtensionListState extends State<ExtensionList>
         installedExtensions.map((e) => '${e.name}_${e.lang}').toSet();
 
     final notInstalled = availableExtensions.where((available) {
-      final key =
-          '${available.name}_${available.lang}_${available.extensionType?.name ?? 'PC'}';
+      final key = '${available.name}_${available.lang}';
       return !installedSet.contains(key);
     }).toList();
 
@@ -264,14 +264,44 @@ class _ExtensionListState extends State<ExtensionList>
 
   List<Source> _computeUpdateEntries() {
     final installedExtensions = _installedExtensions;
-
+    final availableExtensions = _allAvailableExtensions;
     if (installedExtensions.isEmpty) return [];
 
-    final updateAvailable = installedExtensions
-        .where((installed) => installed.hasUpdate == true)
-        .toList();
+    final updateAvailable = installedExtensions.where((installed) {
+      if (installed.hasUpdate == true) return true;
+
+      final available = availableExtensions.firstWhereOrNull(
+        (a) => a.name == installed.name && a.lang == installed.lang,
+      );
+      if (available == null) return false;
+
+      return _isNewerVersion(available.version, installed.version);
+    }).toList();
 
     return _filterData(updateAvailable);
+  }
+
+  bool _isNewerVersion(String? available, String? installed) {
+    if (available == null || installed == null) return false;
+    try {
+      final aParts = available
+          .replaceAll(RegExp(r'[^0-9.]'), '')
+          .split('.')
+          .map(int.parse)
+          .toList();
+      final iParts = installed
+          .replaceAll(RegExp(r'[^0-9.]'), '')
+          .split('.')
+          .map(int.parse)
+          .toList();
+      for (int i = 0; i < aParts.length && i < iParts.length; i++) {
+        if (aParts[i] > iParts[i]) return true;
+        if (aParts[i] < iParts[i]) return false;
+      }
+      return aParts.length > iParts.length;
+    } catch (_) {
+      return false;
+    }
   }
 
   List<Source> _computeRecommendedEntries() {
@@ -328,7 +358,7 @@ class _ExtensionListState extends State<ExtensionList>
           key: ValueKey('update_${element.id ?? element.name}_${element.lang}'),
           source: element,
           mediaType: widget.itemType,
-          onUpdate: _computeAllData,
+          onUpdate: _refreshData,
           primaryFocusNode: isFirst ? _firstItemFocusNode : null,
         );
       },
@@ -375,7 +405,7 @@ class _ExtensionListState extends State<ExtensionList>
               'installed_${element.id ?? element.name}_${element.lang}'),
           source: element,
           mediaType: widget.itemType,
-          onUpdate: _computeAllData,
+          onUpdate: _refreshData,
           primaryFocusNode: isFirst ? _firstItemFocusNode : null,
         );
       },
@@ -410,7 +440,7 @@ class _ExtensionListState extends State<ExtensionList>
               'recommended_${element.id ?? element.name}_${element.lang}'),
           source: element,
           mediaType: widget.itemType,
-          onUpdate: _computeAllData,
+          onUpdate: _refreshData,
           primaryFocusNode: isFirst ? _firstItemFocusNode : null,
         );
       },
@@ -445,7 +475,7 @@ class _ExtensionListState extends State<ExtensionList>
               'not_installed_${element.id ?? element.name}_${element.lang}'),
           source: element,
           mediaType: widget.itemType,
-          onUpdate: _computeAllData,
+          onUpdate: _refreshData,
           primaryFocusNode: isFirst ? _firstItemFocusNode : null,
         );
       },

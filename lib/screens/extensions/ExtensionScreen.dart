@@ -383,18 +383,31 @@ class _ExtensionScreenState extends State<ExtensionScreen>
   }
 
   Widget _buildExtensionCount(ItemType itemType, bool installed) {
-    final key = '${itemType.toString()}_$installed';
-    final count = _extensionCounts[key] ?? 0;
+    return Obx(() {
+      _reloadTrigger.value;
+      sourceController.installedExtensions.length;
 
-    return count > 0
-        ? Text(
-            "($count)",
-            style: const TextStyle(
-              fontSize: 12,
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-            ),
-          )
-        : const SizedBox.shrink();
+      final extensions = installed
+          ? sourceController.getInstalledExtensions(itemType)
+          : sourceController.getAvailableExtensions(itemType);
+
+      final count = extensions
+          .where((e) => _selectedLanguage.value != 'all'
+              ? e.lang!.toLowerCase() ==
+                  completeLanguageCode(_selectedLanguage.value)
+              : true)
+          .length;
+
+      return count > 0
+          ? Text(
+              "($count)",
+              style: const TextStyle(
+                fontSize: 12,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          : const SizedBox.shrink();
+    });
   }
 }
