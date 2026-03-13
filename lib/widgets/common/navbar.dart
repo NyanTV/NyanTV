@@ -7,6 +7,7 @@ import 'package:nyantv/widgets/animation/slide_scale.dart';
 import 'package:nyantv/widgets/common/glow.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 class ResponsiveNavBar extends StatefulWidget {
@@ -173,6 +174,7 @@ class _ResponsiveNavBarState extends State<ResponsiveNavBar> {
             selectedIcon: item.selectedIcon,
             unselectedIcon: item.unselectedIcon,
             label: item.label,
+            isLast: index == items.length - 1,
           ),
         );
       }).toList(),
@@ -189,6 +191,7 @@ class NavBarItem extends StatefulWidget {
   final String label;
   final double? iconSize;
   final Widget? altIcon;
+  final bool isLast;
 
   const NavBarItem({
     super.key,
@@ -200,6 +203,7 @@ class NavBarItem extends StatefulWidget {
     required this.label,
     this.iconSize,
     this.altIcon,
+    this.isLast = false,
   });
 
   @override
@@ -211,10 +215,19 @@ class _NavBarItemState extends State<NavBarItem>
   late AnimationController _controller;
   late Animation<double> _indicatorAnimation;
   bool _isFocused = false;
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
+    _focusNode.onKeyEvent = (node, event) {
+      if (event is KeyDownEvent && widget.isVertical && widget.isLast) {
+        if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+          return KeyEventResult.handled;
+        }
+      }
+      return KeyEventResult.ignored;
+    };
     _controller = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -246,6 +259,7 @@ class _NavBarItemState extends State<NavBarItem>
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -262,18 +276,19 @@ class _NavBarItemState extends State<NavBarItem>
         decoration: BoxDecoration(
             color: widget.isSelected
                 ? theme.colorScheme.primary.withOpacity(0.1)
-                : (_isFocused ? theme.colorScheme.onSurface.withOpacity(0.1) : Colors.transparent),
+                : (_isFocused
+                    ? theme.colorScheme.onSurface.withOpacity(0.1)
+                    : Colors.transparent),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: _isFocused ? theme.colorScheme.primary : Colors.transparent,
+              color:
+                  _isFocused ? theme.colorScheme.primary : Colors.transparent,
               width: 2,
             ),
             boxShadow: widget.isSelected ? [lightGlowingShadow(context)] : []),
         child: widget.altIcon ??
             Icon(
-              widget.isSelected
-                  ? widget.selectedIcon
-                  : widget.unselectedIcon,
+              widget.isSelected ? widget.selectedIcon : widget.unselectedIcon,
               color: widget.isSelected
                   ? theme.colorScheme.primary
                   : theme.colorScheme.inverseSurface,
@@ -319,8 +334,8 @@ class _NavBarItemState extends State<NavBarItem>
                     );
                   },
                 ),
-                // Benutze InkWell für TV Fokus-Support
                 InkWell(
+                  focusNode: _focusNode,
                   onTap: widget.onTap,
                   onFocusChange: (value) => setState(() => _isFocused = value),
                   borderRadius: BorderRadius.circular(12),
@@ -332,6 +347,7 @@ class _NavBarItemState extends State<NavBarItem>
               mainAxisSize: MainAxisSize.min,
               children: [
                 InkWell(
+                  focusNode: _focusNode,
                   onTap: widget.onTap,
                   onFocusChange: (value) => setState(() => _isFocused = value),
                   borderRadius: BorderRadius.circular(12),

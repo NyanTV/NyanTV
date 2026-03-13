@@ -534,8 +534,9 @@ class _FilterScreenState extends State<FilterScreen> {
                           excluding: _selectedIndex != 3,
                           child: const MyLibrary()),
                       ExcludeFocus(
-                          excluding: _selectedIndex != 4,
-                          child: const ExtensionScreen(disableGlow: true)),
+                        excluding: _selectedIndex != 4,
+                        child: const ExtensionScreen(disableGlow: true),
+                      ),
                     ],
                   );
                 }

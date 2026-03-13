@@ -15,6 +15,8 @@ class ExtensionList extends StatefulWidget {
   final String query;
   final String selectedLanguage;
   final bool showRecommended;
+  final RxInt? reloadTrigger;
+  final RxInt? focusFirstItemTrigger;
 
   const ExtensionList({
     required this.installed,
@@ -22,6 +24,8 @@ class ExtensionList extends StatefulWidget {
     required this.itemType,
     required this.selectedLanguage,
     this.showRecommended = true,
+    this.reloadTrigger,
+    this.focusFirstItemTrigger,
     super.key,
   });
 
@@ -37,8 +41,10 @@ class _ExtensionListState extends State<ExtensionList>
   final RxList<Source> _updateEntries = <Source>[].obs;
   final RxList<Source> _notInstalledEntries = <Source>[].obs;
   final RxList<Source> _recommendedEntries = <Source>[].obs;
+  final FocusNode _firstItemFocusNode = FocusNode();
+  Source? _firstVisibleItem;
 
-  late Worker _extensionWorker;
+  List<Worker> _workers = [];
 
   @override
   bool get wantKeepAlive => true;
@@ -51,19 +57,51 @@ class _ExtensionListState extends State<ExtensionList>
   }
 
   void _setupReactiveListeners() {
-    _extensionWorker = ever(_getRelevantExtensionList(), (_) {
-      _computeAllData();
-    });
+    _workers = [
+      ever(sourceController.installedExtensions, (_) => _computeAllData()),
+      if (widget.reloadTrigger != null)
+        ever(widget.reloadTrigger!, (_) => _computeAllData()),
+      if (widget.focusFirstItemTrigger != null)
+        ever(widget.focusFirstItemTrigger!, (_) {
+          controller.jumpTo(0);
+          _firstItemFocusNode.requestFocus();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            if (!_firstItemFocusNode.hasFocus) {
+              Future.microtask(() {
+                if (!mounted) return;
+                _firstItemFocusNode.requestFocus();
+              });
+            }
+          });
+        }),
+    ];
   }
 
-  RxList<Source> _getRelevantExtensionList() {
-    return sourceController.installedExtensions;
+  Source? _getFirstOfNotInstalled(List<Source> list) {
+    if (list.isEmpty) return null;
+    final grouped = <String, List<Source>>{};
+    for (final s in list) {
+      final lang = completeLanguageName(s.lang!.toLowerCase());
+      grouped.putIfAbsent(lang, () => []).add(s);
+    }
+    final sortedGroups = grouped.keys.toList()..sort();
+    final firstGroup = grouped[sortedGroups.first]!;
+    firstGroup.sort((a, b) => a.name!.compareTo(b.name!));
+    return firstGroup.first;
   }
+
+//  RxList<Source> _getRelevantExtensionList() {
+//    return sourceController.installedExtensions;
+//  }
 
   @override
   void dispose() {
     controller.dispose();
-    _extensionWorker.dispose();
+    _firstItemFocusNode.dispose();
+    for (final w in _workers) {
+      w.dispose();
+    }
     super.dispose();
   }
 
@@ -90,6 +128,17 @@ class _ExtensionListState extends State<ExtensionList>
       _recommendedEntries.value = _computeRecommendedEntries();
     } else {
       _recommendedEntries.clear();
+    }
+    if (widget.showRecommended && _recommendedEntries.isNotEmpty) {
+      _firstVisibleItem = _getFirstSorted(_recommendedEntries);
+    } else if (widget.installed && _updateEntries.isNotEmpty) {
+      _firstVisibleItem = _getFirstSorted(_updateEntries);
+    } else if (widget.installed && _installedEntries.isNotEmpty) {
+      _firstVisibleItem = _getFirstSorted(_installedEntries);
+    } else if (_notInstalledEntries.isNotEmpty) {
+      _firstVisibleItem = _getFirstOfNotInstalled(_notInstalledEntries);
+    } else {
+      _firstVisibleItem = null;
     }
   }
 
@@ -124,6 +173,7 @@ class _ExtensionListState extends State<ExtensionList>
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: CustomScrollView(
               controller: controller,
+              physics: const ClampingScrollPhysics(),
               slivers: [
                 if (widget.showRecommended && recommendedEntries.isNotEmpty)
                   _buildRecommendedList(recommendedEntries),
@@ -207,7 +257,9 @@ class _ExtensionListState extends State<ExtensionList>
 
   List<Source> _computeInstalledEntries() {
     final installedExtensions = _installedExtensions;
-    return _filterData(installedExtensions);
+    final withoutPendingUpdates =
+        installedExtensions.where((e) => e.hasUpdate != true).toList();
+    return _filterData(withoutPendingUpdates);
   }
 
   List<Source> _computeUpdateEntries() {
@@ -267,12 +319,19 @@ class _ExtensionListState extends State<ExtensionList>
           ],
         ),
       ),
-      itemBuilder: (context, Source element) => ExtensionListTileWidget(
-        key: ValueKey('update_${element.id ?? element.name}_${element.lang}'),
-        source: element,
-        mediaType: widget.itemType,
-        onUpdate: _computeAllData,
-      ),
+      itemBuilder: (context, Source element) {
+        final isFirst = _firstVisibleItem != null &&
+            element.name == _firstVisibleItem!.name &&
+            element.lang == _firstVisibleItem!.lang;
+
+        return ExtensionListTileWidget(
+          key: ValueKey('update_${element.id ?? element.name}_${element.lang}'),
+          source: element,
+          mediaType: widget.itemType,
+          onUpdate: _computeAllData,
+          primaryFocusNode: isFirst ? _firstItemFocusNode : null,
+        );
+      },
       groupComparator: (group1, group2) => group1.compareTo(group2),
       itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
       order: GroupedListOrder.ASC,
@@ -295,74 +354,104 @@ class _ExtensionListState extends State<ExtensionList>
     }
   }
 
-Widget _buildInstalledList(List<Source> installedEntries) {
-  return SliverGroupedListView<Source, String>(
-    elements: installedEntries,
-    groupBy: (element) => "",
-    groupSeparatorBuilder: (_) => const SizedBox(height: 8),
-    itemBuilder: (context, Source element) => ExtensionListTileWidget(
-      key: ValueKey('installed_${element.id ?? element.name}_${element.lang}'),
-      source: element,
-      mediaType: widget.itemType,
-      onUpdate: _computeAllData,
-    ),
-    groupComparator: (group1, group2) => group1.compareTo(group2),
-    itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
-    order: GroupedListOrder.ASC,
-  );
-}
+  Source? _getFirstSorted(List<Source> list) {
+    if (list.isEmpty) return null;
+    final sorted = [...list]..sort((a, b) => a.name!.compareTo(b.name!));
+    return sorted.first;
+  }
 
-Widget _buildRecommendedList(List<Source> recommendedEntries) {
-  return SliverGroupedListView<Source, String>(
-    elements: recommendedEntries,
-    groupBy: (element) => "",
-    groupSeparatorBuilder: (_) => const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        children: [
-          Text(
-            'Recommended',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          ),
-        ],
-      ),
-    ),
-    itemBuilder: (context, Source element) => ExtensionListTileWidget(
-      key: ValueKey('recommended_${element.id ?? element.name}_${element.lang}'),
-      source: element,
-      mediaType: widget.itemType,
-      onUpdate: _computeAllData,
-    ),
-    groupComparator: (group1, group2) => group1.compareTo(group2),
-    itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
-    order: GroupedListOrder.ASC,
-  );
-}
+  Widget _buildInstalledList(List<Source> installedEntries) {
+    return SliverGroupedListView<Source, String>(
+      elements: installedEntries,
+      groupBy: (element) => "",
+      groupSeparatorBuilder: (_) => const SizedBox(height: 8),
+      itemBuilder: (context, Source element) {
+        final isFirst = _firstVisibleItem != null &&
+            element.name == _firstVisibleItem!.name &&
+            element.lang == _firstVisibleItem!.lang;
 
-Widget _buildNotInstalledList(List<Source> notInstalledEntries) {
-  return SliverGroupedListView<Source, String>(
-    elements: notInstalledEntries,
-    groupBy: (element) => completeLanguageName(element.lang!.toLowerCase()),
-    groupSeparatorBuilder: (String groupByValue) => Padding(
-      padding: const EdgeInsets.only(left: 12, top: 8, bottom: 4),
-      child: Row(
-        children: [
-          Text(
-            groupByValue,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          ),
-        ],
+        return ExtensionListTileWidget(
+          key: ValueKey(
+              'installed_${element.id ?? element.name}_${element.lang}'),
+          source: element,
+          mediaType: widget.itemType,
+          onUpdate: _computeAllData,
+          primaryFocusNode: isFirst ? _firstItemFocusNode : null,
+        );
+      },
+      groupComparator: (group1, group2) => group1.compareTo(group2),
+      itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
+      order: GroupedListOrder.ASC,
+    );
+  }
+
+  Widget _buildRecommendedList(List<Source> recommendedEntries) {
+    return SliverGroupedListView<Source, String>(
+      elements: recommendedEntries,
+      groupBy: (element) => "",
+      groupSeparatorBuilder: (_) => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            Text(
+              'Recommended',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ],
+        ),
       ),
-    ),
-    itemBuilder: (context, Source element) => ExtensionListTileWidget(
-      key: ValueKey('not_installed_${element.id ?? element.name}_${element.lang}'),
-      source: element,
-      mediaType: widget.itemType,
-      onUpdate: _computeAllData,
-    ),
-    groupComparator: (group1, group2) => group1.compareTo(group2),
-    itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
-    order: GroupedListOrder.ASC,
-  );
-}
+      itemBuilder: (context, Source element) {
+        final isFirst = _firstVisibleItem != null &&
+            element.name == _firstVisibleItem!.name &&
+            element.lang == _firstVisibleItem!.lang;
+
+        return ExtensionListTileWidget(
+          key: ValueKey(
+              'recommended_${element.id ?? element.name}_${element.lang}'),
+          source: element,
+          mediaType: widget.itemType,
+          onUpdate: _computeAllData,
+          primaryFocusNode: isFirst ? _firstItemFocusNode : null,
+        );
+      },
+      groupComparator: (group1, group2) => group1.compareTo(group2),
+      itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
+      order: GroupedListOrder.ASC,
+    );
+  }
+
+  Widget _buildNotInstalledList(List<Source> notInstalledEntries) {
+    return SliverGroupedListView<Source, String>(
+      elements: notInstalledEntries,
+      groupBy: (element) => completeLanguageName(element.lang!.toLowerCase()),
+      groupSeparatorBuilder: (String groupByValue) => Padding(
+        padding: const EdgeInsets.only(left: 12, top: 8, bottom: 4),
+        child: Row(
+          children: [
+            Text(
+              groupByValue,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ],
+        ),
+      ),
+      itemBuilder: (context, Source element) {
+        final isFirst = _firstVisibleItem != null &&
+            element.name == _firstVisibleItem!.name &&
+            element.lang == _firstVisibleItem!.lang;
+
+        return ExtensionListTileWidget(
+          key: ValueKey(
+              'not_installed_${element.id ?? element.name}_${element.lang}'),
+          source: element,
+          mediaType: widget.itemType,
+          onUpdate: _computeAllData,
+          primaryFocusNode: isFirst ? _firstItemFocusNode : null,
+        );
+      },
+      groupComparator: (group1, group2) => group1.compareTo(group2),
+      itemComparator: (item1, item2) => item1.name!.compareTo(item2.name!),
+      order: GroupedListOrder.ASC,
+    );
+  }
 }

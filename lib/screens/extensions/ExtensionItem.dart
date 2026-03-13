@@ -10,10 +10,10 @@ import 'package:nyantv/utils/language.dart';
 import 'package:nyantv/widgets/AlertDialogBuilder.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_expansion_tile.dart';
 import 'package:nyantv/widgets/header.dart';
-import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -22,12 +22,18 @@ class ExtensionListTileWidget extends StatefulWidget {
   final Source source;
   final ItemType mediaType;
   final VoidCallback? onUpdate;
+  final VoidCallback? onNavigateUp;
+  final bool isFirst;
+  final FocusNode? primaryFocusNode;
 
   const ExtensionListTileWidget({
     super.key,
     required this.source,
     required this.mediaType,
     this.onUpdate,
+    this.onNavigateUp,
+    this.isFirst = false,
+    this.primaryFocusNode,
   });
 
   @override
@@ -37,6 +43,54 @@ class ExtensionListTileWidget extends StatefulWidget {
 
 class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
   final RxBool _isLoading = false.obs;
+
+  final FocusNode _downloadFocusNode = FocusNode();
+  final FocusNode _updateDeleteFocusNode = FocusNode();
+  final FocusNode _settingsFocusNode = FocusNode();
+  late final VoidCallback _primaryFocusListener;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _primaryFocusListener = () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() {});
+      });
+    };
+    widget.primaryFocusNode?.addListener(_primaryFocusListener);
+
+    _downloadFocusNode.addListener(() {
+      setState(() {});
+      if (_downloadFocusNode.hasFocus) {
+        Scrollable.ensureVisible(context,
+            alignment: 0.5, duration: const Duration(milliseconds: 200));
+      }
+    });
+    _updateDeleteFocusNode.addListener(() {
+      setState(() {});
+      if (_updateDeleteFocusNode.hasFocus) {
+        Scrollable.ensureVisible(context,
+            alignment: 0.5, duration: const Duration(milliseconds: 200));
+      }
+    });
+    _settingsFocusNode.addListener(() {
+      setState(() {});
+      if (_settingsFocusNode.hasFocus) {
+        Scrollable.ensureVisible(context,
+            alignment: 0.5, duration: const Duration(milliseconds: 200));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.primaryFocusNode?.removeListener(_primaryFocusListener);
+    _downloadFocusNode.dispose();
+    _updateDeleteFocusNode.dispose();
+    _settingsFocusNode.dispose();
+    super.dispose();
+  }
 
   Future<void> sortExtensions() async {
     await sourceController.sortAnimeExtensions();
@@ -62,7 +116,6 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
 
   RxList<Source> get _installedExtensions {
     return sourceController.installedExtensions;
-
   }
 
   @override
@@ -236,7 +289,6 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
       bool sourceNotEmpty, bool updateAvailable, ColorScheme theme) {
     Future<void> onTap() async {
       if (_isLoading.value) return;
-
       if (updateAvailable) {
         _isLoading.value = true;
         try {
@@ -252,95 +304,111 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
         AlertDialogBuilder(context)
           ..setTitle("Delete Extension")
           ..setMessage("Are you sure you want to delete this extension?")
-          ..setPositiveButton("Yes", () async {
-            _isLoading.value = true;
-            try {
-              Logger.i("Uninstalling => ${widget.source.id}");
-              await widget.source.extensionType!
-                  .getManager()
-                  .uninstallSource(widget.source);
-              await sortExtensions();
-              widget.onUpdate?.call();
-            } catch (e) {
-              Logger.i("Uninstall Failed => ${e.toString()}");
-            } finally {
-              _isLoading.value = false;
-            }
+          ..setPositiveButton("Yes", () {
+            Future.microtask(() async {
+              _isLoading.value = true;
+              try {
+                Logger.i("Uninstalling => ${widget.source.id}");
+                await widget.source.extensionType!
+                    .getManager()
+                    .uninstallSource(widget.source);
+                await sortExtensions();
+                widget.onUpdate?.call();
+              } catch (e) {
+                Logger.i("Uninstall Failed => ${e.toString()}");
+              } finally {
+                _isLoading.value = false;
+              }
+            });
           })
           ..setNegativeButton("No", () {})
           ..show();
       }
     }
 
-    return !sourceNotEmpty
-        ? Container(
+    if (!sourceNotEmpty) {
+      return Container(
+        decoration: BoxDecoration(
+          color: theme.primaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: IconButton(
+          focusNode: widget.primaryFocusNode ?? _downloadFocusNode,
+          onPressed: _handleSourceAction,
+          style: IconButton.styleFrom(
+            overlayColor: Colors.transparent,
+            side: (widget.primaryFocusNode ?? _downloadFocusNode).hasFocus
+                ? BorderSide(color: theme.primary, width: 2)
+                : BorderSide.none,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          icon: Icon(Icons.download, color: theme.onPrimaryContainer, size: 20),
+          tooltip: "Download",
+        ),
+      );
+    }
+
+    return Container(
+      width: 100,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
             decoration: BoxDecoration(
-              color: theme.primaryContainer,
+              color: updateAvailable
+                  ? theme.tertiaryContainer
+                  : theme.errorContainer.withAlpha(122),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: NyantvOnTap(
-              child: IconButton(
-                onPressed: _handleSourceAction,
-                icon: Icon(
-                  Icons.download,
-                  color: theme.onPrimaryContainer,
-                  size: 20,
-                ),
-                tooltip: "Download",
+            child: IconButton(
+              focusNode: widget.primaryFocusNode ?? _updateDeleteFocusNode,
+              onPressed: onTap,
+              style: IconButton.styleFrom(
+                overlayColor: Colors.transparent,
+                side:
+                    (widget.primaryFocusNode ?? _updateDeleteFocusNode).hasFocus
+                        ? BorderSide(color: theme.primary, width: 2)
+                        : BorderSide.none,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
               ),
+              icon: Icon(
+                updateAvailable ? Icons.update : Iconsax.trash,
+                size: 18,
+                color: updateAvailable
+                    ? theme.onTertiaryContainer
+                    : theme.onErrorContainer,
+              ),
+              tooltip: updateAvailable ? "Update" : "Delete",
             ),
-          )
-        : Container(
-            width: 100,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: updateAvailable
-                        ? theme.tertiaryContainer
-                        : theme.errorContainer.withAlpha(122),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: NyantvOnTap(
-                    onTap: onTap,
-                    child: IconButton(
-                      onPressed: onTap,
-                      icon: Icon(
-                        size: 18,
-                        updateAvailable ? Icons.update : Iconsax.trash,
-                        color: updateAvailable
-                            ? theme.onTertiaryContainer
-                            : theme.onErrorContainer,
-                      ),
-                      tooltip: updateAvailable ? "Update" : "Delete",
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: theme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: NyantvOnTap(
-                    child: IconButton(
-                      onPressed: () {
-                        Get.to(() =>
-                            SourcePreferenceScreen(source: widget.source));
-                      },
-                      icon: Icon(
-                        Iconsax.setting,
-                        size: 18,
-                        color: theme.onSecondaryContainer,
-                      ),
-                      tooltip: "Settings",
-                    ),
-                  ),
-                ),
-              ],
+          ),
+          const SizedBox(width: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.secondaryContainer,
+              borderRadius: BorderRadius.circular(8),
             ),
-          );
+            child: IconButton(
+              focusNode: _settingsFocusNode,
+              onPressed: () =>
+                  Get.to(() => SourcePreferenceScreen(source: widget.source)),
+              style: IconButton.styleFrom(
+                overlayColor: Colors.transparent,
+                side: _settingsFocusNode.hasFocus
+                    ? BorderSide(color: theme.primary, width: 2)
+                    : BorderSide.none,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              icon: Icon(Iconsax.setting,
+                  size: 18, color: theme.onSecondaryContainer),
+              tooltip: "Settings",
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

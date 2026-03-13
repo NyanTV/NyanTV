@@ -43,7 +43,9 @@ class Deeplink {
         }
       } else {
         extType = ExtensionType.mangayomi;
-        repoUrl = (uri.queryParameters["url"] ?? uri.queryParameters['anime_url'])?.trim();
+        repoUrl =
+            (uri.queryParameters["url"] ?? uri.queryParameters['anime_url'])
+                ?.trim();
       }
 
       if (repoUrl != null) {
@@ -119,7 +121,8 @@ class Deeplink {
         await Future.delayed(const Duration(milliseconds: 250));
       }
 
-      if (sourceController == null || sourceController.activeSource.value == null) {
+      if (sourceController == null ||
+          sourceController.activeSource.value == null) {
         Logger.e('Watch Next: no active source after 10s');
         snackBar('No source configured');
         return;
@@ -155,18 +158,6 @@ class Deeplink {
         () => AnimeDetailsPage(media: mediaObj, tag: mediaId),
         transition: Transition.noTransition,
         duration: Duration.zero,
-      );
-
-      await Future.delayed(const Duration(milliseconds: 80));
-
-      Get.to(
-        () => WatchPage(
-          episodeSrc: videos.first,
-          episodeList: episodes is List ? List.from(episodes) : [],
-          anilistData: mediaObj,
-          currentEpisode: episode,
-          episodeTracks: videos,
-        ),
       );
 
       Logger.i('Watch Next: episode launched successfully');
