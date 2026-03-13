@@ -337,6 +337,7 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
           onPressed: _handleSourceAction,
           style: IconButton.styleFrom(
             overlayColor: Colors.transparent,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             side: (widget.primaryFocusNode ?? _downloadFocusNode).hasFocus
                 ? BorderSide(color: theme.primary, width: 2)
                 : BorderSide.none,
@@ -367,6 +368,7 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
               onPressed: onTap,
               style: IconButton.styleFrom(
                 overlayColor: Colors.transparent,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 side:
                     (widget.primaryFocusNode ?? _updateDeleteFocusNode).hasFocus
                         ? BorderSide(color: theme.primary, width: 2)
@@ -396,6 +398,7 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
                   Get.to(() => SourcePreferenceScreen(source: widget.source)),
               style: IconButton.styleFrom(
                 overlayColor: Colors.transparent,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 side: _settingsFocusNode.hasFocus
                     ? BorderSide(color: theme.primary, width: 2)
                     : BorderSide.none,
