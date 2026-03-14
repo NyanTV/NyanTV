@@ -25,7 +25,7 @@ Future<void> snackBar(
   final theme = Theme.of(context);
 
   if (_currentSnackBar != null && _currentSnackBar!.mounted) {
-    //await Future.delayed(Duration(milliseconds: duration + 400));
+    await Future.delayed(Duration(milliseconds: duration + 400));
     if (_currentSnackBar != null && _currentSnackBar!.mounted) {
       _currentSnackBar!.remove();
       _currentSnackBar = null;
