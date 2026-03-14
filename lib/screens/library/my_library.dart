@@ -61,6 +61,8 @@ class _MyLibraryState extends State<MyLibrary> with TVScrollMixin {
   final FocusNode _searchFocusNode = FocusNode();
   final FocusNode _sortFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _backButtonFocusNode = FocusNode();
+  final FocusNode _searchBarInputFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -80,6 +82,8 @@ class _MyLibraryState extends State<MyLibrary> with TVScrollMixin {
     _searchFocusNode.dispose();
     _sortFocusNode.dispose();
     _scrollController.dispose();
+    _backButtonFocusNode.dispose();
+    _searchBarInputFocusNode.dispose();
     super.dispose();
   }
 
@@ -544,40 +548,65 @@ class _MyLibraryState extends State<MyLibrary> with TVScrollMixin {
                                       child: child,
                                     );
                                   },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                        width: 1,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                              .withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 3),
-                                        ),
-                                      ],
-                                    ),
-                                    child: IconButton(
-                                      onPressed: () {
-                                        isSearchActive.value = false;
+                                  child: Focus(
+                                    onKeyEvent: (_, event) {
+                                      if (event is! KeyDownEvent)
+                                        return KeyEventResult.ignored;
+                                      if (event.logicalKey ==
+                                          LogicalKeyboardKey.arrowRight) {
+                                        _searchBarInputFocusNode.requestFocus();
+                                        return KeyEventResult.handled;
+                                      }
+                                      return KeyEventResult.ignored;
+                                    },
+                                    child: ListenableBuilder(
+                                      listenable: _backButtonFocusNode,
+                                      builder: (context, _) {
+                                        return Container(
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                    .withOpacity(0.3),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 3),
+                                              ),
+                                              if (_backButtonFocusNode.hasFocus)
+                                                BoxShadow(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onPrimary
+                                                      .withOpacity(0.8),
+                                                  blurRadius: 0,
+                                                  spreadRadius: 2.5,
+                                                ),
+                                            ],
+                                          ),
+                                          child: IconButton(
+                                            focusNode: _backButtonFocusNode,
+                                            onPressed: () {
+                                              isSearchActive.value = false;
+                                            },
+                                            icon: Icon(
+                                              Icons.arrow_back_ios_new,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimary,
+                                            ),
+                                            constraints: const BoxConstraints(
+                                              minHeight: 40,
+                                              minWidth: 40,
+                                            ),
+                                          ),
+                                        );
                                       },
-                                      icon: Icon(Icons.arrow_back_ios_new,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary),
-                                      constraints: const BoxConstraints(
-                                        minHeight: 40,
-                                        minWidth: 40,
-                                      ),
                                     ),
                                   ),
                                 ),
@@ -585,10 +614,70 @@ class _MyLibraryState extends State<MyLibrary> with TVScrollMixin {
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 10),
-                                    child: CustomSearchBar(
-                                      controller: controller,
-                                      onChanged: _search,
-                                      hintText: 'Search Anime...',
+                                    child: Focus(
+                                      onKeyEvent: (_, event) {
+                                        if (event is! KeyDownEvent) {
+                                          return KeyEventResult.ignored;
+                                        }
+                                        if (event.logicalKey ==
+                                                LogicalKeyboardKey.escape ||
+                                            event.logicalKey ==
+                                                LogicalKeyboardKey.goBack) {
+                                          isSearchActive.value = false;
+                                          _searchFocusNode.requestFocus();
+                                          return KeyEventResult.handled;
+                                        }
+                                        if (event.logicalKey ==
+                                            LogicalKeyboardKey.arrowLeft) {
+                                          _backButtonFocusNode.requestFocus();
+                                          return KeyEventResult.handled;
+                                        }
+                                        if (event.logicalKey ==
+                                            LogicalKeyboardKey.arrowRight) {
+                                          _sortFocusNode.requestFocus();
+                                          return KeyEventResult.handled;
+                                        }
+                                        if (event.logicalKey ==
+                                            LogicalKeyboardKey.arrowDown) {
+                                          FocusScope.of(context).nextFocus();
+                                          return KeyEventResult.handled;
+                                        }
+                                        return KeyEventResult.ignored;
+                                      },
+                                      child: ListenableBuilder(
+                                        listenable: _searchBarInputFocusNode,
+                                        builder: (context, _) {
+                                          final isFocused =
+                                              _searchBarInputFocusNode.hasFocus;
+                                          return AnimatedContainer(
+                                            duration: const Duration(
+                                                milliseconds: 200),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
+                                              boxShadow: isFocused
+                                                  ? [
+                                                      BoxShadow(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .primary
+                                                            .withOpacity(0.4),
+                                                        blurRadius: 20,
+                                                        spreadRadius: 2,
+                                                      ),
+                                                    ]
+                                                  : [],
+                                            ),
+                                            child: CustomSearchBar(
+                                              focusNode:
+                                                  _searchBarInputFocusNode,
+                                              controller: controller,
+                                              onChanged: _search,
+                                              hintText: 'Search Anime...',
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -625,18 +714,6 @@ class _MyLibraryState extends State<MyLibrary> with TVScrollMixin {
                                             .colorScheme
                                             .primary,
                                         borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: _searchFocusNode.hasFocus
-                                              ? Theme.of(context)
-                                                  .colorScheme
-                                                  .onPrimary
-                                              : Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
-                                          width: _searchFocusNode.hasFocus
-                                              ? 2.5
-                                              : 1,
-                                        ),
                                         boxShadow: [
                                           BoxShadow(
                                             color: Theme.of(context)
@@ -646,22 +723,35 @@ class _MyLibraryState extends State<MyLibrary> with TVScrollMixin {
                                             blurRadius: 8,
                                             offset: const Offset(0, 3),
                                           ),
+                                          if (_searchFocusNode.hasFocus)
+                                            BoxShadow(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimary
+                                                  .withOpacity(0.8),
+                                              blurRadius: 0,
+                                              spreadRadius: 2.5,
+                                            ),
                                         ],
                                       ),
                                       child: IconButton(
                                         focusNode: _searchFocusNode,
                                         onPressed: () =>
                                             isSearchActive.value = true,
-                                        icon: Icon(IconlyLight.search,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onPrimary),
+                                        icon: Icon(
+                                          IconlyLight.search,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary,
+                                        ),
                                       ),
                                     );
                                   },
                                 )
-                              : const SizedBox(
-                                  key: ValueKey('emptySearch'), width: 0),
+                              : const ExcludeFocus(
+                                  key: ValueKey('emptySearch'),
+                                  child: SizedBox(width: 0),
+                                ),
                         ),
                         TweenAnimationBuilder<double>(
                           duration: const Duration(milliseconds: 300),
@@ -677,14 +767,6 @@ class _MyLibraryState extends State<MyLibrary> with TVScrollMixin {
                                 decoration: BoxDecoration(
                                   color: Theme.of(context).colorScheme.primary,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: _sortFocusNode.hasFocus
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary
-                                        : Theme.of(context).colorScheme.primary,
-                                    width: _sortFocusNode.hasFocus ? 2.5 : 1,
-                                  ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Theme.of(context)
@@ -694,15 +776,25 @@ class _MyLibraryState extends State<MyLibrary> with TVScrollMixin {
                                       blurRadius: 8,
                                       offset: const Offset(0, 3),
                                     ),
+                                    if (_sortFocusNode.hasFocus)
+                                      BoxShadow(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary
+                                            .withOpacity(0.8),
+                                        blurRadius: 0,
+                                        spreadRadius: 2.5,
+                                      ),
                                   ],
                                 ),
                                 child: IconButton(
                                   focusNode: _sortFocusNode,
                                   onPressed: showSortingSettings,
-                                  icon: Icon(Icons.sort,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onPrimary),
+                                  icon: Icon(
+                                    Icons.sort,
+                                    color:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                  ),
                                 ),
                               );
                             },

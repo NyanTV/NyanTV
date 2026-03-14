@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -41,12 +42,24 @@ class _TvTextFieldState extends State<TvTextField> with WidgetsBindingObserver {
   late FocusNode _focusNode;
   bool _ownsFocusNode = false;
   bool _readOnly = true;
+  bool _keyboardOpenedByUs = false;
+  bool _ignoreMetrics = false;
   static const _channel = MethodChannel('app/keyboard');
+  static const _visibilityChannel = EventChannel('app/keyboard_visibility');
+  StreamSubscription? _keyboardSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    HardwareKeyboard.instance.addHandler(_onHardwareKey);
+
+    _keyboardSubscription =
+        _visibilityChannel.receiveBroadcastStream().listen((isVisible) {
+      if (!isVisible && !_readOnly && _keyboardOpenedByUs && !_ignoreMetrics) {
+        _channel.invokeMethod('show');
+      }
+    });
 
     if (widget.focusNode != null) {
       _focusNode = widget.focusNode!;
@@ -71,27 +84,42 @@ class _TvTextFieldState extends State<TvTextField> with WidgetsBindingObserver {
     }
   }
 
-  @override
-  void didChangeMetrics() {
-    final keyboardHeight = WidgetsBinding
-        .instance.platformDispatcher.views.first.viewInsets.bottom;
-    if (keyboardHeight == 0 && !_readOnly) {
-      if (mounted) setState(() => _readOnly = true);
+  bool _onHardwareKey(KeyEvent event) {
+    if (!_readOnly && event is KeyDownEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.goBack ||
+          event.logicalKey == LogicalKeyboardKey.escape) {
+        setState(() {
+          _readOnly = true;
+          _keyboardOpenedByUs = false;
+        });
+        _channel.invokeMethod('hide');
+        return true;
+      }
     }
+    return false;
   }
 
   @override
   void dispose() {
+    _keyboardSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    HardwareKeyboard.instance.removeHandler(_onHardwareKey);
     if (_ownsFocusNode) _focusNode.dispose();
     super.dispose();
   }
 
   void _showKeyboard() {
     if (!_focusNode.hasFocus) return;
-    setState(() => _readOnly = false);
+    setState(() {
+      _readOnly = false;
+      _keyboardOpenedByUs = true;
+      _ignoreMetrics = true;
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _channel.invokeMethod('show');
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) setState(() => _ignoreMetrics = false);
+      });
     });
   }
 
@@ -109,7 +137,10 @@ class _TvTextFieldState extends State<TvTextField> with WidgetsBindingObserver {
         onChanged: widget.onChanged,
         onSubmitted: (v) {
           widget.onSubmitted?.call(v);
-          setState(() => _readOnly = true);
+          setState(() {
+            _readOnly = true;
+            _keyboardOpenedByUs = false;
+          });
           _channel.invokeMethod('hide');
         },
         decoration:

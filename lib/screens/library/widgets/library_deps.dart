@@ -14,12 +14,16 @@ class CustomSearchBar extends StatefulWidget {
   final TextEditingController? controller;
   final Function(String)? onChanged;
   final String hintText;
+  final FocusNode? focusNode;
+  final bool disableIcons;
 
   const CustomSearchBar({
     super.key,
     this.controller,
     this.onChanged,
     required this.hintText,
+    this.focusNode,
+    this.disableIcons = false,
   });
 
   @override
@@ -33,7 +37,9 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
   @override
   void initState() {
     super.initState();
-    if (settings.isTV.value) {
+    if (widget.focusNode != null) {
+      _focusNode = widget.focusNode!;
+    } else if (settings.isTV.value) {
       _focusNode = FocusNode(
         onKeyEvent: (node, event) {
           if (event is KeyDownEvent) {
@@ -61,6 +67,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
 
   @override
   void dispose() {
+    if (widget.focusNode == null) _focusNode.dispose();
     _focusNode.dispose();
     super.dispose();
   }

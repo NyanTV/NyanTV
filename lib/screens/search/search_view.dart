@@ -94,6 +94,10 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         'anime_searched_queries_${serviceHandler.serviceType.value.name}',
         defaultValue: [].cast<String>());
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchFocusNode.requestFocus();
+    });
+
     if (widget.initialFilters != null) {
       _activeFilters = Map<String, dynamic>.from(widget.initialFilters!);
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -258,13 +262,15 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       onKeyEvent: (event) {
         if (event is KeyDownEvent && _searchFocusNode.hasFocus) {
           if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-            // Check if history is visible
             if (_searchState == SearchState.initial &&
                 _searchedTerms.isNotEmpty) {
               _clearAllHistoryFocusNode.requestFocus();
             } else if (serviceHandler.serviceType.value ==
                 ServicesType.anilist) {
               _adultToggleFocusNode.requestFocus();
+            } else if (_searchState == SearchState.success &&
+                _resultFocusNodes.isNotEmpty) {
+              _gridModeFocusNode.requestFocus();
             }
             return;
           } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
