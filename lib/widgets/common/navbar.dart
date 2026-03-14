@@ -268,7 +268,6 @@ class _NavBarItemState extends State<NavBarItem>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Gemeinsamer Button-Body mit Fokus-Unterstützung für TV
     Widget buildBody() {
       return AnimatedContainer(
         duration: const Duration(milliseconds: 300),

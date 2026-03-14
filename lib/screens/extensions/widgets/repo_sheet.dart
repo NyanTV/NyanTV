@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/utils/tv_text_field.dart';
 import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -313,7 +314,7 @@ class _RepoBottomSheetState extends State<RepoBottomSheet> {
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
+        TvTextField(
           controller: controller,
           decoration: InputDecoration(
             hintText: hint,

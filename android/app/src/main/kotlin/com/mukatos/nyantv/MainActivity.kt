@@ -11,6 +11,7 @@ import androidx.activity.addCallback
 import android.app.UiModeManager
 import android.content.Context
 import android.content.res.Configuration
+import android.view.inputmethod.InputMethodManager
 import java.io.BufferedReader
 import java.io.InputStreamReader
 

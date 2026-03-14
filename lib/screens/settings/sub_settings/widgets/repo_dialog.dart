@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:nyantv/controllers/source/source_controller.dart';
+import 'package:nyantv/utils/tv_text_field.dart';
 import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
@@ -77,7 +78,6 @@ class _GitHubRepoDialogState extends State<GitHubRepoDialog> {
 
       await Future.delayed(const Duration(milliseconds: 500));
       sourceController.setAnimeRepo(url, widget.extType);
-
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -188,7 +188,7 @@ class _GitHubRepoDialogState extends State<GitHubRepoDialog> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: TextField(
+                      child: TvTextField(
                         controller: _controller,
                         focusNode: _focusNode,
                         decoration: InputDecoration(

@@ -1,6 +1,7 @@
 import 'package:nyantv/controllers/services/widgets/widgets_builders.dart';
 import 'package:nyantv/controllers/settings/methods.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/utils/tv_text_field.dart';
 import 'package:nyantv/widgets/common/glow.dart';
 import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:flutter/material.dart';
@@ -66,7 +67,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
                 return KeyEventResult.handled;
               }
             }
-            
+
             if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
               _focusNode.focusInDirection(TraversalDirection.left);
               return KeyEventResult.skipRemainingHandlers;
@@ -103,7 +104,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
       decoration: BoxDecoration(
           boxShadow: widget.enableGlow ? [lightGlowingShadow(context)] : []),
       clipBehavior: Clip.antiAlias,
-      child: TextField(
+      child: TvTextField(
         focusNode: widget.focusNode ?? _focusNode,
         controller: widget.controller,
         onSubmitted: (value) {

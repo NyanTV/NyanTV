@@ -5,6 +5,7 @@ import 'package:nyantv/screens/anime/watch/subtitles/model/online_subtitle.dart'
 import 'package:nyantv/screens/anime/watch/subtitles/repository/imdb_repo.dart';
 import 'package:nyantv/screens/anime/watch/subtitles/repository/subtitle_repo.dart';
 import 'package:nyantv/utils/logger.dart';
+import 'package:nyantv/utils/tv_text_field.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_chip.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
@@ -354,7 +355,7 @@ class _SubtitleSearchBottomSheetState extends State<SubtitleSearchBottomSheet> {
           ),
           if (_currentView.value == SubtitleSearchView.search) ...[
             const SizedBox(height: 16),
-            TextField(
+            TvTextField(
               controller: _searchController,
               onSubmitted: (query) => _performSearch(query: query),
               enabled: !_isLoadingSearch.value,

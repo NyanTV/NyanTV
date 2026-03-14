@@ -7,9 +7,9 @@ import 'package:get/get.dart';
 
 OverlayEntry? _currentSnackBar;
 
-void snackBar(
+Future<void> snackBar(
   String message, {
-  int duration = 2000,
+  int duration = 1750,
   String? title,
   Color? backgroundColor,
   SnackPosition? snackPosition,
@@ -18,14 +18,21 @@ void snackBar(
   Color? iconColor,
   bool showCloseButton = false,
   bool showDurationAnimation = true,
-}) {
-  final context = Get.context!;
+}) async {
+  final context = Get.context;
+  if (context == null) return;
+
   final theme = Theme.of(context);
 
-  if (_currentSnackBar != null) {
-    _currentSnackBar?.remove();
-    _currentSnackBar = null;
+  if (_currentSnackBar != null && _currentSnackBar!.mounted) {
+    //await Future.delayed(Duration(milliseconds: duration + 400));
+    if (_currentSnackBar != null && _currentSnackBar!.mounted) {
+      _currentSnackBar!.remove();
+      _currentSnackBar = null;
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
   }
+  _currentSnackBar = null;
 
   _currentSnackBar = OverlayEntry(
     builder: (context) => _BubbleSnackBar(
@@ -44,13 +51,15 @@ void snackBar(
       duration: Duration(milliseconds: duration),
       theme: theme,
       onDismiss: () {
-        _currentSnackBar?.remove();
+        if (_currentSnackBar != null && _currentSnackBar!.mounted) {
+          _currentSnackBar!.remove();
+        }
         _currentSnackBar = null;
       },
     ),
   );
 
-  Overlay.of(Get.overlayContext!).insert(_currentSnackBar!);
+  Get.key.currentState?.overlay?.insert(_currentSnackBar!);
 }
 
 class _BubbleSnackBar extends StatefulWidget {
@@ -110,27 +119,11 @@ class _BubbleSnackBarState extends State<_BubbleSnackBar>
     );
 
     _slideAnimation = Tween<double>(
-      begin: widget.snackPosition == SnackPosition.TOP ? -100 : 100,
+      begin: widget.snackPosition == SnackPosition.TOP ? -80 : 80,
       end: 0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: const Interval(0.0, 0.6, curve: Curves.elasticOut),
-    ));
-
-    _scaleAnimation = Tween<double>(
-      begin: 0.3,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.2, 0.8, curve: Curves.easeOutBack),
-    ));
-
-    _opacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.0, 0.3, curve: Curves.easeOut),
+      curve: Curves.easeOutCubic,
     ));
 
     _progressAnimation = Tween<double>(
@@ -183,48 +176,40 @@ class _BubbleSnackBarState extends State<_BubbleSnackBar>
 
     return Positioned.fill(
       child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          return Align(
-            alignment: widget.snackPosition == SnackPosition.TOP
-                ? Alignment.topCenter
-                : Alignment.bottomCenter,
-            child: Transform.translate(
-              offset: Offset(0, _slideAnimation.value),
-              child: Container(
-                margin: EdgeInsets.only(
-                  top: widget.snackPosition == SnackPosition.TOP
-                      ? topPadding + 20
-                      : 0,
-                  bottom: widget.snackPosition == SnackPosition.BOTTOM ? 40 : 0,
-                  left: 16,
-                  right: 16,
+        animation: _slideAnimation,
+        builder: (context, child) => Align(
+          alignment: widget.snackPosition == SnackPosition.TOP
+              ? Alignment.topCenter
+              : Alignment.bottomCenter,
+          child: Transform.translate(
+            offset: Offset(0, _slideAnimation.value),
+            child: child,
+          ),
+        ),
+        child: Container(
+          margin: EdgeInsets.only(
+            top:
+                widget.snackPosition == SnackPosition.TOP ? topPadding + 20 : 0,
+            bottom: widget.snackPosition == SnackPosition.BOTTOM ? 40 : 0,
+            left: 16,
+            right: 16,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: IntrinsicHeight(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: screenWidth *
+                      (getResponsiveSize(context,
+                          mobileSize: 0.9, desktopSize: 0.4)),
+                  minWidth: 120,
+                  maxHeight: screenHeight * 0.3,
                 ),
-                child: Opacity(
-                  opacity: _opacityAnimation.value,
-                  child: Transform.scale(
-                    scale: _scaleAnimation.value,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: IntrinsicHeight(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: screenWidth *
-                                (getResponsiveSize(context,
-                                    mobileSize: 0.9, desktopSize: 0.4)),
-                            minWidth: 120,
-                            maxHeight: screenHeight * 0.3,
-                          ),
-                          child: _buildContent(),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                child: _buildContent(),
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

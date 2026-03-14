@@ -7,6 +7,7 @@ import 'package:nyantv/screens/search/widgets/inline_search_history.dart';
 import 'package:nyantv/screens/search/widgets/search_widgets.dart';
 import 'package:nyantv/screens/settings/misc/sauce_finder_view.dart';
 import 'package:nyantv/utils/function.dart';
+import 'package:nyantv/utils/tv_text_field.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:nyantv/widgets/media_items/media_item.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
@@ -292,7 +293,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 ]
               : null,
         ),
-        child: TextField(
+        child: TvTextField(
           controller: _searchController,
           focusNode: _searchFocusNode,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(

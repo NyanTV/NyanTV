@@ -1,5 +1,6 @@
 import 'package:nyantv/database/model/comment.dart';
 import 'package:nyantv/screens/anime/widgets/comments/controller/comments_controller.dart';
+import 'package:nyantv/utils/tv_text_field.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -150,7 +151,7 @@ class _CommentSectionState extends State<CommentSection> {
                           width: 1,
                         ),
                       ),
-                      child: TextField(
+                      child: TvTextField(
                         controller: controller.commentController,
                         focusNode: controller.commentFocusNode,
                         maxLines: controller.isInputExpanded.value ? 5 : 1,

@@ -1,6 +1,7 @@
 import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
 import 'package:nyantv/models/Media/media.dart';
 import 'package:nyantv/models/Offline/Hive/custom_list.dart';
+import 'package:nyantv/utils/tv_text_field.dart';
 import 'package:nyantv/widgets/common/search_bar.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
 import 'package:flutter/material.dart';
@@ -96,7 +97,7 @@ class _CustomListDialogState extends State<CustomListDialog> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  TextField(
+                  TvTextField(
                     controller: textController,
                     autofocus: true,
                     onChanged: (value) {

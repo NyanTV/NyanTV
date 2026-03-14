@@ -1,5 +1,6 @@
 import 'package:nyantv/controllers/settings/methods.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/utils/tv_text_field.dart';
 import 'package:nyantv/widgets/common/slider_semantics.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_icon_wrapper.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
@@ -66,7 +67,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TvTextField(
       focusNode: _focusNode,
       controller: widget.controller,
       onChanged: widget.onChanged,
