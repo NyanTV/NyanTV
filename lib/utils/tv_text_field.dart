@@ -37,15 +37,17 @@ class TvTextField extends StatefulWidget {
   State<TvTextField> createState() => _TvTextFieldState();
 }
 
-class _TvTextFieldState extends State<TvTextField> {
+class _TvTextFieldState extends State<TvTextField> with WidgetsBindingObserver {
   late FocusNode _focusNode;
   bool _ownsFocusNode = false;
-  bool _readOnly = true; // starts as readOnly
+  bool _readOnly = true;
   static const _channel = MethodChannel('app/keyboard');
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     if (widget.focusNode != null) {
       _focusNode = widget.focusNode!;
     } else {
@@ -70,7 +72,17 @@ class _TvTextFieldState extends State<TvTextField> {
   }
 
   @override
+  void didChangeMetrics() {
+    final keyboardHeight = WidgetsBinding
+        .instance.platformDispatcher.views.first.viewInsets.bottom;
+    if (keyboardHeight == 0 && !_readOnly) {
+      if (mounted) setState(() => _readOnly = true);
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     if (_ownsFocusNode) _focusNode.dispose();
     super.dispose();
   }
@@ -87,9 +99,9 @@ class _TvTextFieldState extends State<TvTextField> {
   Widget build(BuildContext context) {
     return CallbackShortcuts(
       bindings: {
-        SingleActivator(LogicalKeyboardKey.select): _showKeyboard,
-        SingleActivator(LogicalKeyboardKey.enter): _showKeyboard,
-        SingleActivator(LogicalKeyboardKey.numpadEnter): _showKeyboard,
+        const SingleActivator(LogicalKeyboardKey.select): _showKeyboard,
+        const SingleActivator(LogicalKeyboardKey.enter): _showKeyboard,
+        const SingleActivator(LogicalKeyboardKey.numpadEnter): _showKeyboard,
       },
       child: TextField(
         focusNode: _focusNode,
