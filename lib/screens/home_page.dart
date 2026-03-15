@@ -34,8 +34,6 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
   final ValueNotifier<bool> _isAppBarVisibleExternally =
       ValueNotifier<bool>(true);
 
-  static const double _tvScrollStep = 120.0;
-
   @override
   void initState() {
     super.initState();
@@ -67,15 +65,19 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
     }
 
     if (_scrollController.hasClients && _scrollController.offset > 0) {
-      final target = (_scrollController.offset - _tvScrollStep).clamp(
+      final target = (_scrollController.offset - 120.0).clamp(
         0.0,
         _scrollController.position.maxScrollExtent,
       );
-      _scrollController.animateTo(
-        target,
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOut,
-      );
+      if (target < 20.0) {
+        _scrollController.jumpTo(0);
+      } else {
+        _scrollController.animateTo(
+          target,
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+        );
+      }
     }
 
     return KeyEventResult.ignored;

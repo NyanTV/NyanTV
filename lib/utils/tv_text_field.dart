@@ -153,6 +153,9 @@ class _TvTextFieldState extends State<TvTextField> with WidgetsBindingObserver {
         obscureText: widget.obscureText,
         autofocus: false,
         readOnly: _readOnly,
+        showCursor: !_readOnly, // neu — kein Cursor wenn readOnly
+        enableInteractiveSelection:
+            !_readOnly, // neu — keine Selection wenn readOnly
       ),
     );
   }

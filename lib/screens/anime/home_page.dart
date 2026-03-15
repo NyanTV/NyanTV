@@ -1,6 +1,7 @@
 // ignore_for_file: invalid_use_of_protected_member
 import 'package:nyantv/widgets/header.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nyantv/utils/tv_scroll_mixin.dart';
 import 'package:get/get.dart';
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
@@ -69,6 +70,40 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin {
     super.dispose();
   }
 
+  KeyEventResult _handleTVKeyEvent(FocusNode node, KeyEvent event) {
+    if (!Get.find<Settings>().isTV.value) return KeyEventResult.ignored;
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    if (event.logicalKey != LogicalKeyboardKey.arrowUp) {
+      return KeyEventResult.ignored;
+    }
+
+    if (_scrollController.hasClients && _scrollController.offset > 0) {
+      final statusBarHeight = MediaQuery.of(context).padding.top;
+      const appBarHeight = kToolbarHeight + 10;
+      final scrollStep =
+          _scrollController.offset < (statusBarHeight + appBarHeight + 40)
+              ? statusBarHeight + appBarHeight + 40
+              : 140.0;
+      final target = (_scrollController.offset - scrollStep).clamp(
+        0.0,
+        _scrollController.position.maxScrollExtent,
+      );
+      if (target < 20.0) {
+        _scrollController.jumpTo(0);
+      } else {
+        _scrollController.animateTo(
+          target,
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+        );
+      }
+    }
+
+    return KeyEventResult.ignored;
+  }
+
   @override
   Widget build(BuildContext context) {
     final serviceHandler = Get.find<ServiceHandler>();
@@ -82,22 +117,27 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin {
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          SingleChildScrollView(
-            controller: _scrollController,
-            physics: getTVScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: statusBarHeight + appBarHeight),
-                const SizedBox(height: 10),
-                Obx(() => Column(
-                      children: serviceHandler.animeWidgets(context),
-                    )),
-                if (!isDesktop)
-                  SizedBox(height: bottomNavBarHeight)
-                else
-                  const SizedBox(height: 50),
-              ],
+          Focus(
+            onKeyEvent: _handleTVKeyEvent,
+            skipTraversal: true,
+            canRequestFocus: false,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: getTVScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: statusBarHeight + appBarHeight),
+                  const SizedBox(height: 10),
+                  Obx(() => Column(
+                        children: serviceHandler.animeWidgets(context),
+                      )),
+                  if (!isDesktop)
+                    SizedBox(height: bottomNavBarHeight)
+                  else
+                    const SizedBox(height: 50),
+                ],
+              ),
             ),
           ),
           ValueListenableBuilder<bool>(
