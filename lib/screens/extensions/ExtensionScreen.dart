@@ -41,13 +41,35 @@ class _ExtensionScreenState extends State<ExtensionScreen>
   final RxInt _focusFirstItemTrigger0 = 0.obs;
   final RxInt _focusFirstItemTrigger1 = 0.obs;
   final _currentTabIndex = 0.obs;
+  bool _searchGlowVisible = false;
+  Timer? _glowTimer;
 
   List<Worker>? _workers;
+
+  void _updateGlow() {
+    final hasFocus = _searchFocusNode.hasFocus || _textFieldFocusNode.hasFocus;
+    if (hasFocus) {
+      _glowTimer?.cancel();
+      if (!_searchGlowVisible) setState(() => _searchGlowVisible = true);
+    } else {
+      _glowTimer?.cancel();
+      _glowTimer = Timer(const Duration(milliseconds: 300), () {
+        if (mounted &&
+            !_searchFocusNode.hasFocus &&
+            !_textFieldFocusNode.hasFocus) {
+          setState(() => _searchGlowVisible = false);
+        }
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _searchFocusNode.addListener(() => setState(() {}));
+    _searchFocusNode.addListener(() {
+      setState(() {});
+      _updateGlow();
+    });
     _textFieldFocusNode = FocusNode(
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent) {
@@ -79,12 +101,12 @@ class _ExtensionScreenState extends State<ExtensionScreen>
         return KeyEventResult.ignored;
       },
     );
+    _textFieldFocusNode.addListener(_updateGlow);
     _fetchData();
     _checkPermission();
     _tabBarController = TabController(length: 2, vsync: this);
     _tabBarController.animateTo(0);
     _tabBarController.addListener(_onTabChanged);
-
     _setupReactiveListeners();
   }
 
@@ -101,6 +123,7 @@ class _ExtensionScreenState extends State<ExtensionScreen>
 
   @override
   void dispose() {
+    _glowTimer?.cancel();
     _searchFocusNode.dispose();
     _textFieldFocusNode.dispose();
     _tab0FocusNode.dispose();
@@ -108,33 +131,26 @@ class _ExtensionScreenState extends State<ExtensionScreen>
     _tabBarController.removeListener(_onTabChanged);
     _tabBarController.dispose();
     _textEditingController.dispose();
-
-    // Dispose all workers
     if (_workers != null) {
       for (var worker in _workers!) {
         worker.dispose();
       }
     }
-
     super.dispose();
   }
 
   void _onTabChanged() {
     if (_tabBarController.indexIsChanging) return;
     if (!mounted) return;
-
     final newIndex = _tabBarController.index;
     _currentTabIndex.value = newIndex;
     _textEditingController.clear();
-
     FocusManager.instance.primaryFocus?.unfocus();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       (_currentTabIndex.value == 0 ? _tab0FocusNode : _tab1FocusNode)
           .requestFocus();
     });
-
     setState(() {});
   }
 
@@ -151,25 +167,21 @@ class _ExtensionScreenState extends State<ExtensionScreen>
 
   void _updateExtensionCounts() {
     final newCounts = <String, int>{};
-
     for (final itemType in [ItemType.anime]) {
       for (final installed in [true, false]) {
         final key = '${itemType.toString()}_$installed';
         final extensions = installed
             ? sourceController.getInstalledExtensions(itemType)
             : sourceController.getAvailableExtensions(itemType);
-
         final filteredCount = extensions
             .where((element) => _selectedLanguage.value != 'all'
                 ? element.lang!.toLowerCase() ==
                     completeLanguageCode(_selectedLanguage.value)
                 : true)
             .length;
-
         newCounts[key] = filteredCount;
       }
     }
-
     _extensionCounts.value = newCounts;
   }
 
@@ -185,10 +197,7 @@ class _ExtensionScreenState extends State<ExtensionScreen>
   }
 
   void repoSheet() {
-    RepoBottomSheet.show(
-      context,
-      onSave: _fetchData,
-    );
+    RepoBottomSheet.show(context, onSave: _fetchData);
   }
 
   @override
@@ -306,14 +315,30 @@ class _ExtensionScreenState extends State<ExtensionScreen>
                   }
                   return KeyEventResult.ignored;
                 },
-                child: CustomSearchBar(
-                  disableIcons: true,
-                  focusNode: _textFieldFocusNode,
-                  controller: _textEditingController,
-                  onChanged: (v) => setState(() {}),
-                  onSubmitted: (v) {
-                    _textFieldFocusNode.unfocus();
-                  },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(_searchGlowVisible ? 0.4 : 0.0),
+                        blurRadius: 20,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: CustomSearchBar(
+                    disableIcons: true,
+                    focusNode: _textFieldFocusNode,
+                    controller: _textEditingController,
+                    onChanged: (v) => setState(() {}),
+                    onSubmitted: (v) {
+                      _textFieldFocusNode.unfocus();
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 8.0),
@@ -386,18 +411,15 @@ class _ExtensionScreenState extends State<ExtensionScreen>
     return Obx(() {
       _reloadTrigger.value;
       sourceController.installedExtensions.length;
-
       final extensions = installed
           ? sourceController.getInstalledExtensions(itemType)
           : sourceController.getAvailableExtensions(itemType);
-
       final count = extensions
           .where((e) => _selectedLanguage.value != 'all'
               ? e.lang!.toLowerCase() ==
                   completeLanguageCode(_selectedLanguage.value)
               : true)
           .length;
-
       return count > 0
           ? Text(
               "($count)",
