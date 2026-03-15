@@ -693,7 +693,11 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             }
             return KeyEventResult.handled;
           } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-            _adultToggleFocusNode.requestFocus();
+            if (serviceHandler.serviceType.value == ServicesType.anilist) {
+              _adultToggleFocusNode.requestFocus();
+            } else {
+              _searchFocusNode.requestFocus();
+            }
             return KeyEventResult.handled;
           } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
             if (_resultFocusNodes.isNotEmpty) {
@@ -829,6 +833,11 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             _searchedTerms.value = updatedTerms;
           });
           _saveHistory();
+          if (updatedTerms.isEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _searchFocusNode.requestFocus();
+            });
+          }
         },
         onNavigateBack: () {
           // Navigate back to Adult toggle if available, otherwise to search bar
@@ -1007,7 +1016,13 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             final targetIndex = index - crossAxisCount;
             _resultFocusNodes[targetIndex].requestFocus();
           } else {
-            _gridModeFocusNode.requestFocus();
+            if (_searchResults != null &&
+                _searchResults!.isNotEmpty &&
+                (_searchState == SearchState.success)) {
+              _gridModeFocusNode.requestFocus();
+            } else {
+              _searchFocusNode.requestFocus();
+            }
           }
           return KeyEventResult.handled;
         }
