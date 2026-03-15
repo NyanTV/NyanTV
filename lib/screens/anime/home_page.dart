@@ -146,16 +146,21 @@ class _AnimeHomePageState extends State<AnimeHomePage> with TVScrollMixin {
               top: 0,
               left: 0,
               right: 0,
-              child: isVisible
-                  ? Container(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      padding: EdgeInsets.only(
-                        top: statusBarHeight,
-                        bottom: 10,
-                      ),
-                      child: const Header(type: PageType.anime),
-                    )
-                  : const SizedBox.shrink(),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: isVisible ? 1.0 : 0.0,
+                child: IgnorePointer(
+                  ignoring: !isVisible,
+                  child: Container(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    padding: EdgeInsets.only(
+                      top: statusBarHeight,
+                      bottom: 10,
+                    ),
+                    child: const Header(type: PageType.anime),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
