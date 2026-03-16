@@ -162,14 +162,7 @@ class AboutPage extends StatelessWidget {
                       await launchUrlHelper(
                           'https://stoat.chat/invite/fKzse8yy');
                     },
-                    leading: CircleAvatar(
-                      backgroundColor: theme.colorScheme.surfaceContainer,
-                      radius: 15,
-                      child: Image.asset(
-                        'assets/images/stoat-icon.png',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                    leading: const Icon(HugeIcons.strokeRoundedBubbleChat),
                     title: "Stoat",
                   ),
                 ],
@@ -194,6 +187,15 @@ class AboutPage extends StatelessWidget {
                     leading: const Icon(HugeIcons.strokeRoundedGithub),
                     title: "GitHub",
                     subtitle: 'View Source code on github.',
+                  ),
+                  CustomListTile(
+                    onTap: () async {
+                      await launchUrlHelper('https://ko-fi.com/hoemotion');
+                    },
+                    leading: const Icon(HugeIcons.strokeRoundedCoffee01),
+                    title: "Ko-fi",
+                    subtitle:
+                        "Consider donating to support the maintainer of NyanTV",
                   ),
                   CustomListTile(
                     onTap: () async {

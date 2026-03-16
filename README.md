@@ -77,6 +77,7 @@ For detailed setup instructions, check out the [Wiki](https://github.com/NyanTV/
 > ⭐ **Star this repository to support the developer & encourage the development of the app!**
 
 <div align="center">
+<a href='https://ko-fi.com/hoemotion' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://ko-fi.com/img/githubbutton_sm.svg' border='0' alt='Leave a tip at ko-fi.com' /></a>
 <details>
   <summary>Star History</summary>
   <a href="https://github.com/NyanTV/NyanTV/stargazers">
