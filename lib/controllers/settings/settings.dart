@@ -116,6 +116,36 @@ class Settings extends GetxController {
     playerSettings =
         Rx<PlayerSettings>(playerBox.get('settings') ?? PlayerSettings());
 
+    final defaultMalCards = {
+      "Continue Watching": true,
+      "Completed Anime": false,
+      "Paused Anime": false,
+      "Dropped Anime": false,
+      "Planning Anime": false,
+    };
+
+    final currentMalCards =
+        Map<String, bool>.from(uiSettings.value.homePageCardsMal);
+    bool malCardsChanged = false;
+
+    currentMalCards.removeWhere((key, _) {
+      final shouldRemove = !defaultMalCards.containsKey(key);
+      if (shouldRemove) malCardsChanged = true;
+      return shouldRemove;
+    });
+
+    for (final entry in defaultMalCards.entries) {
+      if (!currentMalCards.containsKey(entry.key)) {
+        currentMalCards[entry.key] = entry.value;
+        malCardsChanged = true;
+      }
+    }
+
+    if (malCardsChanged) {
+      uiSettings.value.homePageCardsMal = currentMalCards;
+      saveUISettings();
+    }
+
     _selectedShader.value =
         preferences.get('selected_shader', defaultValue: '');
     _selectedProfile.value =

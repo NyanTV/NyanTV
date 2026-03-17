@@ -56,31 +56,7 @@ class _HomePageState extends State<HomePage> with TVScrollMixin {
   }
 
   KeyEventResult _handleTVKeyEvent(FocusNode node, KeyEvent event) {
-    if (!Get.find<Settings>().isTV.value) return KeyEventResult.ignored;
-    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
-      return KeyEventResult.ignored;
-    }
-    if (event.logicalKey != LogicalKeyboardKey.arrowUp) {
-      return KeyEventResult.ignored;
-    }
-
-    if (_scrollController.hasClients && _scrollController.offset > 0) {
-      final target = (_scrollController.offset - 120.0).clamp(
-        0.0,
-        _scrollController.position.maxScrollExtent,
-      );
-      if (target < 20.0) {
-        _scrollController.jumpTo(0);
-      } else {
-        _scrollController.animateTo(
-          target,
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-        );
-      }
-    }
-
-    return KeyEventResult.ignored;
+    return handleTVArrowUpKeyEvent(node, event, context);
   }
 
   @override

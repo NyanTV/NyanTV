@@ -244,14 +244,14 @@ List<TrackedMedia> filterListByStatus(
       return animeList
           .where((anime) => anime.watchingStatus == 'CURRENT')
           .toList();
+    case 'COMPLETED':
+      return animeList
+          .where((anime) => anime.watchingStatus == 'COMPLETED' && isMAL)
+          .toList();
     case 'COMPLETED TV':
       return animeList
           .where((anime) =>
-              ((anime.watchingStatus == 'COMPLETED') && anime.format == 'TV'))
-          .toList();
-    case 'COMPLETED':
-      return animeList
-          .where((anime) => ((anime.watchingStatus == 'COMPLETED')))
+              anime.watchingStatus == 'COMPLETED' && anime.format == 'TV')
           .toList();
     case 'COMPLETED MOVIE':
       return animeList
@@ -296,16 +296,25 @@ List<TrackedMedia> filterListByStatus(
   }
 }
 
-List<TrackedMedia> filterListByLabel(
-    List<TrackedMedia> animeList, String label) {
+List<TrackedMedia> filterListByLabel(List<TrackedMedia> animeList, String label,
+    {bool isMAL = false}) {
   return animeList.where((anime) {
     if (label == "Continue Watching" && anime.watchingStatus == 'CURRENT') {
       return true;
     }
-    if (label == "Completed TV" && anime.watchingStatus == 'COMPLETED') {
+    if (label == "Completed TV" &&
+        anime.watchingStatus == 'COMPLETED' &&
+        anime.format == 'TV') {
       return true;
     }
-    if (label == "Completed Movie" && anime.watchingStatus == 'COMPLETED') {
+    if (label == "Completed Movie" &&
+        anime.watchingStatus == 'COMPLETED' &&
+        anime.format == 'MOVIE') {
+      return true;
+    }
+    if (label == "Completed Anime" &&
+        anime.watchingStatus == 'COMPLETED' &&
+        isMAL) {
       return true;
     }
     if (label == "Paused Anime" && anime.watchingStatus == 'PAUSED') {
@@ -320,7 +329,6 @@ List<TrackedMedia> filterListByLabel(
     if (label == "Rewatching Anime" && anime.watchingStatus == 'REPEATING') {
       return true;
     }
-
     return false;
   }).toList();
 }

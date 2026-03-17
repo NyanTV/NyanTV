@@ -3,9 +3,10 @@
 
 import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-/// 
+///
 /// Usage:
 /// ```dart
 /// class _MyPageState extends State<MyPage> with TVScrollMixin {
@@ -14,7 +15,7 @@ import 'package:get/get.dart';
 ///     super.initState();
 ///     initTVScroll();
 ///   }
-///   
+///
 ///   @override
 ///   void dispose() {
 ///     disposeTVScroll();
@@ -22,7 +23,6 @@ import 'package:get/get.dart';
 ///   }
 /// }
 /// ```
-
 
 mixin TVScrollMixin<T extends StatefulWidget> on State<T> {
   ScrollController get scrollController;
@@ -85,5 +85,48 @@ mixin TVScrollMixin<T extends StatefulWidget> on State<T> {
     return Get.find<Settings>().isTV.value
         ? const BouncingScrollPhysics()
         : const AlwaysScrollableScrollPhysics();
+  }
+
+  KeyEventResult handleTVArrowUpKeyEvent(
+    FocusNode node,
+    KeyEvent event,
+    BuildContext context, {
+    double? scrollStep,
+  }) {
+    if (!Get.find<Settings>().isTV.value) return KeyEventResult.ignored;
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    if (event.logicalKey != LogicalKeyboardKey.arrowUp) {
+      return KeyEventResult.ignored;
+    }
+
+    if (scrollController.hasClients && scrollController.offset > 0) {
+      final double step;
+      if (scrollStep != null) {
+        step = scrollStep;
+      } else {
+        final statusBarHeight = MediaQuery.of(context).padding.top;
+        const appBarHeight = kToolbarHeight + 10;
+        step = scrollController.offset < (statusBarHeight + appBarHeight + 40)
+            ? statusBarHeight + appBarHeight + 40
+            : 140.0;
+      }
+      final target = (scrollController.offset - step).clamp(
+        0.0,
+        scrollController.position.maxScrollExtent,
+      );
+      if (target < 20.0) {
+        scrollController.jumpTo(0);
+      } else {
+        scrollController.animateTo(
+          target,
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+        );
+      }
+    }
+
+    return KeyEventResult.ignored;
   }
 }

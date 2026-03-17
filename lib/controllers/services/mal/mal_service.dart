@@ -172,7 +172,7 @@ class MalService extends GetxController implements BaseService, OnlineService {
                   Column(
                     children: acceptedLists.map((e) {
                       return ReusableCarousel(
-                        data: filterListByLabel(animeList, e),
+                        data: filterListByLabel(animeList, e, isMAL: true),
                         title: e,
                         variant: DataVariant.anilist,
                         type: ItemType.anime,

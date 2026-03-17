@@ -36,7 +36,7 @@ class UISettingsAdapter extends TypeAdapter<UISettings> {
             ? (fields[15] as Map).cast<String, bool>()
             : {
                 "Continue Watching": true,
-                "Completed TV": false,
+                "Completed Anime": false,
                 "Paused Anime": false,
                 "Dropped Anime": false,
                 "Planning Anime": false,

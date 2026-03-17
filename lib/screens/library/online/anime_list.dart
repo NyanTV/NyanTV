@@ -44,6 +44,8 @@ class _AnimeListState extends State<AnimeList> {
             ];
   bool isReversed = false;
   bool isItemsReversed = false;
+  final isMAL =
+      Get.find<ServiceHandler>().serviceType.value != ServicesType.anilist;
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +97,7 @@ class _AnimeListState extends State<AnimeList> {
               tabs: isReversed
                   ? tabs.reversed.toList().map((tab) {
                       final filteredAnimeList =
-                          filterListByStatus(animeList, tab);
+                          filterListByStatus(animeList, tab, isMAL: isMAL);
 
                       return Tab(
                           child: NyantvText(
@@ -105,7 +107,7 @@ class _AnimeListState extends State<AnimeList> {
                     }).toList()
                   : tabs.map((tab) {
                       final filteredAnimeList =
-                          filterListByStatus(animeList, tab);
+                          filterListByStatus(animeList, tab, isMAL: isMAL);
                       return Tab(
                           child: NyantvText(
                         text: '$tab (${filteredAnimeList.length})',
@@ -124,6 +126,7 @@ class _AnimeListState extends State<AnimeList> {
                               ? animeList.reversed.toList()
                               : animeList,
                           listTitle: widget.title,
+                          isMAL: isMAL,
                         ))
                     .toList()
                 : tabs
@@ -133,6 +136,7 @@ class _AnimeListState extends State<AnimeList> {
                               ? animeList.reversed.toList()
                               : animeList,
                           listTitle: widget.title,
+                          isMAL: isMAL,
                         ))
                     .toList(),
           ),
@@ -146,12 +150,14 @@ class AnimeListContent extends StatelessWidget {
   final String tabType;
   final List<TrackedMedia>? animeData;
   final String? listTitle;
+  final bool isMAL;
 
   const AnimeListContent({
     super.key,
     required this.tabType,
     required this.animeData,
     this.listTitle,
+    this.isMAL = false,
   });
 
   int getResponsiveCrossAxisCount(double screenWidth, {int itemWidth = 150}) {
@@ -164,7 +170,8 @@ class AnimeListContent extends StatelessWidget {
       return const Center(child: NyantvProgressIndicator());
     }
 
-    final filteredAnimeList = filterListByStatus(animeData!, tabType);
+    final filteredAnimeList =
+        filterListByStatus(animeData!, tabType, isMAL: isMAL);
 
     if (filteredAnimeList.isEmpty) {
       return Center(
