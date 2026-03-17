@@ -1,23 +1,96 @@
 ### 🌟 Features
+-   only open keyboard for textfield when confirmed with dpad
+-   big carousel in simkl now has movies and shows,  sorted by popularity
+-   experimental features - use legacy loading and use hybrid loading for navigation
+-   simkl movie and series tracking
 -   auto-skip recap and skip recap button and colored segments - migrate to aniskip v2
 -   skip opening and ending button
+-   add myanimelist as a tracking service
+-   accelerated hold-to-seek with progressive speed stages
+-   auto-update-checking for extensions from anymex
+-   themes with secondary colors better custom themes with more flexibility soon
+-   add hold-to-accelerate for score slider navigation
+-   continue watching widget for home menu
+-   auto idle
+-   hold d-pad leftright for accumulated seeks
+-   configure cache and pre-load
 
 ### 🔧 Bug Fixes & Improvements
+-   completed movies showing wrong data and myanimelist completed anime not appearing
+-   search button  on anime home page getting cut when using myanimelist as service
+-   searchbar becoming unfocusable after deleting search history
+-   go back to focus mode when closing keyboard
+-   no more duplicate snackbars
+-   no more desynchronisation between available and installed anime extensions
+-   correctly store data in cache
+-   simkl showing unkown title for trending movies
+-   different card styles being rendered incorrectly
+-   accidentally broke mal list fetching
+-   welcome dialog no longer closes when returning from settings, app now asks for confirmation when trying to quit with back button
 -   snapping too early and subtitle background fallback to clear
 -   library watch history dpad duplicated input and myanime list searchbar not showing
 -   apply new style on all card types
 -   watch state being overwritten with 0 seconds
+-   color profiler slider stuck on brightness
+-   unresponsive change service and view profile button on some remotes
+-   buffering animation will only show when actually buffering
+-   extension download button unresponsive
+-   visual glitch on app start
+-   d-pad misbehaving on watch page when opening settings
+-   no more login duplicates
+-   library editor with full d-pad support
+-   discord rpc images not rendering
+-   no more black screen
+-   deeplink for activity and preview
+-   updater has proper dpad support now  manual update checking works
+-   select source dropdown
+-   list editor watch state
+-   save video playback position on app exit
+-   prevent heartbeat overwriting watch state
+-   update targetsdk to 36 to resolve androidx.browser build error
+-   update targetsdk to 36 to resolve androidx.browser build error
 
 ### 🎨 Style Changes
+-   header fade out on anime homepage
+-   extension screen better search
+-   library tab with better search and focus
+-   weird bug where android tv makes buttons larger than intended
+-   extension screen focus looks cleaner and navigation became easier
+-   myanimelist service will now provide a cover from anilist
+-   initialising screen without blur effect
+-   redundant data in details page and wrong data for simkl
+-   simkl show rating on userlist
+-   0.7x is now the default ui scale
 -   auto-hide skip button after 15s
 -   always show rating, even on own lists such as continue watching
+-   better library focus visibility
+-   better player focus visuals
+-   auto-scroll on home page
+-   better initialising
+-   better initialising screen and idle screen
+-   a few ui adjustments
+-   initialise screen on app launch
+-   use anime poster instead of cover discord rpc
 
 ### 🚀 Performance Improvements
+-   no more stutter when opening the details page and limit cache size to 15 from infinity
+-   bigcarousel only autoplays when in sight of user
+-   shader junk greatly reduced, however longer initial start
+-   faster menu speeds and less update requests
 -   remove redundant header animation and blur on anime home page
 -   smoother page transitions
+-   overall better player performance, smoother playback on low end devices
+-   remove unused player gestures
+-   use const on some functions
+-   no more unnecessary blur, faster details page
 
 ### 🧹 Chores & Documentation
+-   add ko-fi link
+-   include simkl in readme and tos
 -   aaand increase the build size again for the sake of performance
 -   reduce build size and add v8 architecture
+-   update tos
+-   add discord support server
+-   add stoat.chat
 
  
