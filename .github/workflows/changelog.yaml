@@ -213,11 +213,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # ============================================================
-          # FIX: Instead of overwriting the release body (which would
-          # destroy the download table + build stats from build.yml),
-          # we fetch the existing body and append the changelog to it.
-          # ============================================================
           EXISTING_BODY=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.current_tag }}" \
@@ -241,3 +236,45 @@ jobs:
           bodyFile: combined_body.md
           tag: ${{ env.current_tag }}
           allowUpdates: true
+
+      - name: Send Discord Notification
+        if: ${{ steps.check_jobs.outputs.all_jobs_success == 'true' }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/${{ env.current_tag }}"
+
+          DESCRIPTION=$(awk '/^### 🆕 Changelog/{flag=1} /^!\[/{flag=0} flag' CHANGELOG.md \
+            | sed -E 's/!\[[^]]*\]\([^)]*\)//g' \
+            | sed -E 's/\[֍\]\([^)]*\)/•/g' \
+            | sed '/^[[:space:]]*$/d' \
+            | head -c 3800)
+
+          DESCRIPTION_JSON=$(echo "$DESCRIPTION" | jq -Rs .)
+
+          curl -s -X POST "$DISCORD_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \"<@&971836426255728720>\",
+              \"embeds\": [{
+                \"title\": \"🚀 Release ${{ env.current_tag }}\",
+                \"url\": \"$RELEASE_URL\",
+                \"color\": 5814783,
+                \"description\": $DESCRIPTION_JSON,
+                \"fields\": [
+                  {
+                    \"name\": \"📦 arm64-v8a\",
+                    \"value\": \"Nvidia Shield TV (2015), Shield TV Pro (2015–2019)\",
+                    \"inline\": true
+                  },
+                  {
+                    \"name\": \"📦 armeabi-v7a\",
+                    \"value\": \"Fire TV, Chromecast, Google TV Streamer, Onn, TiVo, Shield TV Tube (2019) — use this if unsure\",
+                    \"inline\": true
+                  }
+                ],
+                \"footer\": {
+                  \"text\": \"${{ github.repository }}\"
+                }
+              }]
+            }"
