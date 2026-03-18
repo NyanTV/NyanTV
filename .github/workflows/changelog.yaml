@@ -243,8 +243,8 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
           RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/${{ env.current_tag }}"
-
           DESCRIPTION=$(awk '/^### 🆕 Changelog/{flag=1} /^!\[/{flag=0} flag' CHANGELOG.md \
+            | sed -E 's/\[֍\]\([^)]*\)/•/g' \
             | sed -E 's/^- //' \
             | sed '/^[[:space:]]*$/d' \
             | head -c 3800)
