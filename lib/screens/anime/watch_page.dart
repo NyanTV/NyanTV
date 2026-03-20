@@ -347,7 +347,9 @@ class _WatchPageState extends State<WatchPage>
         }
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted || !showControls.value || generation != _focusGeneration) {
+          if (!mounted ||
+              !showControls.value ||
+              generation != _focusGeneration) {
             return;
           }
 
@@ -797,7 +799,9 @@ class _WatchPageState extends State<WatchPage>
     isEDSkippedOnce.value = false;
 
     final skipQuery = aniskip.SkipSearchQuery(
-        idMAL: widget.anilistData.idMal,
+        idMAL: widget.anilistData.serviceType == ServicesType.mal
+            ? widget.anilistData.id
+            : widget.anilistData.idMal,
         episodeNumber: currentEpisode.value.number);
     aniskip.AniSkipApi().getSkipTimes(skipQuery).then((skipTimeResult) {
       skipTimes.value = skipTimeResult;

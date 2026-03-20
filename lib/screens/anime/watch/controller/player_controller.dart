@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:nyantv/controllers/discord/discord_rpc.dart';
 import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
 import 'package:nyantv/controllers/service_handler/params.dart';
+import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:nyantv/models/Media/media.dart' as nyantv;
@@ -204,7 +205,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
     _initOrientations();
     _initializePlayer();
     _updateRpc();
-    
+
     if (settings.isTV.value) {
       _initTVRemoteHandler();
     }
@@ -218,8 +219,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
     _initializeSwipeStuffs();
     _initializeControlsAutoHide();
     updateNavigatorState();
-    pauseFocusNode.addListener(() {
-    });
+    pauseFocusNode.addListener(() {});
     ever(selectedVideo, (_) {
       final audios = selectedVideo.value?.audios ?? [];
       embeddedAudioTracks.value = audios
@@ -230,7 +230,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
 
   void _initTVRemoteHandler() {
     _tvRemoteHandler = TVRemoteHandler(
-      player: player, 
+      player: player,
       context: Get.context!,
       seekDuration: settings.seekDuration,
       onSeek: (position) {
@@ -247,11 +247,11 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
       getVideoDuration: () => episodeDuration.value,
       isMenuVisible: () => showControls.value,
       isLocked: () => false,
-      
       onPlayPause: () => player.playOrPause(),
       onSkipSegments: (isLeft, amount) {
         final skipSeconds = isLeft ? -amount : amount;
-        final newPos = Duration(seconds: currentPosition.value.inSeconds + skipSeconds);
+        final newPos =
+            Duration(seconds: currentPosition.value.inSeconds + skipSeconds);
         player.seek(newPos);
       },
       onMenuInteraction: () => _resetAutoHideTimer(),
@@ -399,47 +399,47 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
   void _initializePlayer() {
     final settings = Get.find<Settings>();
     final isTV = settings.isTV.value;
-    
+
     debugPrint('=== Initializing Player ===');
     debugPrint('Is Android TV: $isTV');
-    
+
     // Android TV-spezifische Konfiguration
     if (isTV) {
       debugPrint('=== CONFIGURING FOR ANDROID TV ===');
-      
+
       // Erstelle ein sicheres Cache-Verzeichnis
       final tempDir = Directory.systemTemp;
       final cacheDir = Directory('${tempDir.path}/nyantv_tv_cache');
       if (!cacheDir.existsSync()) {
         cacheDir.createSync(recursive: true);
       }
-      
+
       player = Player(
         configuration: PlayerConfiguration(
           // Android TV-spezifische Optionen
           options: {
             // ===== KRITISCHE OPTIONEN FÜR ANDROID TV =====
-            "vo": "gpu",                    // GPU Video Output
+            "vo": "gpu", // GPU Video Output
             "gpu-context": "android",
-            
+
             // Hardware acceleration - DEAKTIVIERT für TV Kompatibilität
-            "hwdec": "auto-safe",//"no",
+            "hwdec": "auto-safe", //"no",
             //"hwdec-codecs": "none",         // Keine Hardware Decoder
-            
+
             // Cache-Einstellungen mit explizitem Pfad
             "cache": "yes",
-            "cache-dir": cacheDir.path,     // Explizites Cache-Verzeichnis
-            "cache-secs": "30",             // Mehr Cache für TV
+            "cache-dir": cacheDir.path, // Explizites Cache-Verzeichnis
+            "cache-secs": "30", // Mehr Cache für TV
             "demuxer-max-bytes": "200M",
             "demuxer-max-back-bytes": "50M",
             "cache-on-disk": "yes",
             "demuxer-readahead-secs": "30",
-            
+
             // Network optimiert für TV
             "network-timeout": "30",
             "stream-buffer-size": "10M",
             "ytdl-raw-options": "force-ipv4=",
-            
+
             // Video-Ausgabe optimiert
             "video-sync": "display-resample",
             "interpolation": "no",
@@ -448,24 +448,24 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
             //"cscale": "spline36",
             //"dscale": "spline36",
             //"tscale": "oversample",
-            
+
             // Audio optimiert
             "audio-buffer": "0.5",
             "audio-client-name": "Nyantv TV",
-            
+
             // Performance
             "vd-lavc-fast": "yes",
             "vd-lavc-skiploopfilter": "none",
             "vd-lavc-skipidct": "none",
             "vd-lavc-threads": "2",
-            
+
             // Debugging
             "msg-level": "status=info,ffmpeg=error",
           },
           bufferSize: 32 * 1024 * 1024, // 32MB Buffer für TV
         ),
       );
-      
+
       playerController = VideoController(
         player,
         configuration: const VideoControllerConfiguration(
@@ -473,7 +473,6 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
           enableHardwareAcceleration: true,
         ),
       );
-      
     } else {
       // Standard-Konfiguration für Mobile/Desktop
       player = Player(
@@ -488,7 +487,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
           bufferSize: 64 * 1024 * 1024,
         ),
       );
-      
+
       playerController = VideoController(
         player,
         configuration: const VideoControllerConfiguration(
@@ -496,20 +495,23 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
         ),
       );
     }
-    
+
     // Setze Log-Listener für Debugging
     player.stream.log.listen((event) {
-      if (event.level == 'error' || event.level == 'fatal' || event.level == 'warn') {
+      if (event.level == 'error' ||
+          event.level == 'fatal' ||
+          event.level == 'warn') {
         debugPrint('=== MPV [${event.level.toUpperCase()}]: ${event.text}');
-        
+
         // Spezifische Fehlerbehandlung für TV
-        if (isTV && event.text.contains('surface') || event.text.contains('native_window')) {
+        if (isTV && event.text.contains('surface') ||
+            event.text.contains('native_window')) {
           debugPrint('=== TV SURFACE ERROR - Retrying with fallback...');
           _retryWithFallbackConfiguration();
         }
       }
     });
-    
+
     // Timeout für TV
     if (isTV) {
       _loadTimeoutTimer = Timer(const Duration(seconds: 30), () {
@@ -527,21 +529,24 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
         }
       });
     }
-    
+
     // Video öffnen
     if (isOffline.value && offlineVideoPath != null) {
-      final stamp = settings.preferences.get(offlineVideoPath, defaultValue: null);
-      player.open(Media(offlineVideoPath!, start: Duration(milliseconds: stamp ?? 0)));
+      final stamp =
+          settings.preferences.get(offlineVideoPath, defaultValue: null);
+      player.open(
+          Media(offlineVideoPath!, start: Duration(milliseconds: stamp ?? 0)));
     } else {
       player.open(
         Media(
           selectedVideo.value!.url,
           httpHeaders: selectedVideo.value!.headers,
-          start: Duration(milliseconds: savedEpisode?.timeStampInMilliseconds ?? 0),
+          start: Duration(
+              milliseconds: savedEpisode?.timeStampInMilliseconds ?? 0),
         ),
       );
     }
-    
+
     // Auto-Play für TV
     if (isTV) {
       Future.delayed(const Duration(milliseconds: 1000), () {
@@ -551,7 +556,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
         }
       });
     }
-    
+
     _performInitialTracking();
     applySavedProfile();
   }
@@ -559,26 +564,26 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
   void _retryWithFallbackConfiguration() {
     final isTV = Get.find<Settings>().isTV.value;
     if (!isTV) return;
-    
+
     debugPrint('=== Applying TV fallback configuration ===');
-    
+
     // Alternative Configuration ohne GPU
     _retryWithAlternativeStream();
   }
-  
+
   void _retryWithAlternativeStream() {
     final isTV = Get.find<Settings>().isTV.value;
     if (!isTV || episodeTracks.length < 2) return;
-    
+
     debugPrint('=== Trying alternative stream for TV ===');
-    
+
     // Nächsten Stream versuchen
     final currentIndex = episodeTracks.indexOf(selectedVideo.value!);
     final nextIndex = (currentIndex + 1) % episodeTracks.length;
     final alternativeTrack = episodeTracks[nextIndex];
-    
+
     selectedVideo.value = alternativeTrack;
-    
+
     player.open(
       Media(
         alternativeTrack.url,
@@ -587,12 +592,15 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
       ),
     );
   }
-  
+
   void _initializeAniSkip() {
     isOPSkippedOnce.value = false;
     isEDSkippedOnce.value = false;
     final skipQuery = aniskip.SkipSearchQuery(
-        idMAL: anilistData.idMal, episodeNumber: currentEpisode.value.number);
+        idMAL: anilistData.serviceType == ServicesType.mal
+            ? anilistData.id
+            : anilistData.idMal,
+        episodeNumber: currentEpisode.value.number);
     aniskip.AniSkipApi().getSkipTimes(skipQuery).then((skipTimeResult) {
       skipTimes = skipTimeResult;
     }).onError((error, stackTrace) {
@@ -651,7 +659,9 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
       _updateRpc();
     }));
 
-    _subscriptions.add(player.stream.buffer.throttleTime(const Duration(seconds: 1)).listen((buf) {
+    _subscriptions.add(player.stream.buffer
+        .throttleTime(const Duration(seconds: 1))
+        .listen((buf) {
       bufferred.value = buf;
     }));
 
@@ -687,13 +697,13 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
 
     _subscriptions.add(player.stream.error.listen((e) {
       Logger.i("MediaKit Error: $e");
-      
+
       if (Get.isSnackbarOpen == false) {
         snackBar('Playback failed. Reverting to avoid app freeze.');
         Future.delayed(const Duration(milliseconds: 500), () {
-           if (Get.currentRoute.contains('watch')) {
-             Get.back();
-           }
+          if (Get.currentRoute.contains('watch')) {
+            Get.back();
+          }
         });
       }
     }));
@@ -706,7 +716,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
       videoHeight.value = height;
       // If height is detected, the video has successfully loaded
       if (height != null && height > 0) {
-        _loadTimeoutTimer?.cancel(); 
+        _loadTimeoutTimer?.cancel();
         Logger.i("Video detected: Hardware acceleration active.");
       }
     }));
@@ -917,6 +927,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
       play: true,
     );
   }
+
   void delete() {
     Future.microtask(() async {
       _trackLocally();
@@ -954,10 +965,8 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
     if (!Platform.isAndroid && !Platform.isIOS) {
       NyantvTitleBar.setFullScreen(false);
     }
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight
-    ]);
+    SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
   }
 
   void seekTo(Duration pos) {
@@ -1115,8 +1124,8 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
     showControls.toggle();
     if (showControls.value) {
       Future.delayed(const Duration(milliseconds: 50), () {
-      pauseFocusNode.requestFocus();
-    });
+        pauseFocusNode.requestFocus();
+      });
       _resetAutoHideTimer();
     } else {
       pauseFocusNode.unfocus();
@@ -1158,7 +1167,8 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
       final episode = episodeList[i];
       if (episode.filler != true) {
         if (skippedCount > 0) {
-          snackBar('Skipped $skippedCount filler episode${skippedCount > 1 ? 's' : ''}');
+          snackBar(
+              'Skipped $skippedCount filler episode${skippedCount > 1 ? 's' : ''}');
         }
         return episode;
       }
