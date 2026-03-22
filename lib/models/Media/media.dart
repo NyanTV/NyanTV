@@ -47,6 +47,7 @@ class Media {
   DateTime? createdAt;
   bool? isAdult;
   String? sourceName;
+  String? imdbId;
 
   Media(
       {this.id = '0',
@@ -81,6 +82,7 @@ class Media {
       this.mediaContent,
       required this.serviceType,
       this.sourceName,
+      this.imdbId,
       DateTime? createdAt})
       : createdAt = DateTime.now();
 
@@ -164,8 +166,6 @@ class Media {
   }
 
   factory Media.fromSimkl(Map<String?, dynamic> json, bool isMovie) {
-    ItemType type = ItemType.anime;
-
     return Media(
       id: '${json['ids']?['simkl_id']?.toString() ?? json['ids']?['simkl']?.toString()}*${isMovie ? "MOVIE" : "SERIES"}',
       title: json['title'] ?? 'Unknown Title',
@@ -190,7 +190,7 @@ class Media {
           json['ratings']?['imdb']?['rating']?.toString() ??
           ' N/A',
       popularity: json['rank']?.toString() ?? '0',
-      mediaType: type,
+      mediaType: ItemType.anime,
       aired: json['released'] ??
           _parseDate(json['first_aired']) ??
           'Unknown air date',
@@ -211,6 +211,7 @@ class Media {
               .toList()
               .cast<Media>() ??
           [],
+      imdbId: json['ids']?['imdb']?.toString(),
       serviceType: ServicesType.simkl,
     );
   }

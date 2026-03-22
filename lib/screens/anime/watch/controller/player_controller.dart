@@ -15,7 +15,9 @@ import 'package:nyantv/screens/anime/watch/controller/player_utils.dart';
 import 'package:nyantv/screens/anime/watch/controls/widgets/bottom_sheet.dart';
 import 'package:nyantv/screens/anime/watch/subtitles/model/online_subtitle.dart';
 import 'package:nyantv/screens/anime/watch/controller/tv_remote_handler.dart';
+import 'package:nyantv/utils/skip_times.dart';
 import 'package:nyantv/utils/aniskip.dart' as aniskip;
+import 'package:nyantv/utils/introdb.dart' as introdb;
 import 'package:nyantv/utils/color_profiler.dart';
 import 'package:nyantv/utils/logger.dart';
 import 'package:nyantv/utils/string_extensions.dart';
@@ -177,7 +179,7 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
   bool _hasTrackedInitialOnline = false;
   bool _hasTrackedInitialLocal = false;
 
-  aniskip.EpisodeSkipTimes? skipTimes;
+  EpisodeSkipTimes? skipTimes;
   final isOPSkippedOnce = false.obs;
   final isEDSkippedOnce = false.obs;
 
@@ -596,18 +598,55 @@ class PlayerController extends GetxController with WidgetsBindingObserver {
   void _initializeAniSkip() {
     isOPSkippedOnce.value = false;
     isEDSkippedOnce.value = false;
-    final skipQuery = aniskip.SkipSearchQuery(
-        idMAL: anilistData.serviceType == ServicesType.mal
-            ? anilistData.id
-            : anilistData.idMal,
-        episodeNumber: currentEpisode.value.number);
-    aniskip.AniSkipApi().getSkipTimes(skipQuery).then((skipTimeResult) {
-      skipTimes = skipTimeResult;
-    }).onError((error, stackTrace) {
-      debugPrint("An error occurred: $error");
-      debugPrint("Stack trace: $stackTrace");
-    });
+    skipTimes = null;
+
+    final isSimkl = anilistData.serviceType == ServicesType.simkl;
+    final isSeries = !anilistData.id.contains('*MOVIE');
+
+    if (isSimkl && isSeries) {
+      final imdbId = anilistData.imdbId;
+      if (imdbId == null) return;
+
+      () async {
+        try {
+          final result = await introdb.IntroDbApi().getSkipTimes(
+            introdb.SkipSearchQuery(
+              imdbId: imdbId,
+              seasonNumber: _extractSeason(currentEpisode.value.number),
+              episodeNumber: _extractEpisode(currentEpisode.value.number),
+            ),
+          );
+          if (result == null) return;
+          skipTimes = EpisodeSkipTimes.fromIntroDb(result);
+        } catch (e) {
+          debugPrint('IntroDb error: $e');
+        }
+      }();
+    } else {
+      () async {
+        try {
+          final result = await aniskip.AniSkipApi().getSkipTimes(
+            aniskip.SkipSearchQuery(
+              idMAL: anilistData.serviceType == ServicesType.mal
+                  ? anilistData.id
+                  : anilistData.idMal,
+              episodeNumber: currentEpisode.value.number,
+            ),
+          );
+          if (result == null) return;
+          skipTimes = EpisodeSkipTimes.fromAniSkip(result);
+        } catch (e) {
+          debugPrint('AniSkip error: $e');
+        }
+      }();
+    }
   }
+
+  String _extractSeason(String ep) =>
+      RegExp(r'[Ss](\d+)').firstMatch(ep)?.group(1) ?? '1';
+
+  String _extractEpisode(String ep) =>
+      RegExp(r'[Ee](\d+)').firstMatch(ep)?.group(1) ?? ep;
 
   void _performInitialTracking() {
     Future.microtask(() async {

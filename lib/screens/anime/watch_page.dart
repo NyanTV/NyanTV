@@ -44,6 +44,8 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:outlined_text/outlined_text.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:nyantv/utils/aniskip.dart' as aniskip;
+import 'package:nyantv/utils/introdb.dart' as introdb;
+import 'package:nyantv/utils/skip_times.dart';
 import 'package:nyantv/utils/tv_scroll_mixin.dart';
 import 'package:nyantv/controllers/discord/discord_rpc.dart';
 import 'package:nyantv/main.dart';
@@ -112,7 +114,7 @@ class _WatchPageState extends State<WatchPage>
   late PlayerSettings playerSettings;
   late FocusNode _keyboardListenerFocusNode;
   final ScrollController _scrollController = ScrollController();
-  final skipTimes = Rx<aniskip.EpisodeSkipTimes?>(null);
+  final skipTimes = Rx<EpisodeSkipTimes?>(null);
   final isOPSkippedOnce = false.obs;
   final isEDSkippedOnce = false.obs;
 
@@ -798,17 +800,7 @@ class _WatchPageState extends State<WatchPage>
     isOPSkippedOnce.value = false;
     isEDSkippedOnce.value = false;
 
-    final skipQuery = aniskip.SkipSearchQuery(
-        idMAL: widget.anilistData.serviceType == ServicesType.mal
-            ? widget.anilistData.id
-            : widget.anilistData.idMal,
-        episodeNumber: currentEpisode.value.number);
-    aniskip.AniSkipApi().getSkipTimes(skipQuery).then((skipTimeResult) {
-      skipTimes.value = skipTimeResult;
-    }).onError((error, stackTrace) {
-      debugPrint("An error occurred: $error");
-      debugPrint("Stack trace: $stackTrace");
-    });
+    _fetchSkipTimes();
 
     if (areShadersEnabled) {
       final key = (PlayerShaders.getShaders()
@@ -978,8 +970,7 @@ class _WatchPageState extends State<WatchPage>
 
         final candidates = <_ActiveSkip>[];
 
-        void checkSegment(
-            aniskip.SkipIntervals? seg, String label, bool autoSkip) {
+        void checkSegment(SkipIntervals? seg, String label, bool autoSkip) {
           if (seg == null || autoSkip) return;
           if (pos >= seg.start && pos < seg.end) {
             final secsIn = pos - seg.start;
@@ -1069,6 +1060,59 @@ class _WatchPageState extends State<WatchPage>
       subtitleText.value = e;
     });
   }
+
+  void _fetchSkipTimes() {
+    skipTimes.value = null;
+    isOPSkippedOnce.value = false;
+    isEDSkippedOnce.value = false;
+
+    final isSimkl = anilistData.value.serviceType == ServicesType.simkl;
+    final isSeries = !anilistData.value.id.contains('*MOVIE');
+
+    if (isSimkl && isSeries) {
+      final imdbId = anilistData.value.imdbId;
+      if (imdbId == null) return;
+
+      () async {
+        try {
+          final result = await introdb.IntroDbApi().getSkipTimes(
+            introdb.SkipSearchQuery(
+              imdbId: imdbId,
+              seasonNumber: _extractSeason(currentEpisode.value.number),
+              episodeNumber: _extractEpisode(currentEpisode.value.number),
+            ),
+          );
+          if (result == null) return;
+          skipTimes.value = EpisodeSkipTimes.fromIntroDb(result);
+        } catch (e) {
+          debugPrint('IntroDb error: $e');
+        }
+      }();
+    } else {
+      () async {
+        try {
+          final result = await aniskip.AniSkipApi().getSkipTimes(
+            aniskip.SkipSearchQuery(
+              idMAL: anilistData.value.serviceType == ServicesType.mal
+                  ? anilistData.value.id
+                  : anilistData.value.idMal,
+              episodeNumber: currentEpisode.value.number,
+            ),
+          );
+          if (result == null) return;
+          skipTimes.value = EpisodeSkipTimes.fromAniSkip(result);
+        } catch (e) {
+          debugPrint('AniSkip error: $e');
+        }
+      }();
+    }
+  }
+
+  String _extractSeason(String ep) =>
+      RegExp(r'[Ss](\d+)').firstMatch(ep)?.group(1) ?? '1';
+
+  String _extractEpisode(String ep) =>
+      RegExp(r'[Ee](\d+)').firstMatch(ep)?.group(1) ?? ep;
 
   void startSeeking() {
     _isSeeking = true;
@@ -1354,7 +1398,7 @@ class _WatchPageState extends State<WatchPage>
   }
 
   void _handleAutoSkip() {
-    void trySkip(aniskip.SkipIntervals? seg, bool enabled, RxBool skippedOnce) {
+    void trySkip(SkipIntervals? seg, bool enabled, RxBool skippedOnce) {
       if (seg == null || !enabled) return;
       if (playerSettings.autoSkipOnce && skippedOnce.value) return;
       if (currentPosition.value.inSeconds > seg.start &&
@@ -3108,7 +3152,7 @@ class _WatchPageState extends State<WatchPage>
       final cs = Theme.of(context).colorScheme;
       final currentSecs = currentPosition.value.inSeconds;
 
-      final segments = <(aniskip.SkipIntervals?, Color)>[
+      final segments = <(SkipIntervals?, Color)>[
         (skipTimes.value?.op, rotateHue(cs.primary, 45)),
         (skipTimes.value?.mixedOp, rotateHue(cs.primary, 45)),
         (skipTimes.value?.ed, cs.secondary),
