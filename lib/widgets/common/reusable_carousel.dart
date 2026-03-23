@@ -173,7 +173,7 @@ class _ReusableCarouselState extends State<ReusableCarousel> {
     if (widget.source != null) {
       controller.setActiveSource(widget.source!);
     } else if (itemData.source != null) {
-      controller.getExtensionByName(itemData.source!);
+      controller.getExtensionByValue(itemData.source!);
     }
   }
 }

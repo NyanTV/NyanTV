@@ -1,7 +1,7 @@
 import 'package:nyantv/models/Offline/Hive/video.dart';
 import 'package:nyantv/screens/anime/watch/controller/player_controller.dart';
 import 'package:nyantv/screens/anime/widgets/episode/normal_episode.dart';
-import 'package:dartotsu_extension_bridge/Mangayomi/string_extensions.dart';
+import 'package:dartotsu_extension_bridge/Services/Mangayomi/string_extensions.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

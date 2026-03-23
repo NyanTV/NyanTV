@@ -194,7 +194,7 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
                   onKeyEvent: (node, event) {
                     if (event is KeyDownEvent &&
                         (event.logicalKey == LogicalKeyboardKey.select ||
-                        event.logicalKey == LogicalKeyboardKey.enter)) {
+                            event.logicalKey == LogicalKeyboardKey.enter)) {
                       _handleEpisodeSelection(episode);
                       return KeyEventResult.handled;
                     }
@@ -203,7 +203,7 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
                   child: Builder(
                     builder: (context) {
                       final isFocused = Focus.of(context).hasFocus;
-                      
+
                       return Opacity(
                         opacity: completedEpisode
                             ? 0.5
@@ -214,7 +214,8 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
                           decoration: isFocused
                               ? BoxDecoration(
                                   border: Border.all(
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                     width: 3,
                                   ),
                                   borderRadius: BorderRadius.circular(12),
@@ -258,9 +259,30 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
       builder: (context) {
         return SizedBox(
           width: double.infinity,
-          child: settingsController.preferences
-                  .get('universal_scrapper', defaultValue: false)
-              ? _buildUniversalScraper(ep.link!)
+          child: sourceController.activeSource.value!.methods
+                      .getVideoListStream(
+                          DEpisode(episodeNumber: ep.number, url: ep.link)) !=
+                  null
+              ? StreamBuilder(
+                  stream: sourceController.activeSource.value!.methods
+                      .getVideoListStream(
+                          DEpisode(episodeNumber: ep.number, url: ep.link)),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return _buildScrapingLoadingState(true);
+                    } else if (snapshot.hasError) {
+                      return _buildErrorState(snapshot.error.toString());
+                    } else if (!snapshot.hasData) {
+                      return _buildEmptyState();
+                    } else {
+                      if (snapshot.data != null) {
+                        streamList.value
+                            .add(hive.Video.fromVideo(snapshot.data!));
+                      }
+                      return _buildServerList();
+                    }
+                  },
+                )
               : FutureBuilder<List<Video>>(
                   future: sourceController.activeSource.value!.methods
                       .getVideoList(
@@ -284,168 +306,6 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
         );
       },
     );
-  }
-
-  Widget _buildUniversalScraper(String url) {
-    Logger.i("universal");
-    return FutureBuilder<List<Video>>(
-      future: _scrapeVideoStreams(url),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildScrapingLoadingState(false);
-        } else if (snapshot.hasError) {
-          return _buildErrorState(snapshot.error.toString());
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildEmptyState();
-        } else {
-          streamList.value = streamList.value =
-              snapshot.data?.map((e) => hive.Video.fromVideo(e)).toList() ?? [];
-          return _buildServerList();
-        }
-      },
-    );
-  }
-
-  Future<List<Video>> _scrapeVideoStreams(String url) async {
-    final completer = Completer<List<Video>>();
-    final foundVideos = <Video>[];
-    debugPrint('Calling => $url');
-
-    await headlessWebView?.dispose();
-
-    scrapingTimer = Timer(Duration(seconds: 30), () {
-      headlessWebView?.dispose();
-      if (!completer.isCompleted) {
-        completer.complete(foundVideos);
-      }
-    });
-
-    try {
-      headlessWebView = HeadlessInAppWebView(
-        initialUrlRequest: URLRequest(url: WebUri(url)),
-        initialSettings: InAppWebViewSettings(
-          userAgent:
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-          javaScriptEnabled: true,
-        ),
-        onLoadStop: (controller, loadedUrl) async {
-          await Future.delayed(Duration(seconds: 8));
-
-          try {
-            await controller.evaluateJavascript(source: """
-          const playButtons = document.querySelectorAll('button[class*="play"], .play-button, [aria-label*="play"], [title*="play"]');
-          playButtons.forEach(btn => btn.click());
-          
-          const videos = document.querySelectorAll('video');
-          videos.forEach(video => {
-            video.play().catch(e => {});
-            video.click();
-          });
-          
-          const containers = document.querySelectorAll('.video-container, .player-container, .video-player, .player');
-          containers.forEach(container => container.click());
-        """);
-          } catch (e) {
-            Logger.i('JavaScript execution error: $e');
-          }
-
-          await Future.delayed(Duration(seconds: 5));
-
-          if (!completer.isCompleted) {
-            completer.complete(foundVideos);
-          }
-        },
-        shouldInterceptRequest: (controller, request) async {
-          final requestUrl = request.url.toString();
-          final headers = request.headers ?? {};
-          Logger.i('Intercepted request: $requestUrl');
-
-          if (_isVideoStream(requestUrl)) {
-            final video = Video(
-              requestUrl,
-              _extractQuality(requestUrl),
-              url,
-              headers:
-                  headers.isNotEmpty ? Map<String, String>.from(headers) : null,
-            );
-
-            final baseUrl = requestUrl.split('?')[0];
-            if (!foundVideos.any((v) => v.url.split('?')[0] == baseUrl)) {
-              foundVideos.add(video);
-              Logger.i(
-                  'Added video stream: $requestUrl (Quality: ${video.quality})');
-            } else {
-              Logger.i('Skipped duplicate stream: $requestUrl');
-            }
-          }
-
-          return null;
-        },
-        onReceivedServerTrustAuthRequest: (controller, challenge) async {
-          return ServerTrustAuthResponse(
-              action: ServerTrustAuthResponseAction.PROCEED);
-        },
-      );
-
-      await headlessWebView?.run();
-    } catch (e) {
-      Logger.i('Headless WebView error: $e');
-      if (!completer.isCompleted) {
-        completer.complete(foundVideos);
-      }
-    }
-
-    final result = await completer.future;
-    scrapingTimer?.cancel();
-    await headlessWebView?.dispose();
-
-    Logger.i('Final video count: ${result.length}');
-    return result;
-  }
-
-  bool _isVideoStream(String url) {
-    final lowercaseUrl = url.toLowerCase();
-    return lowercaseUrl.contains('m3u8') ||
-        lowercaseUrl.contains('.mp4') ||
-        lowercaseUrl.contains('manifest') ||
-        (lowercaseUrl.contains('video') &&
-            (lowercaseUrl.contains('stream') ||
-                lowercaseUrl.contains('play'))) ||
-        lowercaseUrl.contains('playlist') ||
-        lowercaseUrl.contains('.mpd');
-  }
-
-  String _extractQuality(String url) {
-    final lowercaseUrl = url.toLowerCase();
-    final filename = url.split('/').last.toLowerCase();
-
-    if (filename.contains('master.m3u8')) return 'Auto';
-    if (filename.contains('playlist.m3u8')) return 'Auto';
-
-    final qualityPatterns = [
-      RegExp(r'\b2160p\b', caseSensitive: false), // 4K
-      RegExp(r'\b1080p\b', caseSensitive: false),
-      RegExp(r'\b720p\b', caseSensitive: false),
-      RegExp(r'\b480p\b', caseSensitive: false),
-      RegExp(r'\b360p\b', caseSensitive: false),
-      RegExp(r'\b240p\b', caseSensitive: false),
-    ];
-
-    final qualityLabels = ['4K', '1080p', '720p', '480p', '360p', '240p'];
-
-    for (int i = 0; i < qualityPatterns.length; i++) {
-      if (qualityPatterns[i].hasMatch(url)) {
-        return qualityLabels[i];
-      }
-    }
-
-    if (lowercaseUrl.contains('4k') || lowercaseUrl.contains('uhd')) {
-      return '4K';
-    }
-
-    if (lowercaseUrl.contains('hd')) return 'HD';
-
-    return url.split('/').last;
   }
 
   Widget _buildScrapingLoadingState(bool fromSrc) {
@@ -558,26 +418,26 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
                 Get.back();
                 if (General.shouldAskForTrack.get(true) == false) {
                   navigate(() => WatchPage(
-                          episodeSrc: e,
-                          episodeList: widget.episodeList,
-                          anilistData: widget.anilistData!,
-                          currentEpisode: selectedEpisode.value,
-                          episodeTracks: streamList,
-                          shouldTrack: true,
-                        ));
+                        episodeSrc: e,
+                        episodeList: widget.episodeList,
+                        anilistData: widget.anilistData!,
+                        currentEpisode: selectedEpisode.value,
+                        episodeTracks: streamList,
+                        shouldTrack: true,
+                      ));
                   return;
                 }
                 final shouldTrack = await showTrackingDialog(context);
 
                 if (shouldTrack != null) {
                   navigate(() => WatchPage(
-                          episodeSrc: e,
-                          episodeList: widget.episodeList,
-                          anilistData: widget.anilistData!,
-                          currentEpisode: selectedEpisode.value,
-                          episodeTracks: streamList,
-                          shouldTrack: shouldTrack,
-                        ));
+                        episodeSrc: e,
+                        episodeList: widget.episodeList,
+                        anilistData: widget.anilistData!,
+                        currentEpisode: selectedEpisode.value,
+                        episodeTracks: streamList,
+                        shouldTrack: shouldTrack,
+                      ));
                 }
               },
               child: Padding(

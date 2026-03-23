@@ -1,18 +1,16 @@
-import 'dart:io';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:dartotsu_extension_bridge/Models/Source.dart';
 import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
-import 'package:nyantv/screens/anime/watch_page.dart';
 import 'package:nyantv/controllers/source/source_controller.dart';
-import 'package:get/get.dart';
-import 'extensions.dart';
-import 'package:nyantv/utils/logger.dart';
 import 'package:nyantv/models/Media/media.dart' as nyantv;
 import 'package:nyantv/models/Offline/Hive/video.dart' as model;
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart' as d;
 import 'package:nyantv/screens/anime/details_page.dart';
 import 'package:nyantv/main.dart';
+import 'package:nyantv/utils/logger.dart';
+import 'extensions.dart';
+import 'package:get/get.dart';
 
 class Deeplink {
   static void handleDeepLink(Uri uri) async {
@@ -24,36 +22,35 @@ class Deeplink {
       }
       if (uri.host != 'add-repo') return;
 
-      ExtensionType extType;
-      String? repoUrl;
+      final em = Get.find<ExtensionManager>();
+      final repoUrl =
+          (uri.queryParameters['url'] ?? uri.queryParameters['anime_url'])
+              ?.trim();
 
-      if (Platform.isAndroid) {
-        switch (uri.scheme.toLowerCase()) {
-          case 'aniyomi':
-            extType = ExtensionType.aniyomi;
-            repoUrl = uri.queryParameters["url"]?.trim();
-            break;
-          case 'tachiyomi':
-            extType = ExtensionType.aniyomi;
-            repoUrl = uri.queryParameters["url"]?.trim();
-            break;
-          default:
-            extType = ExtensionType.mangayomi;
-            repoUrl = (uri.queryParameters["url"])?.trim();
-        }
-      } else {
-        extType = ExtensionType.mangayomi;
-        repoUrl =
-            (uri.queryParameters["url"] ?? uri.queryParameters['anime_url'])
-                ?.trim();
-      }
-
-      if (repoUrl != null) {
-        Extensions().addRepo(ItemType.anime, repoUrl, extType);
-        snackBar("Added Repo Link Successfully!");
-      } else {
+      if (repoUrl == null || repoUrl.isEmpty) {
         snackBar("Missing required parameters in the link.");
+        return;
       }
+
+      bool isRepoAdded = false;
+      snackBar("Adding repo... please wait.");
+
+      for (final manager in em.managers) {
+        if (manager.schemes.contains(uri.scheme.toLowerCase())) {
+          manager.handleSchemes(uri);
+          isRepoAdded = true;
+          break;
+        }
+      }
+
+      if (!isRepoAdded) {
+        await em.addRepo(repoUrl, ItemType.anime, 'mangayomi');
+        isRepoAdded = true;
+      }
+
+      snackBar(isRepoAdded
+          ? "Added Repo Link Successfully!"
+          : "Missing or invalid parameters in the link.");
     } catch (e, stackTrace) {
       Logger.e("Deep Link error: $e\n$stackTrace");
       snackBar("Failed to handle deep link");
@@ -91,8 +88,6 @@ class Deeplink {
         return;
       }
 
-      // firstWhereOrNull funktioniert nicht auf dynamic-typed Listen —
-      // daher manuell iterieren.
       dynamic episode;
       final episodes = media.episodes;
       if (episodes != null) {

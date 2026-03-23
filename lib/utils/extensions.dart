@@ -6,8 +6,16 @@ import 'package:get/get.dart';
 class Extensions {
   final settings = Get.put(SourceController());
 
-  Future<void> addRepo(ItemType type, String repo, ExtensionType ext) async {
-    settings.setAnimeRepo(repo, ext);
-    await settings.fetchRepos();
+  Future<void> addRepo(ItemType type, String repo, String managerId) async {
+    final em = Get.find<ExtensionManager>();
+
+    await em.addRepo(repo, type, managerId);
+  }
+
+  Future<void> addRepos(
+      ItemType type, List<String> repos, String managerId) async {
+    final em = Get.find<ExtensionManager>();
+
+    await em.addRepos(repos, type, managerId);
   }
 }

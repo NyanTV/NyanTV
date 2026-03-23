@@ -370,14 +370,8 @@ class _ExtensionListState extends State<ExtensionList>
 
   Future<void> _updateAllExtensions(List<Source> updateEntries) async {
     if (updateEntries.isEmpty) return;
-
     try {
-      final futures = updateEntries
-          .map((source) =>
-              source.extensionType?.getManager().updateSource(source))
-          .whereType<Future<dynamic>>();
-
-      await Future.wait(futures);
+      await Future.wait(updateEntries.map((source) => source.update()));
       _computeAllData();
     } catch (e) {
       debugPrint('Error updating extensions: $e');

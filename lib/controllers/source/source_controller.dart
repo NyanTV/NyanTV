@@ -16,10 +16,9 @@ import 'package:nyantv/utils/function.dart';
 import 'package:nyantv/utils/storage_provider.dart';
 import 'package:nyantv/widgets/common/search_bar.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
-import 'package:dartotsu_extension_bridge/Aniyomi/AniyomiExtensions.dart';
-import 'package:dartotsu_extension_bridge/Mangayomi/MangayomiExtensions.dart';
+import 'package:dartotsu_extension_bridge/Services/Aniyomi/AniyomiExtensions.dart';
+import 'package:dartotsu_extension_bridge/Services/Mangayomi/MangayomiExtensions.dart';
 import 'package:flutter/material.dart';
-import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 import 'package:hive/hive.dart';
@@ -36,12 +35,16 @@ class SourceController extends GetxController implements BaseService {
 
   final _animeSections = <Widget>[].obs;
   final _homeSections = <Widget>[].obs;
+  final _widgetCache = <int, Widget>{};
 
   final isExtensionsServiceAllowed = false.obs;
   final RxString _activeAnimeRepo = ''.obs;
   final RxString _activeAniyomiAnimeRepo = ''.obs;
+  final shouldShowExtensions = false.obs;
 
-  final RxBool shouldShowExtensions = false.obs;
+  Future<void>? _repoRefreshTask;
+  Timer? _rebuildTimer;
+  bool _homeReady = false;
 
   String get activeAnimeRepo => _activeAnimeRepo.value;
   set activeAnimeRepo(String value) {
@@ -55,22 +58,18 @@ class SourceController extends GetxController implements BaseService {
     saveRepoSettings();
   }
 
-  void setAnimeRepo(String val, ExtensionType type) {
-    if (type == ExtensionType.aniyomi) {
-      Logger.i('Settings Aniyomi repo: $val');
+  void setAnimeRepo(String val, String managerId) {
+    if (managerId == 'aniyomi') {
       activeAniyomiAnimeRepo = val;
     } else {
-      Logger.i('Settings Mangayomi repo: $val');
       activeAnimeRepo = val;
     }
   }
 
-  String getAnimeRepo(ExtensionType type) {
-    if (type == ExtensionType.aniyomi) {
-      Logger.i('Getting Aniyomi repo');
+  String getAnimeRepo(String managerId) {
+    if (managerId == 'aniyomi') {
       return activeAniyomiAnimeRepo;
     } else {
-      Logger.i('Getting Mangayomi repo');
       return activeAnimeRepo;
     }
   }
@@ -79,36 +78,47 @@ class SourceController extends GetxController implements BaseService {
     final box = Hive.box('themeData');
     box.put("activeAnimeRepo", _activeAnimeRepo.value);
     box.put("activeAniyomiAnimeRepo", _activeAniyomiAnimeRepo.value);
-    shouldShowExtensions.value = [
-      _activeAnimeRepo.value,
-      _activeAniyomiAnimeRepo.value,
-      installedExtensions,
-    ].any((e) => (e as dynamic).isNotEmpty);
+    _refreshVisibility();
+  }
+
+  void _refreshVisibility() {
+    shouldShowExtensions.value = _activeAnimeRepo.value.isNotEmpty ||
+        _activeAniyomiAnimeRepo.value.isNotEmpty ||
+        installedExtensions.isNotEmpty;
   }
 
   @override
   void onInit() {
     super.onInit();
-
+    ever(installedExtensions, (_) => _scheduleRebuild());
     _initialize();
+  }
+
+  @override
+  void onClose() {
+    _rebuildTimer?.cancel();
+    super.onClose();
+  }
+
+  void _scheduleRebuild() {
+    _refreshVisibility();
+    if (!_homeReady) return;
+    _rebuildTimer?.cancel();
+    _rebuildTimer = Timer(const Duration(milliseconds: 150), _syncSections);
   }
 
   void _initialize() async {
     isar = await StorageProvider().initDB(null);
     await DartotsuExtensionBridge().init(isar, 'NyanTV');
-
     await initExtensions();
-
     if (Get.find<ServiceHandler>().serviceType.value ==
         ServicesType.extensions) {
       fetchHomePage();
     }
-
     if (Get.context != null) {
       checkForUpdates(Get.context!);
     }
   }
-
 
   Future<void> checkForUpdates(BuildContext context) async {
     try {
@@ -122,7 +132,6 @@ class SourceController extends GetxController implements BaseService {
           updates.add(available);
         }
       }
-
       if (updates.isNotEmpty) {
         snackString("Updates available for ${updates.length} extensions");
       }
@@ -131,216 +140,165 @@ class SourceController extends GetxController implements BaseService {
     }
   }
 
-  Future<List<Source>> _getInstalledExtensions(
-      Future<List<Source>> Function() fetchFn) async {
-    return await fetchFn();
-  }
-
-  List<Source> _getAvailableExtensions(List<Source> Function() fetchFn) {
-    return fetchFn();
-  }
-
   Future<void> sortAnimeExtensions() async {
-    final types = ExtensionType.values.where((e) {
-      if (!Platform.isAndroid && e == ExtensionType.aniyomi) return false;
-      return true;
-    });
-
-    final installed = <Source>[];
-    final available = <Source>[];
-
-    for (final type in types) {
-      final manager = type.getManager();
-      installed.addAll(await _getInstalledExtensions(
-          () => manager.getInstalledAnimeExtensions()));
-      available.addAll(_getAvailableExtensions(
-          () => manager.availableAnimeExtensions.value));
-    }
-
-    installedExtensions.value = installed;
-    availableExtensions.value = available;
-
-    installedDownloaderExtensions.value = installed
+    final em = Get.find<ExtensionManager>();
+    installedExtensions.value = em.installedAnimeExtensions;
+    availableExtensions.value = em.availableAnimeExtensions;
+    installedDownloaderExtensions.value = installedExtensions
         .where((e) => e.name?.contains('Downloader') ?? false)
         .toList();
   }
 
-  Future<void> sortAllExtensions() async {
-    await Future.wait([
-      sortAnimeExtensions(),
-    ]);
-  }
-
   Future<void> initExtensions({bool refresh = true}) async {
     try {
-      await sortAllExtensions();
+      await sortAnimeExtensions();
       final box = Hive.box('themeData');
-      final savedActiveSourceId =
-          box.get('activeSourceId', defaultValue: '') as String?;
+      final savedId = box.get('activeSourceId', defaultValue: '') as String?;
       isExtensionsServiceAllowed.value =
           box.get('extensionsServiceAllowed', defaultValue: false);
 
-      activeSource.value = installedExtensions.firstWhereOrNull(
-          (source) => source.id.toString() == savedActiveSourceId);
+      if (installedExtensions.isEmpty &&
+          savedId != null &&
+          savedId.isNotEmpty) {
+        final deadline = DateTime.now().add(const Duration(seconds: 10));
+        while (
+            installedExtensions.isEmpty && DateTime.now().isBefore(deadline)) {
+          await Future.delayed(const Duration(milliseconds: 200));
+          await sortAnimeExtensions();
+        }
+      }
 
-      activeSource.value ??= installedExtensions.firstOrNull;
+      activeSource.value = installedExtensions
+              .firstWhereOrNull((s) => s.id.toString() == savedId) ??
+          installedExtensions.firstOrNull;
 
       _activeAnimeRepo.value = box.get("activeAnimeRepo", defaultValue: '');
       _activeAniyomiAnimeRepo.value =
           box.get("activeAniyomiAnimeRepo", defaultValue: '');
 
-      shouldShowExtensions.value = [
-        _activeAnimeRepo.value,
-        _activeAniyomiAnimeRepo.value,
-        installedExtensions,
-      ].any((e) => (e as dynamic).isNotEmpty);
-
+      _refreshVisibility();
       Logger.i('Extensions initialized.');
     } catch (e) {
       Logger.i('Error initializing extensions: $e');
     }
   }
 
-  bool isEmpty(dynamic val) => val.isEmpty;
-
   void setActiveSource(Source source) {
     activeSource.value = source;
-    Hive.box('themeData').put('activeSourceId', source.id);
+    Hive.box('themeData').put('activeSourceId', source.id.toString());
     lastUpdatedSource.value = 'ANIME';
   }
 
-  List<Source> getInstalledExtensions(ItemType type) {
-    return installedExtensions;
-  }
-
-  List<Source> getAvailableExtensions(ItemType type) {
-    return availableExtensions;
-  }
+  List<Source> getInstalledExtensions(ItemType type) => installedExtensions;
+  List<Source> getAvailableExtensions(ItemType type) => availableExtensions;
 
   Future<void> fetchRepos() async {
-    final extenionTypes = ExtensionType.values.where((e) {
-      if (!Platform.isAndroid) {
-        if (e == ExtensionType.aniyomi) {
-          return false;
-        }
-      }
-      return true;
-    }).toList();
-    Logger.i(extenionTypes.length.toString());
-    if (Platform.isAndroid) {
-      Get.put(AniyomiExtensions(), tag: 'AniyomiExtensions');
+    final active = _repoRefreshTask;
+    if (active != null) {
+      await active;
+      return;
     }
-    Get.put(MangayomiExtensions(), tag: 'MangayomiExtensions');
-    for (var type in extenionTypes) {
-      await type
-          .getManager()
-          .fetchAvailableAnimeExtensions([getAnimeRepo(type)]);
+
+    final task = _doFetchRepos();
+    _repoRefreshTask = task;
+    try {
+      await task;
+    } finally {
+      if (identical(_repoRefreshTask, task)) _repoRefreshTask = null;
     }
+  }
+
+  Future<void> _doFetchRepos() async {
+    final em = Get.find<ExtensionManager>();
+    await em.refreshExtensions(refreshAvailableSource: true);
     await initExtensions();
   }
 
-  Source? getExtensionByName(String name) {
-    final selectedSource = installedExtensions.firstWhereOrNull((source) =>
-        '${source.name} (${source.lang?.toUpperCase()})' == name ||
-        source.name == name);
-
-    if (selectedSource != null) {
-      activeSource.value = selectedSource;
-      Hive.box('themeData').put('activeSourceId', selectedSource.id);
-      return activeSource.value;
+  Source? getExtensionByValue(String value) {
+    final match = installedExtensions.firstWhereOrNull(
+      (s) => '${s.name} (${s.lang?.toUpperCase()})' == value || s.name == value,
+    );
+    if (match != null) {
+      activeSource.value = match;
+      Hive.box('themeData').put('activeSourceId', match.id);
+      return match;
     }
     lastUpdatedSource.value = 'ANIME';
     return null;
   }
 
-  void _initializeEmptySections() {
+  void _buildOfflineSections() {
     final offlineStorage = Get.find<OfflineStorageController>();
-    _animeSections.value = [const Center(child: NyantvProgressIndicator())];
     _homeSections.value = [
-      Obx(
-        () => buildSection(
+      Obx(() => buildSection(
             "Continue Watching",
             offlineStorage.animeLibrary
                 .where((e) => e.serviceIndex == ServicesType.extensions.index)
                 .toList(),
-            variant: DataVariant.offline),
-      ),
+            variant: DataVariant.offline,
+          )),
+    ];
+  }
+
+  void _syncSections() {
+    final liveIds = {for (final s in installedExtensions) s.id};
+    final cachedIds = _widgetCache.keys.toSet();
+
+    final added = liveIds.difference(cachedIds);
+    final removed = cachedIds.difference(liveIds);
+
+    if (added.isEmpty && removed.isEmpty) return;
+
+    for (final id in removed) {
+      _widgetCache.remove(id);
+    }
+
+    for (final src in installedExtensions.where((s) => added.contains(s.id))) {
+      _widgetCache[int.tryParse(src.id?.toString() ?? '') ?? src.id.hashCode] =
+          buildFutureSection(
+        src.name ?? '??',
+        src.methods.getPopular(1).then((r) => r.list),
+        type: ItemType.anime,
+        variant: DataVariant.extension,
+        source: src,
+      );
+    }
+
+    _animeSections.value = [
+      if (_widgetCache.isNotEmpty)
+        CustomSearchBar(
+          disableIcons: true,
+          onSubmitted: (v) =>
+              SourceSearchPage(initialTerm: v, type: ItemType.anime).go(),
+        ),
+      ..._widgetCache.values,
     ];
   }
 
   @override
-  RxList<Widget> animeWidgets(BuildContext context) => [
-        Obx(() {
-          return Column(
-            children: _animeSections.value,
-          );
-        })
-      ].obs;
+  RxList<Widget> animeWidgets(BuildContext context) =>
+      [Obx(() => Column(children: _animeSections.value))].obs;
 
   @override
-  RxList<Widget> homeWidgets(BuildContext context) => [
-        Obx(() {
-          return Column(
-            children: _homeSections.value,
-          );
-        })
-      ].obs;
+  RxList<Widget> homeWidgets(BuildContext context) =>
+      [Obx(() => Column(children: _homeSections.value))].obs;
 
   @override
   Future<void> fetchHomePage() async {
     try {
-      _initializeEmptySections();
-
-      for (final source in installedExtensions) {
-        _fetchSourceData(source,
-            targetSections: _animeSections, type: ItemType.anime);
-      }
-
-      Logger.i('Fetched home page data.');
+      _buildOfflineSections();
+      _homeReady = true;
+      _syncSections();
     } catch (error) {
       Logger.i('Error in fetchHomePage: $error');
       errorSnackBar('Failed to fetch data from sources.');
     }
   }
 
-  Future<void> _fetchSourceData(
-    Source source, {
-    required RxList<Widget> targetSections,
-    required ItemType type,
-  }) async {
-    try {
-      final future = source.methods.getPopular(1).then((result) => result.list);
-
-      final newSection = buildFutureSection(
-        source.name ?? '??',
-        future,
-        type: type,
-        variant: DataVariant.extension,
-        source: source,
-      );
-
-      if (targetSections.first is Center) {
-        targetSections.value = [];
-        targetSections.add(CustomSearchBar(
-          disableIcons: true,
-          onSubmitted: (v) {
-            SourceSearchPage(initialTerm: v, type: type).go();
-          },
-        ));
-      }
-      targetSections.add(newSection);
-
-      Logger.i('Data fetched and updated for ${source.name}');
-    } catch (e) {
-      Logger.i('Error fetching data from ${source.name}: $e');
-    }
-  }
-
   @override
   Future<Media> fetchDetails(FetchDetailsParams params) async {
-    final id = params.id;
-    final data = await activeSource.value!.methods.getDetail(DMedia.withUrl(id));
-
+    final data =
+        await activeSource.value!.methods.getDetail(DMedia.withUrl(params.id));
     if (serviceHandler.serviceType.value != ServicesType.extensions) {
       cacheController.addCache(data.toJson());
     }
@@ -349,8 +307,8 @@ class SourceController extends GetxController implements BaseService {
 
   @override
   Future<List<Media>> search(SearchParams params) async {
-    final source = activeSource.value;
-    final data = (await source!.methods.search(params.query, 1, [])).list;
+    final data =
+        (await activeSource.value!.methods.search(params.query, 1, [])).list;
     return data.map((e) => Media.froDMedia(e, ItemType.anime)).toList();
   }
 }

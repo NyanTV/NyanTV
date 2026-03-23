@@ -17,14 +17,11 @@ class SettingsCommon extends StatefulWidget {
 
 class _SettingsCommonState extends State<SettingsCommon> {
   final settings = Get.find<Settings>();
-  late bool uniScrapper;
   late bool shouldAskForPermission = General.shouldAskForTrack.get(true);
 
   @override
   void initState() {
     super.initState();
-    uniScrapper = settingsController.preferences
-        .get('universal_scrapper', defaultValue: false);
   }
 
   @override
@@ -97,23 +94,6 @@ class _SettingsCommonState extends State<SettingsCommon> {
                           description: "Choose which list to show on home page",
                           onTap: () => _showHomePageCardsDialog(context, true),
                         )),
-                    // NyantvExpansionTile(
-                    //     initialExpanded: true,
-                    //     title: 'Experimental',
-                    //     content: CustomSwitchTile(
-                    //       switchValue: uniScrapper,
-                    //       icon: Iconsax.global,
-                    //       title: 'Use Universal Scrapper',
-                    //       description:
-                    //           "it could be really slow depending on the site, might not work for all sites its in testing stages.",
-                    //       onChanged: (v) {
-                    //         setState(() {
-                    //           uniScrapper = v;
-                    //         });
-                    //         settingsController.preferences
-                    //             .put('universal_scrapper', v);
-                    //       },
-                    //     )),
                   ],
                 )
               ],

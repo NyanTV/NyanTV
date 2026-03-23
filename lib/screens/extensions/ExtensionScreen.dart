@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:nyantv/screens/extensions/ExtensionList.dart';
-import 'package:nyantv/screens/extensions/widgets/repo_sheet.dart';
 import 'package:nyantv/utils/language.dart';
 import 'package:nyantv/utils/storage_provider.dart';
 import 'package:nyantv/widgets/AlertDialogBuilder.dart';
@@ -12,6 +11,8 @@ import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart'
     hide Extension, ExtensionList;
+import 'package:nyantv/screens/settings/sub_settings/settings_extensions.dart';
+import 'package:nyantv/utils/function.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -197,7 +198,7 @@ class _ExtensionScreenState extends State<ExtensionScreen>
   }
 
   void repoSheet() {
-    RepoBottomSheet.show(context, onSave: _fetchData);
+    navigate(() => const SettingsExtensions());
   }
 
   @override

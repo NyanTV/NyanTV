@@ -1,21 +1,21 @@
 import 'dart:io';
 
+import 'package:get/get.dart';
 import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:nyantv/utils/tv_text_field.dart';
-import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
+import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
-import 'package:dartotsu_extension_bridge/Models/Source.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class GitHubRepoDialog extends StatefulWidget {
   final ItemType type;
-  final ExtensionType extType;
+  final String managerId;
 
   const GitHubRepoDialog({
     super.key,
     required this.type,
-    required this.extType,
+    required this.managerId,
   });
 
   @override
@@ -26,7 +26,7 @@ class GitHubRepoDialog extends StatefulWidget {
   }) {
     showDialog(
       context: context,
-      builder: (context) => GitHubRepoDialog(type: type, extType: extType),
+      builder: (context) => GitHubRepoDialog(type: type, managerId: managerId),
     );
   }
 }
@@ -77,7 +77,8 @@ class _GitHubRepoDialogState extends State<GitHubRepoDialog> {
       });
 
       await Future.delayed(const Duration(milliseconds: 500));
-      sourceController.setAnimeRepo(url, widget.extType);
+      final em = Get.find<ExtensionManager>();
+      await em.addRepo(url, widget.type, widget.managerId);
 
       if (mounted) {
         Navigator.of(context).pop();

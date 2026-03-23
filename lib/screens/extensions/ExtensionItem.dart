@@ -13,7 +13,6 @@ import 'package:nyantv/widgets/header.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -102,9 +101,7 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
 
     _isLoading.value = true;
     try {
-      await widget.source.extensionType
-          ?.getManager()
-          .installSource(widget.source);
+      await widget.source.install();
       await sortExtensions();
       widget.onUpdate?.call();
     } catch (e) {
@@ -136,10 +133,9 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
             height: 42,
             width: 42,
             decoration: BoxDecoration(
-              color: (widget.source.extensionType == ExtensionType.mangayomi
-                      ? Colors.red
-                      : Colors.indigoAccent)
-                  .withValues(alpha: 0.4),
+              color:
+                  (widget.source is MSource ? Colors.red : Colors.indigoAccent)
+                      .withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Container(
@@ -159,10 +155,7 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
                     right: 1,
                     child: NetworkSizedImage(
                       radius: 50,
-                      imageUrl: widget.source.extensionType ==
-                              ExtensionType.mangayomi
-                          ? "https://raw.githubusercontent.com/kodjodevf/mangayomi/main/assets/app_icons/icon-red.png"
-                          : 'https://aniyomi.org/img/logo-128px.png',
+                      imageUrl: widget.source.managerIcon,
                       height: 13,
                       width: 13,
                     ),
@@ -292,9 +285,7 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
       if (updateAvailable) {
         _isLoading.value = true;
         try {
-          await widget.source.extensionType!
-              .getManager()
-              .updateSource(widget.source);
+          await widget.source.update();
           await sortExtensions();
           widget.onUpdate?.call();
         } finally {
@@ -309,9 +300,7 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
               _isLoading.value = true;
               try {
                 Logger.i("Uninstalling => ${widget.source.id}");
-                await widget.source.extensionType!
-                    .getManager()
-                    .uninstallSource(widget.source);
+                await widget.source.uninstall();
                 await sortExtensions();
                 widget.onUpdate?.call();
               } catch (e) {

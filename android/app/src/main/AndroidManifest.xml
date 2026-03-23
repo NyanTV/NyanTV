@@ -81,6 +81,20 @@
                 
                 <data android:host="add-repo" />
             </intent-filter>
+
+            <intent-filter android:label="NyanTV Repo Importer">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="cloudstreamrepo" />
+            </intent-filter>
+
+            <intent-filter android:label="NyanTV Repo Importer">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="sora" />
+            </intent-filter>
             
             <!-- Deep Link for TV Watch Next -->
             <intent-filter android:label="NyanTV Watch Next">

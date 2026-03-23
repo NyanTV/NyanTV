@@ -18,11 +18,10 @@ import 'package:nyantv/widgets/header.dart';
 import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
-import 'package:dartotsu_extension_bridge/ExtensionManager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
-import 'package:dartotsu_extension_bridge/Models/Source.dart';
+import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
 
@@ -72,18 +71,17 @@ class _EpisodeSectionState extends State<EpisodeSection> {
       _episodeFuture.value = Future.value(widget.episodeList!);
       _fetchFillerInfo();
     }
-   
+
     if (widget.episodeList != null) {
       _episodeListListener = ever(widget.episodeList!, (episodes) {
         if (episodes.isNotEmpty && !_fillerFetched) {
           _fetchFillerInfo();
         }
-      });      
+      });
     }
 
     _sourceDropdownFocusNode.addListener(() => setState(() {}));
     _sourceSettingsFocusNode.addListener(() => setState(() {}));
-
   }
 
   @override
@@ -96,14 +94,14 @@ class _EpisodeSectionState extends State<EpisodeSection> {
 
   Future<void> _fetchFillerInfo() async {
     if (_fillerFetched) return;
-    
+
     if (widget.episodeList != null && widget.episodeList!.isNotEmpty) {
       if (widget.episodeList!.any((ep) => ep.filler == true)) {
         _fillerFetched = true;
         return;
       }
     }
-    
+
     final malId = widget.anilistData?.idMal;
     if (malId == null) return;
 
@@ -111,14 +109,14 @@ class _EpisodeSectionState extends State<EpisodeSection> {
 
     try {
       final fillerMap = await JikanService.getFillerEpisodes(malId.toString());
-      
+
       if (fillerMap.isNotEmpty && widget.episodeList != null) {
         bool updated = false;
-        
+
         for (var ep in widget.episodeList!) {
           if (fillerMap.containsKey(ep.number)) {
-             ep.filler = true;
-             updated = true;
+            ep.filler = true;
+            updated = true;
           }
         }
 
@@ -156,12 +154,14 @@ class _EpisodeSectionState extends State<EpisodeSection> {
     widget.episodeList?.value = [];
 
     try {
-      final sourceController = Get.find<ServiceHandler>().extensionService;
-      sourceController.getExtensionByName(value);
+      final source = sourceController.installedExtensions
+          .firstWhereOrNull((s) => s.id.toString() == value);
+      if (source == null) return;
+
+      sourceController.setActiveSource(source);
 
       _requestCounter.value++;
       int currentRequestId = _requestCounter.value;
-
       _episodeFuture.value = _fetchEpisodes(currentRequestId);
     } catch (e) {
       Logger.i(e.toString());
@@ -192,16 +192,13 @@ class _EpisodeSectionState extends State<EpisodeSection> {
             ),
           ]
         : sourceController.installedExtensions.map<DropdownItem>((source) {
-            final isMangayomi = source.extensionType == ExtensionType.mangayomi;
             return DropdownItem(
-              value: '${source.name} (${source.lang?.toUpperCase()})',
+              value: source.id.toString(),
               text: source.name?.toUpperCase() ?? 'Unknown Source',
               subtitle: source.lang?.toUpperCase() ?? 'Unknown',
               leadingIcon: NetworkSizedImage(
                 radius: 16,
-                imageUrl: isMangayomi
-                    ? "https://raw.githubusercontent.com/kodjodevf/mangayomi/main/assets/app_icons/icon-red.png"
-                    : 'https://aniyomi.org/img/logo-128px.png',
+                imageUrl: source.managerIcon,
                 height: 24,
                 width: 24,
               ),
@@ -214,17 +211,13 @@ class _EpisodeSectionState extends State<EpisodeSection> {
     } else {
       final activeSource = sourceController.activeSource.value;
       if (activeSource != null) {
-        final isMangayomi =
-            activeSource.extensionType == ExtensionType.mangayomi;
         selectedItem = DropdownItem(
-          value: '${activeSource.name} (${activeSource.lang?.toUpperCase()})',
+          value: activeSource.id.toString(),
           text: activeSource.name?.toUpperCase() ?? 'Unknown Source',
           subtitle: activeSource.lang?.toUpperCase() ?? 'Unknown',
           leadingIcon: NetworkSizedImage(
             radius: 12,
-            imageUrl: isMangayomi
-                ? "https://raw.githubusercontent.com/kodjodevf/mangayomi/main/assets/app_icons/icon-red.png"
-                : 'https://aniyomi.org/img/logo-128px.png',
+            imageUrl: activeSource.managerIcon,
             height: 20,
             width: 20,
           ),
@@ -243,15 +236,14 @@ class _EpisodeSectionState extends State<EpisodeSection> {
                     event.logicalKey == LogicalKeyboardKey.enter) {
                   final ctx = _sourceDropdownKey.currentContext;
                   if (ctx != null) {
-                    final RenderBox box =
-                        ctx.findRenderObject() as RenderBox;
+                    final RenderBox box = ctx.findRenderObject() as RenderBox;
                     final Offset pos =
                         box.localToGlobal(box.size.center(Offset.zero));
-                    GestureBinding.instance.handlePointerEvent(
-                        PointerDownEvent(position: pos));
+                    GestureBinding.instance
+                        .handlePointerEvent(PointerDownEvent(position: pos));
                     Future.delayed(const Duration(milliseconds: 50), () {
-                      GestureBinding.instance.handlePointerEvent(
-                          PointerUpEvent(position: pos));
+                      GestureBinding.instance
+                          .handlePointerEvent(PointerUpEvent(position: pos));
                     });
                   }
                   return KeyEventResult.handled;
@@ -290,10 +282,8 @@ class _EpisodeSectionState extends State<EpisodeSection> {
             ),
           ),
         ),
-
         if (sourceController.installedExtensions.isNotEmpty) ...[
           const SizedBox(width: 8),
-
           Focus(
             focusNode: _sourceSettingsFocusNode,
             onKeyEvent: (node, event) {
