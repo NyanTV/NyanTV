@@ -59,6 +59,7 @@ class _ExtensionListState extends State<ExtensionList>
   void _setupReactiveListeners() {
     _workers = [
       ever(sourceController.installedExtensions, (_) => _computeAllData()),
+      ever(sourceController.availableExtensions, (_) => _computeAllData()),
       if (widget.reloadTrigger != null)
         ever(widget.reloadTrigger!, (_) => _computeAllData()),
       if (widget.focusFirstItemTrigger != null)

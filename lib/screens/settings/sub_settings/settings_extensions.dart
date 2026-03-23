@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:nyantv/utils/tv_text_field.dart';
 import 'package:nyantv/widgets/common/glow.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
@@ -21,9 +20,44 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
   final Map<String, bool> _deleting = {};
   final List<FocusNode> _managerFocusNodes = [];
   final FocusNode _fabFocusNode = FocusNode();
-  final FocusNode _backFocusNode = FocusNode();
+
+  final List<FocusNode> _repoCopyNodes = [];
+  final List<FocusNode> _repoDeleteNodes = [];
 
   Extension get _manager => em.managers[_managerIndex];
+
+  @override
+  void initState() {
+    super.initState();
+    for (int i = 0; i < em.managers.length; i++) {
+      _managerFocusNodes.add(FocusNode());
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_managerFocusNodes.isNotEmpty) {
+        _managerFocusNodes[_managerIndex].requestFocus();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    for (final n in _managerFocusNodes) n.dispose();
+    _fabFocusNode.dispose();
+    for (final n in _repoCopyNodes) n.dispose();
+    for (final n in _repoDeleteNodes) n.dispose();
+    super.dispose();
+  }
+
+  void _rebuildRepoFocusNodes(int count) {
+    for (final n in _repoCopyNodes) n.dispose();
+    for (final n in _repoDeleteNodes) n.dispose();
+    _repoCopyNodes.clear();
+    _repoDeleteNodes.clear();
+    for (int i = 0; i < count; i++) {
+      _repoCopyNodes.add(FocusNode());
+      _repoDeleteNodes.add(FocusNode());
+    }
+  }
 
   Future<void> _addRepos(List<String> urls) async {
     await em.addRepos(urls, ItemType.anime, _manager.id);
@@ -55,6 +89,103 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
     );
   }
 
+  KeyEventResult _handleManagerKey(
+      RawKeyEvent event, int index, int total, List<Repo> repos) {
+    if (event is! RawKeyDownEvent) return KeyEventResult.ignored;
+
+    if (event.logicalKey == LogicalKeyboardKey.select ||
+        event.logicalKey == LogicalKeyboardKey.enter) {
+      HapticFeedback.lightImpact();
+      setState(() => _managerIndex = index);
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      if (repos.isNotEmpty && _repoCopyNodes.isNotEmpty) {
+        _repoCopyNodes[0].requestFocus();
+      } else {
+        _fabFocusNode.requestFocus();
+      }
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowRight &&
+        index == total - 1) {
+      _fabFocusNode.requestFocus();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  KeyEventResult _handleCopyKey(
+      RawKeyEvent event, int index, List<Repo> repos, Repo repo) {
+    if (event is! RawKeyDownEvent) return KeyEventResult.ignored;
+
+    if (event.logicalKey == LogicalKeyboardKey.select ||
+        event.logicalKey == LogicalKeyboardKey.enter) {
+      Clipboard.setData(ClipboardData(text: repo.url));
+      snackBar('URL copied');
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      _repoDeleteNodes[index].requestFocus();
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      if (_managerFocusNodes.isNotEmpty) {
+        _managerFocusNodes[_managerIndex].requestFocus();
+      }
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      if (index > 0) {
+        _repoCopyNodes[index - 1].requestFocus();
+      } else if (_managerFocusNodes.isNotEmpty) {
+        _managerFocusNodes[_managerIndex].requestFocus();
+      }
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      if (index < repos.length - 1) {
+        _repoCopyNodes[index + 1].requestFocus();
+      } else {
+        _fabFocusNode.requestFocus();
+      }
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  KeyEventResult _handleDeleteKey(
+      RawKeyEvent event, int index, List<Repo> repos, Repo repo) {
+    if (event is! RawKeyDownEvent) return KeyEventResult.ignored;
+
+    if (event.logicalKey == LogicalKeyboardKey.select ||
+        event.logicalKey == LogicalKeyboardKey.enter) {
+      _removeRepo(repo);
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      _repoCopyNodes[index].requestFocus();
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      if (index > 0) {
+        _repoDeleteNodes[index - 1].requestFocus();
+      } else if (_managerFocusNodes.isNotEmpty) {
+        _managerFocusNodes[_managerIndex].requestFocus();
+      }
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      if (index < repos.length - 1) {
+        _repoDeleteNodes[index + 1].requestFocus();
+      } else {
+        _fabFocusNode.requestFocus();
+      }
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).colorScheme;
@@ -79,7 +210,10 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
           if (em.managers.length > 1)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: _buildManagerBar(theme),
+              child: Obx(() {
+                final repos = _manager.getReposRx(ItemType.anime).value;
+                return _buildManagerBar(theme, repos);
+              }),
             ),
           Expanded(child: _buildBody()),
         ]),
@@ -89,8 +223,15 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
             onFocusChange: (_) => setState(() {}),
             onKey: (node, event) {
               if (event is RawKeyDownEvent) {
-                if (event.logicalKey == LogicalKeyboardKey.arrowUp ||
-                    event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                  if (_repoCopyNodes.isNotEmpty) {
+                    _repoCopyNodes.last.requestFocus();
+                  } else if (_managerFocusNodes.isNotEmpty) {
+                    _managerFocusNodes[_managerIndex].requestFocus();
+                  }
+                  return KeyEventResult.handled;
+                }
+                if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
                   if (_managerFocusNodes.isNotEmpty) {
                     _managerFocusNodes[_managerIndex].requestFocus();
                   }
@@ -153,14 +294,14 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
           ),
           const SizedBox(width: 10),
-          const Text("Extensions",
+          const Text('Extensions',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
         ],
       ),
     );
   }
 
-  Widget _buildManagerBar(ColorScheme colors) {
+  Widget _buildManagerBar(ColorScheme colors, List<Repo> repos) {
     final managers = em.managers;
 
     return SizedBox(
@@ -176,26 +317,8 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
             child: Focus(
               focusNode: focusNode,
               onFocusChange: (_) => setState(() {}),
-              onKey: (node, event) {
-                if (event is RawKeyDownEvent) {
-                  if (event.logicalKey == LogicalKeyboardKey.select ||
-                      event.logicalKey == LogicalKeyboardKey.enter) {
-                    HapticFeedback.lightImpact();
-                    setState(() => _managerIndex = e.key);
-                    return KeyEventResult.handled;
-                  }
-                  if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-                    _fabFocusNode.requestFocus();
-                    return KeyEventResult.handled;
-                  }
-                  if (event.logicalKey == LogicalKeyboardKey.arrowRight &&
-                      e.key == managers.length - 1) {
-                    _fabFocusNode.requestFocus();
-                    return KeyEventResult.handled;
-                  }
-                }
-                return KeyEventResult.ignored;
-              },
+              onKey: (node, event) =>
+                  _handleManagerKey(event, e.key, managers.length, repos),
               child: Builder(builder: (context) {
                 final hasFocus = Focus.of(context).hasFocus;
                 return AnimatedContainer(
@@ -234,13 +357,11 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.extension_outlined,
-                              size: 14,
-                              color: selected
-                                  ? colors.onSecondary
-                                  : colors.onSurfaceVariant,
-                            ),
+                            Icon(Icons.extension_outlined,
+                                size: 14,
+                                color: selected
+                                    ? colors.onSecondary
+                                    : colors.onSurfaceVariant),
                             const SizedBox(width: 5),
                             Flexible(
                               child: Text(
@@ -276,6 +397,15 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
   Widget _buildBody() {
     return Obx(() {
       final repos = _manager.getReposRx(ItemType.anime).value;
+
+      if (repos.length != _repoCopyNodes.length) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() => _rebuildRepoFocusNodes(repos.length));
+          }
+        });
+      }
+
       if (repos.isEmpty) return _buildEmpty();
       return _buildRepoList(repos);
     });
@@ -308,121 +438,139 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
   }
 
   Widget _buildRepoList(List<Repo> repos) {
+    if (_repoCopyNodes.length != repos.length) {
+      return const SizedBox.shrink();
+    }
+
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
       itemCount: repos.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (_, i) {
         final repo = repos[i];
-        return _buildRepoCard(repo, isDeleting: _deleting[repo.url] == true);
+        final colors = Theme.of(context).colorScheme;
+        String? host;
+        String path;
+        try {
+          final uri = Uri.parse(repo.url);
+          host = uri.host.isEmpty ? null : uri.host;
+          path = uri.path.isEmpty ? repo.url : uri.path;
+        } catch (_) {
+          path = repo.url;
+        }
+
+        final copyHasFocus = _repoCopyNodes[i].hasFocus;
+        final deleteHasFocus = _repoDeleteNodes[i].hasFocus;
+
+        return AnimatedOpacity(
+          opacity: _deleting[repo.url] == true ? 0.4 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          child: Container(
+            decoration: BoxDecoration(
+              color: colors.surfaceContainerLow.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: colors.outlineVariant.withOpacity(0.5)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                      color: colors.surfaceContainer,
+                      borderRadius: BorderRadius.circular(9)),
+                  child: Icon(Icons.storage_outlined,
+                      size: 17, color: colors.onSurfaceVariant),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(path,
+                          style: TextStyle(
+                              fontSize: 12.5,
+                              fontFamily: 'monospace',
+                              color: colors.onSurface,
+                              fontWeight: FontWeight.w500),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis),
+                      if (host != null) ...[
+                        const SizedBox(height: 2),
+                        Text(host,
+                            style: TextStyle(
+                                fontSize: 11, color: colors.onSurfaceVariant)),
+                      ],
+                    ],
+                  ),
+                ),
+                // Copy
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  decoration: copyHasFocus
+                      ? BoxDecoration(
+                          border: Border.all(color: colors.secondary, width: 2),
+                          borderRadius: BorderRadius.circular(8))
+                      : null,
+                  child: Focus(
+                    focusNode: _repoCopyNodes[i],
+                    onFocusChange: (_) => setState(() {}),
+                    onKey: (node, event) =>
+                        _handleCopyKey(event, i, repos, repo),
+                    child: IconButton(
+                      focusNode: FocusNode(canRequestFocus: false),
+                      focusColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: repo.url));
+                        snackBar('URL copied');
+                      },
+                      icon: Icon(Icons.copy_outlined,
+                          size: 18, color: colors.onSurfaceVariant),
+                    ),
+                  ),
+                ),
+                // Delete
+                if (_deleting[repo.url] == true)
+                  Padding(
+                    padding: const EdgeInsets.all(9),
+                    child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: colors.error)),
+                  )
+                else
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    decoration: deleteHasFocus
+                        ? BoxDecoration(
+                            border:
+                                Border.all(color: colors.secondary, width: 2),
+                            borderRadius: BorderRadius.circular(8))
+                        : null,
+                    child: Focus(
+                      focusNode: _repoDeleteNodes[i],
+                      onFocusChange: (_) => setState(() {}),
+                      onKey: (node, event) =>
+                          _handleDeleteKey(event, i, repos, repo),
+                      child: IconButton(
+                        focusNode: FocusNode(canRequestFocus: false),
+                        focusColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        onPressed: () => _removeRepo(repo),
+                        icon: Icon(Icons.delete_outline_rounded,
+                            size: 18, color: colors.error),
+                      ),
+                    ),
+                  ),
+              ]),
+            ),
+          ),
+        );
       },
     );
-  }
-
-  Widget _buildRepoCard(Repo repo, {required bool isDeleting}) {
-    final colors = Theme.of(context).colorScheme;
-    String? host;
-    String path;
-    try {
-      final uri = Uri.parse(repo.url);
-      host = uri.host.isEmpty ? null : uri.host;
-      path = uri.path.isEmpty ? repo.url : uri.path;
-    } catch (_) {
-      path = repo.url;
-    }
-
-    return AnimatedOpacity(
-      opacity: isDeleting ? 0.4 : 1.0,
-      duration: const Duration(milliseconds: 200),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colors.surfaceContainerLow.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.outlineVariant.withOpacity(0.5)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                  color: colors.surfaceContainer,
-                  borderRadius: BorderRadius.circular(9)),
-              child: Icon(Icons.storage_outlined,
-                  size: 17, color: colors.onSurfaceVariant),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(path,
-                        style: TextStyle(
-                            fontSize: 12.5,
-                            fontFamily: 'monospace',
-                            color: colors.onSurface,
-                            fontWeight: FontWeight.w500),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis),
-                    if (host != null) ...[
-                      const SizedBox(height: 2),
-                      Text(host,
-                          style: TextStyle(
-                              fontSize: 11, color: colors.onSurfaceVariant)),
-                    ],
-                  ]),
-            ),
-            IconButton(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: repo.url));
-                snackBar('URL copied');
-              },
-              icon: Icon(Icons.copy_outlined,
-                  size: 18, color: colors.onSurfaceVariant),
-            ),
-            if (isDeleting)
-              Padding(
-                padding: const EdgeInsets.all(9),
-                child: SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: colors.error)),
-              )
-            else
-              IconButton(
-                onPressed: () => _removeRepo(repo),
-                icon: Icon(Icons.delete_outline_rounded,
-                    size: 18, color: colors.error),
-              ),
-          ]),
-        ),
-      ),
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    for (int i = 0; i < em.managers.length; i++) {
-      _managerFocusNodes.add(FocusNode());
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_managerFocusNodes.isNotEmpty) {
-        _managerFocusNodes[_managerIndex].requestFocus();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    for (final n in _managerFocusNodes) {
-      n.dispose();
-    }
-    _fabFocusNode.dispose();
-    _backFocusNode.dispose();
-    super.dispose();
   }
 }
 

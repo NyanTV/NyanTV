@@ -352,7 +352,7 @@ class _ExtensionScreenState extends State<ExtensionScreen>
                         excluding: _currentTabIndex.value != 0,
                         child: ExtensionList(
                           key: ValueKey(
-                              'anime_installed_${_selectedLanguage.value}_${sourceController.activeAnimeRepo}'),
+                              'anime_installed_${_selectedLanguage.value}_${sourceController.installedExtensions.length}'),
                           installed: true,
                           query: _textEditingController.text,
                           itemType: ItemType.anime,
@@ -366,7 +366,7 @@ class _ExtensionScreenState extends State<ExtensionScreen>
                         excluding: _currentTabIndex.value != 1,
                         child: ExtensionList(
                           key: ValueKey(
-                              'anime_available_${_selectedLanguage.value}_${sourceController.activeAnimeRepo}'),
+                              'anime_available_${_selectedLanguage.value}_${sourceController.availableExtensions.length}'),
                           installed: false,
                           query: _textEditingController.text,
                           itemType: ItemType.anime,
