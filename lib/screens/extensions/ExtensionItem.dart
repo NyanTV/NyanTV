@@ -12,6 +12,9 @@ import 'package:nyantv/widgets/custom_widgets/custom_expansion_tile.dart';
 import 'package:nyantv/widgets/header.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
+import 'package:dartotsu_extension_bridge/Services/Aniyomi/Models/Source.dart';
+import 'package:dartotsu_extension_bridge/Services/Sora/Models/Source.dart';
+import 'package:dartotsu_extension_bridge/Services/CloudStream/Models/CloudStreamSource.dart';
 import 'package:flutter/material.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
@@ -133,9 +136,14 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
             height: 42,
             width: 42,
             decoration: BoxDecoration(
-              color:
-                  (widget.source is MSource ? Colors.red : Colors.indigoAccent)
-                      .withValues(alpha: 0.4),
+              color: switch (widget.source) {
+                MSource _ => Colors.red,
+                ASource _ => Colors.indigoAccent,
+                CloudStreamSource _ => const Color(0xFF42A5F5),
+                SSource _ => const Color(0xFF8D6E63),
+                _ => Colors.indigoAccent,
+              }
+                  .withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Container(

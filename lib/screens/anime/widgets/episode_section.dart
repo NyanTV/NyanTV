@@ -192,6 +192,8 @@ class _EpisodeSectionState extends State<EpisodeSection> {
             ),
           ]
         : sourceController.installedExtensions.map<DropdownItem>((source) {
+            Logger.i(
+                'type: ${source.runtimeType}, icon: ${source.managerIcon}');
             return DropdownItem(
               value: source.id.toString(),
               text: source.name?.toUpperCase() ?? 'Unknown Source',

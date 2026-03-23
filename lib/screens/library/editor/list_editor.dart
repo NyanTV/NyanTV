@@ -2,6 +2,7 @@
 import 'dart:ui';
 import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
 import 'package:nyantv/models/Offline/Hive/offline_media.dart';
+import 'package:nyantv/utils/tv_text_field.dart';
 import 'package:nyantv/widgets/common/glow.dart';
 import 'package:nyantv/widgets/header.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
@@ -613,7 +614,7 @@ class _CustomListsEditorState extends State<CustomListsEditor> {
               style: TextStyle(
                   color: theme.colorScheme.onSurface,
                   fontWeight: FontWeight.w600)),
-          content: TextField(
+          content: TvTextField(
             controller: controller,
             focusNode: focusNode,
             style: TextStyle(color: theme.colorScheme.onSurface),
@@ -750,7 +751,7 @@ class _CustomListsEditorState extends State<CustomListsEditor> {
               style: TextStyle(
                   color: theme.colorScheme.onSurface,
                   fontWeight: FontWeight.w600)),
-          content: TextField(
+          content: TvTextField(
             controller: controller,
             focusNode: focusNode,
             style: TextStyle(color: theme.colorScheme.onSurface),

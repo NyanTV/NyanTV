@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:nyantv/utils/tv_text_field.dart';
 import 'package:nyantv/widgets/common/glow.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
@@ -18,6 +19,9 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
 
   int _managerIndex = 0;
   final Map<String, bool> _deleting = {};
+  final List<FocusNode> _managerFocusNodes = [];
+  final FocusNode _fabFocusNode = FocusNode();
+  final FocusNode _backFocusNode = FocusNode();
 
   Extension get _manager => em.managers[_managerIndex];
 
@@ -79,16 +83,56 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
             ),
           Expanded(child: _buildBody()),
         ]),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _openAddDialog,
-          icon: const Icon(Icons.add, size: 20),
-          label: const Text('Add Repo',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-          backgroundColor: theme.primary,
-          foregroundColor: theme.onPrimary,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        ),
+        floatingActionButton: Builder(builder: (context) {
+          return Focus(
+            focusNode: _fabFocusNode,
+            onFocusChange: (_) => setState(() {}),
+            onKey: (node, event) {
+              if (event is RawKeyDownEvent) {
+                if (event.logicalKey == LogicalKeyboardKey.arrowUp ||
+                    event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                  if (_managerFocusNodes.isNotEmpty) {
+                    _managerFocusNodes[_managerIndex].requestFocus();
+                  }
+                  return KeyEventResult.handled;
+                }
+                if (event.logicalKey == LogicalKeyboardKey.select ||
+                    event.logicalKey == LogicalKeyboardKey.enter) {
+                  _openAddDialog();
+                  return KeyEventResult.handled;
+                }
+              }
+              return KeyEventResult.ignored;
+            },
+            child: Builder(builder: (context) {
+              final hasFocus = Focus.of(context).hasFocus;
+              final theme = Theme.of(context).colorScheme;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: hasFocus
+                      ? Border.all(color: theme.secondary, width: 2)
+                      : Border.all(color: Colors.transparent, width: 2),
+                ),
+                child: FloatingActionButton.extended(
+                  focusNode: FocusNode(canRequestFocus: false),
+                  onPressed: _openAddDialog,
+                  icon: const Icon(Icons.add, size: 20),
+                  label: const Text('Add Repo',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  backgroundColor: theme.primary,
+                  foregroundColor: theme.onPrimary,
+                  focusColor: Colors.transparent,
+                  focusElevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+              );
+            }),
+          );
+        }),
       ),
     );
   }
@@ -118,80 +162,114 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
 
   Widget _buildManagerBar(ColorScheme colors) {
     final managers = em.managers;
-    final total = managers.length;
-    final alignX = total > 1 ? -1.0 + (2.0 * _managerIndex / (total - 1)) : 0.0;
 
-    return Container(
+    return SizedBox(
       height: 46,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.outline.withOpacity(0.1)),
-      ),
-      child: Stack(children: [
-        AnimatedAlign(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutQuint,
-          alignment: Alignment(alignX, 0),
-          child: FractionallySizedBox(
-            widthFactor: 1 / total,
-            heightFactor: 1,
-            child: Container(
-              decoration: BoxDecoration(
-                color: colors.secondary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
-        Row(
-          children: managers.asMap().entries.map((e) {
-            final selected = _managerIndex == e.key;
-            return Expanded(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  if (!selected) {
+      child: Row(
+        children: managers.asMap().entries.map((e) {
+          final selected = _managerIndex == e.key;
+          final focusNode = e.key < _managerFocusNodes.length
+              ? _managerFocusNodes[e.key]
+              : FocusNode();
+
+          return Expanded(
+            child: Focus(
+              focusNode: focusNode,
+              onFocusChange: (_) => setState(() {}),
+              onKey: (node, event) {
+                if (event is RawKeyDownEvent) {
+                  if (event.logicalKey == LogicalKeyboardKey.select ||
+                      event.logicalKey == LogicalKeyboardKey.enter) {
                     HapticFeedback.lightImpact();
                     setState(() => _managerIndex = e.key);
+                    return KeyEventResult.handled;
                   }
-                },
-                child: AnimatedOpacity(
-                  opacity: selected ? 1.0 : 0.6,
+                  if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                    _fabFocusNode.requestFocus();
+                    return KeyEventResult.handled;
+                  }
+                  if (event.logicalKey == LogicalKeyboardKey.arrowRight &&
+                      e.key == managers.length - 1) {
+                    _fabFocusNode.requestFocus();
+                    return KeyEventResult.handled;
+                  }
+                }
+                return KeyEventResult.ignored;
+              },
+              child: Builder(builder: (context) {
+                final hasFocus = Focus.of(context).hasFocus;
+                return AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.extension_outlined,
-                          size: 14,
-                          color: selected
-                              ? colors.onSecondary
-                              : colors.onSurfaceVariant),
-                      const SizedBox(width: 5),
-                      Flexible(
-                        child: Text(
-                          e.value.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight:
-                                selected ? FontWeight.w700 : FontWeight.w400,
-                            color: selected
-                                ? colors.onSecondary
-                                : colors.onSurfaceVariant,
-                          ),
+                  margin: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? colors.secondary
+                        : hasFocus
+                            ? colors.secondary.withOpacity(0.15)
+                            : colors.surfaceContainerHighest.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(16),
+                    border: hasFocus
+                        ? Border.all(
+                            color:
+                                selected ? colors.onSecondary : colors.primary,
+                            width: 2,
+                          )
+                        : Border.all(color: colors.outline.withOpacity(0.1)),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      focusColor: Colors.transparent,
+                      hoverColor: Colors.transparent,
+                      splashColor: colors.secondary.withOpacity(0.2),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        setState(() => _managerIndex = e.key);
+                      },
+                      child: Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.extension_outlined,
+                              size: 14,
+                              color: selected
+                                  ? colors.onSecondary
+                                  : colors.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 5),
+                            Flexible(
+                              child: Text(
+                                e.value.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: selected
+                                      ? FontWeight.w700
+                                      : FontWeight.w400,
+                                  color: selected
+                                      ? colors.onSecondary
+                                      : colors.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ]),
+                );
+              }),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -323,6 +401,29 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
       ),
     );
   }
+
+  @override
+  void initState() {
+    super.initState();
+    for (int i = 0; i < em.managers.length; i++) {
+      _managerFocusNodes.add(FocusNode());
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_managerFocusNodes.isNotEmpty) {
+        _managerFocusNodes[_managerIndex].requestFocus();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    for (final n in _managerFocusNodes) {
+      n.dispose();
+    }
+    _fabFocusNode.dispose();
+    _backFocusNode.dispose();
+    super.dispose();
+  }
 }
 
 class _AddRepoDialog extends StatefulWidget {
@@ -397,7 +498,7 @@ class _AddRepoDialogState extends State<_AddRepoDialog> {
             ),
           ]),
           const SizedBox(height: 18),
-          TextField(
+          TvTextField(
             controller: _ctrl,
             autofocus: true,
             maxLines: 2,

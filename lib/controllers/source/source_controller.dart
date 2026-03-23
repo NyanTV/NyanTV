@@ -16,8 +16,6 @@ import 'package:nyantv/utils/function.dart';
 import 'package:nyantv/utils/storage_provider.dart';
 import 'package:nyantv/widgets/common/search_bar.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
-import 'package:dartotsu_extension_bridge/Services/Aniyomi/AniyomiExtensions.dart';
-import 'package:dartotsu_extension_bridge/Services/Mangayomi/MangayomiExtensions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
@@ -90,7 +88,6 @@ class SourceController extends GetxController implements BaseService {
   @override
   void onInit() {
     super.onInit();
-    ever(installedExtensions, (_) => _scheduleRebuild());
     _initialize();
   }
 
@@ -110,6 +107,20 @@ class SourceController extends GetxController implements BaseService {
   void _initialize() async {
     isar = await StorageProvider().initDB(null);
     await DartotsuExtensionBridge().init(isar, 'NyanTV');
+
+    final em = Get.find<ExtensionManager>();
+    ever(em.installedAnimeExtensions, (list) {
+      installedExtensions.value = list;
+      installedDownloaderExtensions.value =
+          list.where((e) => e.name?.contains('Downloader') ?? false).toList();
+      _refreshVisibility();
+      if (_homeReady) _syncSections();
+    });
+
+    ever(em.availableAnimeExtensions, (list) {
+      availableExtensions.value = list;
+    });
+
     await initExtensions();
     if (Get.find<ServiceHandler>().serviceType.value ==
         ServicesType.extensions) {
@@ -142,8 +153,8 @@ class SourceController extends GetxController implements BaseService {
 
   Future<void> sortAnimeExtensions() async {
     final em = Get.find<ExtensionManager>();
-    installedExtensions.value = em.installedAnimeExtensions;
-    availableExtensions.value = em.availableAnimeExtensions;
+    installedExtensions.value = em.installedAnimeExtensions.value;
+    availableExtensions.value = em.availableAnimeExtensions.value;
     installedDownloaderExtensions.value = installedExtensions
         .where((e) => e.name?.contains('Downloader') ?? false)
         .toList();
