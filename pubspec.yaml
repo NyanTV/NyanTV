@@ -42,7 +42,7 @@ dependencies:
   dartotsu_extension_bridge:
     git:
       url: https://github.com/NyanTV/DartotsuExtensionBridge.git
-      ref: d5c5666
+      ref: eb197f2
   outlined_text: ^1.0.1
   media_kit:
     git:
@@ -85,8 +85,8 @@ dependencies:
   rxdart: any
   ffi: any
   win32: any
-  isar_community: ^3.3.0-dev.3
-  isar_community_flutter_libs: ^3.3.0-dev.3
+  isar_community: 3.3.2
+  isar_community_flutter_libs: 3.3.2
   sensors_plus: ^7.0.0
   flutter_discord_rpc_fork:
     git:
