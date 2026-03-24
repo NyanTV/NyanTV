@@ -339,6 +339,25 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
       skipTraversal: settings.isTV.value,
     );
 
+    ever(isBackButtonPressed, (pressed) {
+      if (pressed && mounted) {
+        isBackButtonPressed.value = false;
+
+        if (isEpisodeDialogOpen.value) {
+          isEpisodeDialogOpen.value = false;
+          _menuInteractionPaused = false;
+          _startHideControlsTimer();
+        } else if (showControls.value) {
+          toggleControls(val: false);
+        } else if (!isLocked.value) {
+          if (widget.shouldTrack) {
+            discordRPC.updateMediaPresence(media: anilistData.value);
+          }
+          Get.back();
+        }
+      }
+    });
+
     ever(showControls, (controlsVisible) {
       if (!settings.isTV.value || !mounted) return;
       final generation = ++_focusGeneration;
@@ -1585,6 +1604,12 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
               _menuInteractionPaused = false;
               _startHideControlsTimer();
               return;
+            }
+            if (!isLocked.value) {
+              if (widget.shouldTrack) {
+                discordRPC.updateMediaPresence(media: anilistData.value);
+              }
+              Get.back();
             }
 
             if (settings.isTV.value && showControls.value) {

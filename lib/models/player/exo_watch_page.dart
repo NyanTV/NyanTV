@@ -362,6 +362,25 @@ class _ExoWatchPageState extends State<ExoWatchPage>
       }
     });
 
+    ever(isBackButtonPressed, (pressed) {
+      if (pressed && mounted) {
+        isBackButtonPressed.value = false;
+
+        if (isEpisodeDialogOpen.value) {
+          isEpisodeDialogOpen.value = false;
+          _menuInteractionPaused = false;
+          _startHideControlsTimer();
+        } else if (showControls.value) {
+          toggleControls(val: false);
+        } else if (!isLocked.value) {
+          if (widget.shouldTrack) {
+            discordRPC.updateMediaPresence(media: anilistData.value);
+          }
+          Get.back();
+        }
+      }
+    });
+
     ever(isBuffering, (buffering) {
       if (showControls.value && !buffering) {
         _startHideControlsTimer();
@@ -1174,6 +1193,12 @@ class _ExoWatchPageState extends State<ExoWatchPage>
               _menuInteractionPaused = false;
               _startHideControlsTimer();
               return;
+            }
+            if (!isLocked.value) {
+              if (widget.shouldTrack) {
+                discordRPC.updateMediaPresence(media: anilistData.value);
+              }
+              Get.back();
             }
             if (settings.isTV.value && showControls.value) {
               toggleControls(val: false);

@@ -65,6 +65,7 @@ final _isInExcludedScreen = false.obs;
 final _isInDVDMode = false.obs;
 final isAnimePageActive = false.obs;
 final RxBool isWelcomeDialogOpen = false.obs;
+final RxBool isBackButtonPressed = false.obs;
 Timer? _autoIdleTimer;
 
 bool get isInDVDMode => _isInDVDMode.value;
@@ -73,6 +74,11 @@ DateTime? _lastBackPress;
 
 void handleAppBack() {
   if (isWelcomeDialogOpen.value) return;
+
+  if (_isInExcludedScreen.value) {
+    isBackButtonPressed.value = true;
+    return;
+  }
 
   if (!Get.key.currentState!.canPop()) {
     final now = DateTime.now();
