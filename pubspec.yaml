@@ -42,7 +42,7 @@ dependencies:
   dartotsu_extension_bridge:
     git:
       url: https://github.com/NyanTV/DartotsuExtensionBridge.git
-      ref: 0e69c3e
+      ref: d5c5666
   outlined_text: ^1.0.1
   media_kit:
     git:
