@@ -75,7 +75,7 @@ dependencies:
   preload_page_view: ^0.2.0
   archive: any
   image: any
-  flutter_widget_from_html: ^0.17.0
+  flutter_widget_from_html: ^0.15.3
   timeago: ^3.7.1
   flutter_staggered_animations: ^1.1.1
   material_symbols_icons: ^4.2867.0
