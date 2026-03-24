@@ -372,6 +372,12 @@ class Settings extends GetxController {
   set markAsCompleted(int value) =>
       _setPlayerSetting((s) => s?.markAsCompleted = value);
 
+  String get playerEngine =>
+      preferences.get('player_engine', defaultValue: 'libmpv') as String;
+  set playerEngine(String value) {
+    if (_isInitialized) preferences.put('player_engine', value);
+  }
+
   void updateHomePageCard(String key, bool value) {
     final currentCards = Map<String, bool>.from(uiSettings.value.homePageCards);
     currentCards[key] = value;

@@ -31,12 +31,15 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
   Rx<Color> outlineColor = Colors.black.obs;
   final styles = ['Regular', 'Accent', 'Blurred Accent'];
   final selectedStyleIndex = 0.obs;
+  final engines = ['libmpv', 'exoplayer'];
+  late RxString selectedEngine;
 
   @override
   void initState() {
     super.initState();
     speed.value = settings.speed;
     selectedStyleIndex.value = settings.playerStyle;
+    selectedEngine = settings.playerEngine.obs;
   }
 
   String numToPlayerStyle(int i) {
@@ -45,6 +48,20 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
 
   int styleToNum(String i) {
     return styles.indexOf(i);
+  }
+
+  void showPlayerEngineDialog() {
+    showSelectionDialog<String>(
+      title: 'Player Engine',
+      items: engines,
+      selectedItem: selectedEngine,
+      getTitle: (e) => e == 'libmpv' ? 'LibMPV' : 'ExoPlayer',
+      onItemSelected: (e) {
+        settings.playerEngine = e;
+        selectedEngine.value = e;
+      },
+      leadingIcon: Icons.video_settings_rounded,
+    );
   }
 
   void _showPlaybackSpeedDialog() {
@@ -116,7 +133,8 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
     final currentFit = settings.resizeMode;
     final selectedLabel = resizeModeList.firstWhere(
       (lbl) =>
-          (resizeModes[lbl]?.name.toLowerCase() ?? '') == currentFit.toLowerCase(),
+          (resizeModes[lbl]?.name.toLowerCase() ?? '') ==
+          currentFit.toLowerCase(),
       orElse: () => resizeModeList.first,
     );
 
@@ -227,6 +245,18 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                 descColor:
                                     Theme.of(context).colorScheme.primary,
                                 isDescBold: true,
+                                icon: Icons.video_settings_rounded,
+                                onTap: showPlayerEngineDialog,
+                                title: "Player Engine",
+                                description: selectedEngine.value == 'libmpv'
+                                    ? 'LibMPV'
+                                    : 'ExoPlayer',
+                              ),
+                              CustomTile(
+                                padding: 10,
+                                descColor:
+                                    Theme.of(context).colorScheme.primary,
+                                isDescBold: true,
                                 icon: HugeIcons.strokeRoundedPlaySquare,
                                 onTap: () => showPlayerStyleDialog(),
                                 title: "Player Theme",
@@ -250,7 +280,8 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                 icon: Icons.aspect_ratio,
                                 title: 'Resize Mode',
                                 isDescBold: true,
-                                description: settings.resizeMode.capitalizeFirst!,
+                                description:
+                                    settings.resizeMode.capitalizeFirst!,
                                 descColor:
                                     Theme.of(context).colorScheme.primary,
                                 onTap: () {
@@ -285,8 +316,7 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                   padding: const EdgeInsets.all(10),
                                   icon: Icons.fast_forward_outlined,
                                   title: "Auto Skip Recap",
-                                  description:
-                                      "Auto skip the recap section",
+                                  description: "Auto skip the recap section",
                                   switchValue: settings.autoSkipRecap,
                                   onChanged: (val) =>
                                       settings.autoSkipRecap = val),
@@ -399,7 +429,9 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                 onTap: () {
                                   _showColorSelectionDialog(
                                     'Select Subtitle Background Color',
-                                    colorOptions[settings.subtitleBackgroundColor] ?? Colors.transparent,
+                                    colorOptions[
+                                            settings.subtitleBackgroundColor] ??
+                                        Colors.transparent,
                                     (color) {
                                       settings.subtitleBackgroundColor = color;
                                     },
@@ -446,46 +478,49 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                           fontWeight: FontWeight.w600),
                                     ),
                                     const SizedBox(height: 10),
-
                                     Focus(
                                       child: Builder(
                                         builder: (context) {
-                                          final isFocused = Focus.of(context).hasFocus;
+                                          final isFocused =
+                                              Focus.of(context).hasFocus;
                                           return Container(
-                                              alignment: Alignment.center,
-                                              decoration: BoxDecoration(
-                                                  color: colorOptions[settings
-                                                      .subtitleBackgroundColor],
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                  border: isFocused
-                                                        ? Border.all(
-                                                            color: Theme.of(context).colorScheme.primary,
-                                                            width: 2.0,
-                                                          )
-                                                        : null,
-                                              ),
-                                              padding: const EdgeInsets.all(10),
-                                              child: OutlinedText(
-                                                text: Text(
-                                                  'Subtitle Preview Text',
-                                                  style: TextStyle(
-                                                    color: colorOptions[
-                                                        settings.subtitleColor],
-                                                    fontSize: settings.subtitleSize
-                                                        .toDouble(),
-                                                  ),
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: colorOptions[settings
+                                                  .subtitleBackgroundColor],
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: isFocused
+                                                  ? Border.all(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                      width: 2.0,
+                                                    )
+                                                  : null,
+                                            ),
+                                            padding: const EdgeInsets.all(10),
+                                            child: OutlinedText(
+                                              text: Text(
+                                                'Subtitle Preview Text',
+                                                style: TextStyle(
+                                                  color: colorOptions[
+                                                      settings.subtitleColor],
+                                                  fontSize: settings
+                                                      .subtitleSize
+                                                      .toDouble(),
                                                 ),
-                                                strokes: [
-                                                  OutlinedTextStroke(
-                                                      color: fontColorOptions[settings
-                                                          .subtitleOutlineColor]!,
-                                                      width: settings
-                                                          .subtitleOutlineWidth
-                                                          .toDouble())
-                                                ],
                                               ),
-                                            );
+                                              strokes: [
+                                                OutlinedTextStroke(
+                                                    color: fontColorOptions[settings
+                                                        .subtitleOutlineColor]!,
+                                                    width: settings
+                                                        .subtitleOutlineWidth
+                                                        .toDouble())
+                                              ],
+                                            ),
+                                          );
                                         },
                                       ),
                                     ),

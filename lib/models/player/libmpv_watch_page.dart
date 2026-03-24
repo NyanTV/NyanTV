@@ -51,14 +51,14 @@ import 'package:nyantv/controllers/discord/discord_rpc.dart';
 import 'package:nyantv/main.dart';
 import 'package:nyantv/controllers/tv/tv_watch_next_service.dart';
 
-class WatchPage extends StatefulWidget {
+class LibmpvWatchPage extends StatefulWidget {
   final model.Video episodeSrc;
   final Episode currentEpisode;
   final List<Episode> episodeList;
   final nyantv.Media anilistData;
   final List<model.Video> episodeTracks;
   final bool shouldTrack;
-  const WatchPage(
+  const LibmpvWatchPage(
       {super.key,
       required this.episodeSrc,
       required this.episodeList,
@@ -68,7 +68,7 @@ class WatchPage extends StatefulWidget {
       required this.episodeTracks});
 
   @override
-  State<WatchPage> createState() => _WatchPageState();
+  State<LibmpvWatchPage> createState() => _LibmpvWatchPageState();
 }
 
 class _ActiveSkip {
@@ -80,7 +80,7 @@ class _ActiveSkip {
 
 final Rx<_ActiveSkip?> activeSkip = Rx<_ActiveSkip?>(null);
 
-class _WatchPageState extends State<WatchPage>
+class _LibmpvWatchPageState extends State<LibmpvWatchPage>
     with TickerProviderStateMixin, TVScrollMixin, WidgetsBindingObserver {
   late Rx<model.Video> episode;
   late Rx<Episode> currentEpisode;

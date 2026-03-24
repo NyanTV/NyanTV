@@ -9,6 +9,11 @@ import 'package:nyantv/models/Offline/Hive/episode.dart';
 import 'package:nyantv/models/Offline/Hive/offline_media.dart';
 import 'package:nyantv/models/models_convertor/carousel/carousel_data.dart';
 import 'package:nyantv/models/models_convertor/carousel_mapper.dart';
+import 'package:nyantv/models/player/exo_watch_page.dart';
+import 'package:nyantv/models/player/libmpv_watch_page.dart';
+import 'package:nyantv/models/Offline/Hive/video.dart' as model;
+import 'package:nyantv/models/Media/media.dart' as nyantv;
+import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -364,4 +369,34 @@ String getRandomTag({String? addition}) {
     return '$addition-${DateTime.now().millisecond}';
   }
   return DateTime.now().millisecond.toString();
+}
+
+void navigateToPlayer({
+  required model.Video episodeSrc,
+  required List<Episode> episodeList,
+  required nyantv.Media anilistData,
+  required Episode currentEpisode,
+  required List<model.Video> episodeTracks,
+  bool shouldTrack = true,
+}) {
+  final engine = Get.find<Settings>().playerEngine;
+  if (engine == 'exoplayer') {
+    navigate(() => ExoWatchPage(
+          episodeSrc: episodeSrc,
+          episodeList: episodeList,
+          anilistData: anilistData,
+          currentEpisode: currentEpisode,
+          shouldTrack: shouldTrack,
+          episodeTracks: episodeTracks,
+        ));
+  } else {
+    navigate(() => LibmpvWatchPage(
+          episodeSrc: episodeSrc,
+          episodeList: episodeList,
+          anilistData: anilistData,
+          currentEpisode: currentEpisode,
+          shouldTrack: shouldTrack,
+          episodeTracks: episodeTracks,
+        ));
+  }
 }

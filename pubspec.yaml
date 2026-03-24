@@ -92,6 +92,7 @@ dependencies:
     git:
       url: https://github.com/Schnitzel5/flutter-discord-rpc.git
       ref: main
+  better_player_plus: any
 dev_dependencies:
   build_runner: ^2.4.11
   change_app_package_name: ^1.4.0

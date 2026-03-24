@@ -9,7 +9,6 @@ import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
 import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:nyantv/models/Media/media.dart';
 import 'package:nyantv/models/Offline/Hive/episode.dart';
-import 'package:nyantv/screens/anime/watch_page.dart';
 import 'package:nyantv/screens/anime/widgets/episode/normal_episode.dart';
 import 'package:nyantv/screens/anime/widgets/episode_range.dart';
 import 'package:nyantv/screens/anime/widgets/track_dialog.dart';
@@ -417,27 +416,27 @@ class _EpisodeListBuilderState extends State<EpisodeListBuilder> {
               onTap: () async {
                 Get.back();
                 if (General.shouldAskForTrack.get(true) == false) {
-                  navigate(() => WatchPage(
-                        episodeSrc: e,
-                        episodeList: widget.episodeList,
-                        anilistData: widget.anilistData!,
-                        currentEpisode: selectedEpisode.value,
-                        episodeTracks: streamList,
-                        shouldTrack: true,
-                      ));
+                  navigateToPlayer(
+                    episodeSrc: e,
+                    episodeList: widget.episodeList,
+                    anilistData: widget.anilistData!,
+                    currentEpisode: selectedEpisode.value,
+                    episodeTracks: streamList,
+                    shouldTrack: true,
+                  );
                   return;
                 }
                 final shouldTrack = await showTrackingDialog(context);
 
                 if (shouldTrack != null) {
-                  navigate(() => WatchPage(
-                        episodeSrc: e,
-                        episodeList: widget.episodeList,
-                        anilistData: widget.anilistData!,
-                        currentEpisode: selectedEpisode.value,
-                        episodeTracks: streamList,
-                        shouldTrack: shouldTrack,
-                      ));
+                  navigateToPlayer(
+                    episodeSrc: e,
+                    episodeList: widget.episodeList,
+                    anilistData: widget.anilistData!,
+                    currentEpisode: selectedEpisode.value,
+                    episodeTracks: streamList,
+                    shouldTrack: shouldTrack,
+                  );
                 }
               },
               child: Padding(
