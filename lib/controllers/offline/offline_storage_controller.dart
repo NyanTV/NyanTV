@@ -22,7 +22,6 @@ class OfflineStorageController extends GetxController {
   late Box storage;
 
   bool _isUpdating = false;
-  TvWatchNextService? _tvWatchNext;
 
   @override
   Future<void> onInit() async {
@@ -38,16 +37,6 @@ class OfflineStorageController extends GetxController {
       storage = await Hive.openBox('storage');
       _loadLibraries();
     }
-    
-    // Try to get TvWatchNextService if it exists (only on Android TV)
-    if (Platform.isAndroid) {
-      try {
-        _tvWatchNext = Get.find<TvWatchNextService>();
-        Logger.i('TvWatchNextService connected to OfflineStorageController');
-      } catch (e) {
-        Logger.i('TvWatchNextService not available (not Android TV)');
-      }
-    }
   }
 
   void _loadLibraries() {
@@ -62,7 +51,8 @@ class OfflineStorageController extends GetxController {
     if (savedLists != null && savedLists.isNotEmpty) {
       animeCustomLists.value.assignAll(savedLists);
     } else {
-      animeCustomLists.value.assignAll([CustomList(listName: 'Default', mediaIds: [])]);
+      animeCustomLists.value
+          .assignAll([CustomList(listName: 'Default', mediaIds: [])]);
       _saveLibraries();
     }
 
@@ -324,7 +314,7 @@ class OfflineStorageController extends GetxController {
     if (!_isUpdating) {
       _refreshListData();
     }
-    
+
     // Update TV Watch Next
     _updateTvWatchNext();
   }
@@ -352,17 +342,19 @@ class OfflineStorageController extends GetxController {
           'Anime with ID: $animeId not found. Unable to add/update episode.');
     }
     _saveLibraries();
-    
+
     // Update TV Watch Next
     _updateTvWatchNext();
   }
-  
+
   void _updateTvWatchNext() {
-    if (_tvWatchNext != null && !_isUpdating) {
+    if (!Platform.isAndroid || _isUpdating) return;
+    try {
+      final tvWatchNext = Get.find<TvWatchNextService>();
       Future.delayed(const Duration(milliseconds: 500), () {
-        _tvWatchNext!.updateWatchNext();
+        tvWatchNext.updateWatchNext();
       });
-    }
+    } catch (_) {}
   }
 
   OfflineMedia _createOfflineMedia(
@@ -399,18 +391,18 @@ class OfflineStorageController extends GetxController {
         serviceIndex: handler.serviceType.value.index);
   }
 
-void _saveLibraries() {
-  final updatedStorage = OfflineStorage(
-      animeLibrary: animeLibrary.toList(),
-      animeCustomList: animeCustomLists.value);
+  void _saveLibraries() {
+    final updatedStorage = OfflineStorage(
+        animeLibrary: animeLibrary.toList(),
+        animeCustomList: animeCustomLists.value);
 
-  try {
-    _offlineStorageBox.put('storage', updatedStorage);
-    Logger.i("Anime Successfully Saved!");
-  } catch (e) {
-    Logger.i('Error saving libraries: $e');
+    try {
+      _offlineStorageBox.put('storage', updatedStorage);
+      Logger.i("Anime Successfully Saved!");
+    } catch (e) {
+      Logger.i('Error saving libraries: $e');
+    }
   }
-}
 
   OfflineMedia? getAnimeById(String id) {
     return animeLibrary.firstWhereOrNull((anime) => anime.id == id);
