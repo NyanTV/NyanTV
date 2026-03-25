@@ -15,6 +15,7 @@ import 'package:nyantv/models/Offline/Hive/episode.dart';
 import 'package:nyantv/models/player/video_player_impl.dart';
 import 'package:nyantv/models/player/base_player.dart' as base_player;
 import 'package:nyantv/models/player/player_adaptor.dart';
+import 'package:nyantv/screens/anime/watch/controller/tv_remote_handler.dart';
 import 'package:nyantv/screens/anime/widgets/episode_watch_screen.dart';
 import 'package:nyantv/screens/anime/widgets/video_slider.dart';
 import 'package:nyantv/screens/settings/sub_settings/settings_player.dart';
@@ -168,6 +169,8 @@ class _ExoWatchPageState extends State<ExoWatchPage>
   DateTime _lastUIUpdate = DateTime.now();
   final prevRate = 1.0.obs;
 
+  late TVRemoteHandler? _tvRemoteHandler;
+
   bool get isMobile =>
       !settings.isTV.value && (Platform.isAndroid || Platform.isIOS);
 
@@ -310,6 +313,72 @@ class _ExoWatchPageState extends State<ExoWatchPage>
       skipTraversal: settings.isTV.value,
     );
 
+    if (settings.isTV.value) {
+      _tvRemoteHandler = TVRemoteHandler(
+        player: null,
+        context: context,
+        seekDuration: settings.seekDuration,
+        onSeek: (duration) {
+          _betterPlayer.seek(duration);
+          currentPosition.value = duration;
+          formattedTime.value = formatDuration(duration);
+        },
+        onToggleMenu: () {
+          if (isEpisodeDialogOpen.value) {
+            isEpisodeDialogOpen.value = false;
+            _menuInteractionPaused = false;
+            _startHideControlsTimer();
+            return;
+          }
+          toggleControls();
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (mounted) {
+              if (showControls.value) {
+                if (_keyboardListenerFocusNode.hasFocus) {
+                  _keyboardListenerFocusNode.unfocus();
+                }
+              } else {
+                FocusScope.of(context).requestFocus(_keyboardListenerFocusNode);
+              }
+            }
+          });
+        },
+        onExitPlayer: () {
+          if (isEpisodeDialogOpen.value) {
+            isEpisodeDialogOpen.value = false;
+            _menuInteractionPaused = false;
+            _startHideControlsTimer();
+            return;
+          }
+          Get.back();
+        },
+        getCurrentPosition: () => currentPosition.value,
+        getVideoDuration: () => episodeDuration.value,
+        isMenuVisible: () => showControls.value,
+        isLocked: () => isLocked.value,
+        onPlayPause: () => _betterPlayer.playOrPause(),
+        onNextEpisode: () {
+          if (currentEpisode.value.number.toInt() <
+              episodeList.value.last.number.toInt()) {
+            isSwitchingEpisode = true;
+            _betterPlayer.pause();
+            fetchEpisode(false);
+          }
+        },
+        onPreviousEpisode: () {
+          if (currentEpisode.value.number.toInt() > 1) {
+            isSwitchingEpisode = true;
+            _betterPlayer.pause();
+            fetchEpisode(true);
+          }
+        },
+        onSkipSegments: (isLeft, amount) => _skipSegmentsTV(isLeft, amount),
+        onMenuInteraction: () => _startHideControlsTimer(),
+      );
+    } else {
+      _tvRemoteHandler = null;
+    }
+
     ever(showControls, (controlsVisible) {
       if (!settings.isTV.value || !mounted) return;
       final generation = ++_focusGeneration;
@@ -365,7 +434,6 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     ever(isBackButtonPressed, (pressed) {
       if (pressed && mounted) {
         isBackButtonPressed.value = false;
-
         if (isEpisodeDialogOpen.value) {
           isEpisodeDialogOpen.value = false;
           _menuInteractionPaused = false;
@@ -1054,63 +1122,12 @@ class _ExoWatchPageState extends State<ExoWatchPage>
   }
 
   KeyEventResult handlePlayerKeyEvent(FocusNode node, KeyEvent e) {
+    if (settings.isTV.value) {
+      return _tvRemoteHandler!.handleKeyEvent(node, e);
+    }
+
     if (e is! KeyDownEvent) return KeyEventResult.ignored;
     final key = e.logicalKey;
-
-    if (settings.isTV.value) {
-      if (key == LogicalKeyboardKey.select || key == LogicalKeyboardKey.enter) {
-        if (!showControls.value) {
-          toggleControls(val: true);
-          return KeyEventResult.handled;
-        }
-        _betterPlayer.playOrPause();
-        _startHideControlsTimer();
-        return KeyEventResult.handled;
-      }
-      if (key == LogicalKeyboardKey.arrowLeft && showControls.value) {
-        final newPos = Duration(
-            seconds: (currentPosition.value.inSeconds - settings.seekDuration)
-                .clamp(0, episodeDuration.value.inSeconds));
-        _betterPlayer.seek(newPos);
-        currentPosition.value = newPos;
-        formattedTime.value = formatDuration(newPos);
-        _skipSegmentsTV(true, settings.seekDuration);
-        _startHideControlsTimer();
-        return KeyEventResult.handled;
-      }
-      if (key == LogicalKeyboardKey.arrowRight && showControls.value) {
-        final newPos = Duration(
-            seconds: (currentPosition.value.inSeconds + settings.seekDuration)
-                .clamp(0, episodeDuration.value.inSeconds));
-        _betterPlayer.seek(newPos);
-        currentPosition.value = newPos;
-        formattedTime.value = formatDuration(newPos);
-        _skipSegmentsTV(false, settings.seekDuration);
-        _startHideControlsTimer();
-        return KeyEventResult.handled;
-      }
-      if (key == LogicalKeyboardKey.arrowUp ||
-          key == LogicalKeyboardKey.arrowDown) {
-        toggleControls();
-        return KeyEventResult.handled;
-      }
-      if (key == LogicalKeyboardKey.goBack ||
-          key == LogicalKeyboardKey.escape) {
-        if (isEpisodeDialogOpen.value) {
-          isEpisodeDialogOpen.value = false;
-          _menuInteractionPaused = false;
-          _startHideControlsTimer();
-          return KeyEventResult.handled;
-        }
-        if (showControls.value) {
-          toggleControls(val: false);
-          return KeyEventResult.handled;
-        }
-        Get.back();
-        return KeyEventResult.handled;
-      }
-      return KeyEventResult.ignored;
-    }
 
     if (key == LogicalKeyboardKey.space) {
       _betterPlayer.playOrPause();
@@ -1162,6 +1179,8 @@ class _ExoWatchPageState extends State<ExoWatchPage>
         discordRPC.updateMediaPresence(media: anilistData.value);
       } catch (e) {}
     }
+    _tvRemoteHandler?.dispose();
+    _tvRemoteHandler = null;
     _betterPlayer.dispose();
     _leftAnimationController.dispose();
     _rightAnimationController.dispose();

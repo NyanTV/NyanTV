@@ -7,7 +7,7 @@ import 'package:media_kit/media_kit.dart';
 /// TV Remote D-Pad handler for video playback
 /// Implements menu-state-driven behavior with enhanced features
 class TVRemoteHandler {
-  final Player player;
+  final Player? player;
   final Function(Duration) onSeek;
   final Function() onToggleMenu;
   final Function() onExitPlayer;
@@ -51,7 +51,7 @@ class TVRemoteHandler {
 
   int get _currentSeekIncrement {
     if (_holdTickCount >= 10) return (shortPressSeekSeconds * 2.5).round();
-    if (_holdTickCount >= 4)  return (shortPressSeekSeconds * 1.5).round();
+    if (_holdTickCount >= 4) return (shortPressSeekSeconds * 1.5).round();
     return shortPressSeekSeconds;
   }
 
@@ -110,8 +110,7 @@ class TVRemoteHandler {
       }
 
       // Enter/Select activates focused item
-      if (key == LogicalKeyboardKey.select ||
-          key == LogicalKeyboardKey.enter) {
+      if (key == LogicalKeyboardKey.select || key == LogicalKeyboardKey.enter) {
         return false; // Allow Flutter to handle activation
       }
 
@@ -127,17 +126,14 @@ class TVRemoteHandler {
     }
     // Menu hidden state - Playback controls active
 
-    
     // Select/Enter opens menu
-    if (key == LogicalKeyboardKey.select ||
-        key == LogicalKeyboardKey.enter) {
+    if (key == LogicalKeyboardKey.select || key == LogicalKeyboardKey.enter) {
       onToggleMenu(); // Open menu
       return true;
     }
 
     // Back/Escape exits player
-    if (key == LogicalKeyboardKey.goBack ||
-        key == LogicalKeyboardKey.escape) {
+    if (key == LogicalKeyboardKey.goBack || key == LogicalKeyboardKey.escape) {
       onExitPlayer(); // Exit player
       return true;
     }
@@ -203,7 +199,7 @@ class TVRemoteHandler {
 
   void _handleFocusNavigation(LogicalKeyboardKey key) {
     final focusScope = FocusScope.of(context);
-    
+
     switch (key) {
       case LogicalKeyboardKey.arrowLeft:
         focusScope.focusInDirection(TraversalDirection.left);
@@ -225,7 +221,8 @@ class TVRemoteHandler {
   void _handleSeek(SeekDirection direction) {
     // Use the skip segments function if available (for visual feedback)
     if (onSkipSegments != null) {
-      onSkipSegments!(direction == SeekDirection.backward, shortPressSeekSeconds);
+      onSkipSegments!(
+          direction == SeekDirection.backward, shortPressSeekSeconds);
       return;
     }
 
@@ -255,13 +252,16 @@ class TVRemoteHandler {
     _holdTickCount = 0;
     _accumulatedSeekSeconds = shortPressSeekSeconds;
 
-    onSkipSegments?.call(direction == SeekDirection.backward, _accumulatedSeekSeconds);
+    onSkipSegments?.call(
+        direction == SeekDirection.backward, _accumulatedSeekSeconds);
 
     _holdTimer = Timer(const Duration(seconds: 1), () {
-      _accelerationTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      _accelerationTimer =
+          Timer.periodic(const Duration(milliseconds: 500), (_) {
         _holdTickCount++;
         _accumulatedSeekSeconds += _currentSeekIncrement;
-        onSkipSegments?.call(direction == SeekDirection.backward, _accumulatedSeekSeconds);
+        onSkipSegments?.call(
+            direction == SeekDirection.backward, _accumulatedSeekSeconds);
       });
     });
   }
@@ -296,7 +296,6 @@ class TVRemoteHandler {
     _accelerationTimer?.cancel();
     _accelerationTimer = null;
   }
-
 }
 
 enum SeekDirection {

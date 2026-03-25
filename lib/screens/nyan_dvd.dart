@@ -373,6 +373,12 @@ class _DVDBounceLayerState extends State<_DVDBounceLayer>
   @override
   void initState() {
     super.initState();
+    ever(isBackButtonPressed, (pressed) {
+      if (pressed && mounted) {
+        isBackButtonPressed.value = false;
+        Get.back();
+      }
+    });
     _logoSize = widget.dvdMode ? 150.0 : 350.0;
 
     final rng = Random();
