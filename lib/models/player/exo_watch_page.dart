@@ -12,7 +12,7 @@ import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:nyantv/models/Media/media.dart' as nyantv;
 import 'package:nyantv/models/Offline/Hive/episode.dart';
-import 'package:nyantv/models/player/better_player_impl.dart';
+import 'package:nyantv/models/player/video_player_impl.dart';
 import 'package:nyantv/models/player/base_player.dart' as base_player;
 import 'package:nyantv/models/player/player_adaptor.dart';
 import 'package:nyantv/screens/anime/widgets/episode_watch_screen.dart';
@@ -463,7 +463,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
       if (mounted) setState(() {});
     }
 
-    _initSubs();
+    await _initSubs();
     await _betterPlayer.setRate(prevRate.value);
     isOPSkippedOnce.value = false;
     isEDSkippedOnce.value = false;
@@ -747,7 +747,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     prevRate.value = playerSettings.speed;
   }
 
-  void _initSubs() async {
+  Future<void> _initSubs() async {
     subtitles.clear();
     selectedSubIndex.value = 0;
     _betterPlayer.setSubtitleTrack(base_player.SubtitleTrack.no());
@@ -1416,30 +1416,23 @@ class _ExoWatchPageState extends State<ExoWatchPage>
           bottom: showControls.value ? 100 : (30 + settings.bottomMargin),
           child: Align(
             alignment: Alignment.bottomCenter,
-            child: AnimatedOpacity(
-              opacity: subtitleText[0].isEmpty ? 0.0 : 1.0,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: subtitleText[0].isEmpty
-                      ? Colors.transparent
-                      : colorOptions[settings.subtitleBackgroundColor],
-                  borderRadius: BorderRadius.circular(12.multiplyRadius()),
-                ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  switchInCurve: Curves.easeIn,
-                  switchOutCurve: Curves.easeOut,
+            child: Obx(() {
+              final lines = subtitleText
+                  .where((l) => l.trim().isNotEmpty)
+                  .map((l) => l.trim())
+                  .toList();
+              if (lines.isEmpty) return const SizedBox.shrink();
+              return RepaintBoundary(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: colorOptions[settings.subtitleBackgroundColor],
+                    borderRadius: BorderRadius.circular(12.multiplyRadius()),
+                  ),
                   child: OutlinedText(
                     text: Text(
-                      [
-                        for (final line in subtitleText)
-                          if (line.trim().isNotEmpty) line.trim(),
-                      ].join('\n'),
-                      key: ValueKey(subtitleText.join()),
+                      lines.join('\n'),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: fontColorOptions[settings.subtitleColor],
@@ -1449,14 +1442,14 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                     ),
                     strokes: [
                       OutlinedTextStroke(
-                          color:
-                              fontColorOptions[settings.subtitleOutlineColor]!,
-                          width: settings.subtitleOutlineWidth.toDouble())
+                        color: fontColorOptions[settings.subtitleOutlineColor]!,
+                        width: settings.subtitleOutlineWidth.toDouble(),
+                      )
                     ],
                   ),
                 ),
-              ),
-            ),
+              );
+            }),
           ),
         ));
   }
