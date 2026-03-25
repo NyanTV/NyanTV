@@ -1789,7 +1789,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
     );
   }
 
-  Obx _buildSubtitle() {
+  Widget _buildSubtitle() {
     return Obx(() => AnimatedPositioned(
           right: 0,
           left: 0,
@@ -1803,42 +1803,63 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
               opacity: subtitleText[0].isEmpty ? 0.0 : 1.0,
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: subtitleText[0].isEmpty
-                      ? Colors.transparent
-                      : colorOptions[settings.subtitleBackgroundColor],
-                  borderRadius: BorderRadius.circular(12.multiplyRadius()),
-                ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  switchInCurve: Curves.easeIn,
-                  switchOutCurve: Curves.easeOut,
-                  child: OutlinedText(
-                    text: Text(
-                      [
-                        for (final line in subtitleText)
-                          if (line.trim().isNotEmpty) line.trim(),
-                      ].join('\n'),
-                      key: ValueKey(subtitleText.join()),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: fontColorOptions[settings.subtitleColor],
-                        fontSize: settings.subtitleSize.toDouble(),
-                        fontFamily: "Poppins-Bold",
-                      ),
-                    ),
-                    strokes: [
-                      OutlinedTextStroke(
-                          color:
-                              fontColorOptions[settings.subtitleOutlineColor]!,
-                          width: settings.subtitleOutlineWidth.toDouble())
-                    ],
-                  ),
-                ),
-              ),
+              child: () {
+                final lines = [
+                  for (final line in subtitleText)
+                    if (line.trim().isNotEmpty) line.trim(),
+                ].join('\n');
+
+                if (lines.isEmpty) return const SizedBox.shrink();
+
+                final textColor =
+                    fontColorOptions[settings.subtitleColor] ?? Colors.white;
+                final outlineColorKey = settings.subtitleOutlineColor;
+                final outlineColor = outlineColorKey == 'Clear'
+                    ? Colors.transparent
+                    : fontColorOptions[outlineColorKey] ?? Colors.white;
+                final bgColor = colorOptions[settings.subtitleBackgroundColor];
+                final hasBackground =
+                    bgColor != null && bgColor != Colors.transparent;
+
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: hasBackground
+                      ? BoxDecoration(
+                          color: bgColor,
+                          borderRadius:
+                              BorderRadius.circular(12.multiplyRadius()),
+                        )
+                      : null,
+                  child: outlineColorKey == 'Clear'
+                      ? Text(
+                          lines,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: settings.subtitleSize.toDouble(),
+                            fontFamily: "Poppins-Bold",
+                          ),
+                        )
+                      : OutlinedText(
+                          text: Text(
+                            lines,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: settings.subtitleSize.toDouble(),
+                              fontFamily: "Poppins-Bold",
+                            ),
+                          ),
+                          strokes: [
+                            OutlinedTextStroke(
+                              color: outlineColor,
+                              width: settings.subtitleOutlineWidth.toDouble(),
+                            )
+                          ],
+                        ),
+                );
+              }(),
             ),
           ),
         ));

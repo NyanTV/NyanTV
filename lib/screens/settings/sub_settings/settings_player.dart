@@ -152,7 +152,14 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
   }
 
   void _showColorSelectionDialog(
-      String title, Color currentColor, Function(String) onColorSelected) {
+    String title,
+    Color currentColor,
+    Function(String) onColorSelected, {
+    bool includeClear = true,
+  }) {
+    final Map<String, Color> options =
+        includeClear ? colorOptions : fontColorOptions;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -169,7 +176,7 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
             width: double.maxFinite,
             child: SuperListView(
               physics: const BouncingScrollPhysics(),
-              children: colorOptions.entries.map((entry) {
+              children: options.entries.map((entry) {
                 return RadioListTile<Color>(
                   title: Text(entry.key),
                   value: entry.value,
@@ -398,13 +405,16 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                 title: 'Subtitle Color',
                                 onTap: () {
                                   _showColorSelectionDialog(
-                                      'Select Subtitle Color',
-                                      fontColorOptions[settings.subtitleColor]!,
-                                      (color) {
-                                    settings.subtitleColor = color;
-                                  });
+                                    'Select Subtitle Color',
+                                    fontColorOptions[settings.subtitleColor]!,
+                                    (color) {
+                                      settings.subtitleColor = color;
+                                    },
+                                    includeClear: false,
+                                  );
                                 },
                               ),
+
                               // Subtitle Outline Color
                               CustomTile(
                                 padding: 10,
@@ -413,14 +423,18 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                 description: 'Change subtitle outline color',
                                 onTap: () {
                                   _showColorSelectionDialog(
-                                      'Select Subtitle Outline Color',
-                                      colorOptions[settings
-                                          .subtitleOutlineColor]!, (color) {
-                                    settings.subtitleOutlineColor = color;
-                                  });
+                                    'Select Subtitle Outline Color',
+                                    colorOptions[
+                                        settings.subtitleOutlineColor]!,
+                                    (color) {
+                                      settings.subtitleOutlineColor = color;
+                                    },
+                                    includeClear: true,
+                                  );
                                 },
                               ),
 
+                              // Subtitle Background Color
                               CustomTile(
                                 padding: 10,
                                 description: 'Change subtitle background color',
@@ -435,6 +449,7 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                     (color) {
                                       settings.subtitleBackgroundColor = color;
                                     },
+                                    includeClear: true,
                                   );
                                 },
                               ),
@@ -483,6 +498,15 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                         builder: (context) {
                                           final isFocused =
                                               Focus.of(context).hasFocus;
+                                          final outlineColorKey =
+                                              settings.subtitleOutlineColor;
+                                          final outlineColor =
+                                              outlineColorKey == 'Clear'
+                                                  ? Colors.transparent
+                                                  : fontColorOptions[
+                                                          outlineColorKey] ??
+                                                      Colors.white;
+
                                           return Container(
                                             alignment: Alignment.center,
                                             decoration: BoxDecoration(
@@ -504,8 +528,10 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                               text: Text(
                                                 'Subtitle Preview Text',
                                                 style: TextStyle(
-                                                  color: colorOptions[
-                                                      settings.subtitleColor],
+                                                  color: fontColorOptions[
+                                                          settings
+                                                              .subtitleColor] ??
+                                                      Colors.white,
                                                   fontSize: settings
                                                       .subtitleSize
                                                       .toDouble(),
@@ -513,11 +539,11 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                               ),
                                               strokes: [
                                                 OutlinedTextStroke(
-                                                    color: fontColorOptions[settings
-                                                        .subtitleOutlineColor]!,
-                                                    width: settings
-                                                        .subtitleOutlineWidth
-                                                        .toDouble())
+                                                  color: outlineColor,
+                                                  width: settings
+                                                      .subtitleOutlineWidth
+                                                      .toDouble(),
+                                                )
                                               ],
                                             ),
                                           );

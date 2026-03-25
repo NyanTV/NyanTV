@@ -26,25 +26,37 @@ class SubtitleText extends StatelessWidget {
         for (final line in controller.subtitleText)
           if (line.trim().isNotEmpty) line.trim(),
       ].join('\n');
+      final textColor = fontColorOptions[controller.settings.subtitleColor];
+      final outlineColorKey = controller.settings.subtitleOutlineColor;
 
-      final content = OutlinedText(
-        key: ValueKey(controller.subtitleText.join()),
-        text: Text(
-          subtitle,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: fontColorOptions[controller.settings.subtitleColor],
-            fontSize: controller.settings.subtitleSize.toDouble(),
-            fontFamily: "Poppins-Bold",
-          ),
-        ),
-        strokes: [
-          OutlinedTextStroke(
-            color: fontColorOptions[controller.settings.subtitleOutlineColor]!,
-            width: controller.settings.subtitleOutlineWidth.toDouble(),
-          )
-        ],
-      );
+      final content = outlineColorKey == 'Clear'
+          ? Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: textColor,
+                fontSize: controller.settings.subtitleSize.toDouble(),
+                fontFamily: "Poppins-Bold",
+              ),
+            )
+          : OutlinedText(
+              key: ValueKey(controller.subtitleText.join()),
+              text: Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: controller.settings.subtitleSize.toDouble(),
+                  fontFamily: "Poppins-Bold",
+                ),
+              ),
+              strokes: [
+                OutlinedTextStroke(
+                  color: fontColorOptions[outlineColorKey] ?? Colors.white,
+                  width: controller.settings.subtitleOutlineWidth.toDouble(),
+                )
+              ],
+            );
 
       final subtitleBox = Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
