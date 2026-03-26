@@ -1,7 +1,9 @@
 // ignore_for_file: invalid_use_of_protected_member
 import 'dart:async';
+import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:nyantv/utils/logger.dart';
+import 'package:nyantv/utils/subtitle_server.dart';
 import 'package:nyantv/controllers/service_handler/params.dart';
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/models/Offline/Hive/video.dart' as model;
@@ -86,6 +88,8 @@ class _ExoWatchPageState extends State<ExoWatchPage>
   late RxList<Episode> episodeList;
   late Rx<nyantv.Media> anilistData;
   RxList<model.Track?> subtitles = <model.Track>[].obs;
+  final _subtitleServer = SubtitleServer();
+  String? _activeSubUrl;
 
   final offlineStorage = Get.find<OfflineStorageController>();
   late ServicesType mediaService;
@@ -498,6 +502,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     final startMs = isNearEnd ? 0 : savedMs;
 
     if (firstTime) {
+      await _subtitleServer.start();
       _betterPlayer = BetterPlayerImpl(
         configuration: base_player.PlayerConfiguration(
           playerType: base_player.PlayerType.betterPlayer,
@@ -815,6 +820,28 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     prevRate.value = playerSettings.speed;
   }
 
+  Future<String> _normalizeVtt(String url) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode != 200) return url;
+
+      String content = response.body;
+      content = content.replaceAllMapped(
+        RegExp(r'(\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}\.\d{3})'),
+        (m) => '00:${m[1]} --> 00:${m[2]}',
+      );
+
+      if (_activeSubUrl != null) {
+        _subtitleServer.remove(_activeSubUrl!);
+      }
+      _activeSubUrl = _subtitleServer.serve(content);
+      return _activeSubUrl!;
+    } catch (e) {
+      Logger.i('VTT normalize error: $e');
+      return url;
+    }
+  }
+
   Future<void> _initSubs() async {
     subtitles.clear();
     selectedSubIndex.value = 0;
@@ -838,8 +865,9 @@ class _ExoWatchPageState extends State<ExoWatchPage>
           i?.file != null) {
         final index = subtitles.indexOf(i);
         selectedSubIndex.value = index;
+        final subUrl = await _normalizeVtt(i!.file!);
         await _betterPlayer.setSubtitleTrack(
-          base_player.SubtitleTrack(id: i!.file!, url: i.file, title: i.label),
+          base_player.SubtitleTrack(id: subUrl, url: subUrl, title: i.label),
         );
         break;
       }
@@ -1190,6 +1218,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     _skipButtonFocusNode.dispose();
     _keyboardListenerFocusNode.dispose();
     WidgetsBinding.instance.removeObserver(this);
+    _subtitleServer.dispose();
     super.dispose();
   }
 
@@ -1213,15 +1242,11 @@ class _ExoWatchPageState extends State<ExoWatchPage>
               _startHideControlsTimer();
               return;
             }
-            if (!isLocked.value) {
-              if (widget.shouldTrack) {
-                discordRPC.updateMediaPresence(media: anilistData.value);
-              }
-              Get.back();
-            }
-            if (settings.isTV.value && showControls.value) {
+            if (showControls.value) {
               toggleControls(val: false);
-            } else {
+              return;
+            }
+            if (!isLocked.value) {
               if (widget.shouldTrack) {
                 discordRPC.updateMediaPresence(media: anilistData.value);
               }
@@ -1425,7 +1450,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
         ));
   }
 
-  Widget _buildSubtitle() {
+  Obx _buildSubtitle() {
     return Obx(() => AnimatedPositioned(
           right: 0,
           left: 0,
@@ -1435,29 +1460,25 @@ class _ExoWatchPageState extends State<ExoWatchPage>
           bottom: showControls.value ? 100 : (30 + settings.bottomMargin),
           child: Align(
             alignment: Alignment.bottomCenter,
-            child: AnimatedOpacity(
-              opacity: subtitleText[0].isEmpty ? 0.0 : 1.0,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              child: () {
-                final lines = [
-                  for (final line in subtitleText)
-                    if (line.trim().isNotEmpty) line.trim(),
-                ].join('\n');
+            child: Obx(() {
+              final lines = subtitleText
+                  .where((l) => l.trim().isNotEmpty)
+                  .map((l) => l.trim())
+                  .toList();
+              if (lines.isEmpty) return const SizedBox.shrink();
 
-                if (lines.isEmpty) return const SizedBox.shrink();
+              final textColor =
+                  fontColorOptions[settings.subtitleColor] ?? Colors.white;
+              final outlineColorKey = settings.subtitleOutlineColor;
+              final outlineColor = outlineColorKey == 'Clear'
+                  ? Colors.transparent
+                  : fontColorOptions[outlineColorKey] ?? Colors.white;
+              final bgColor = colorOptions[settings.subtitleBackgroundColor];
+              final hasBackground =
+                  bgColor != null && bgColor != Colors.transparent;
 
-                final textColor =
-                    fontColorOptions[settings.subtitleColor] ?? Colors.white;
-                final outlineColorKey = settings.subtitleOutlineColor;
-                final outlineColor = outlineColorKey == 'Clear'
-                    ? Colors.transparent
-                    : fontColorOptions[outlineColorKey] ?? Colors.white;
-                final bgColor = colorOptions[settings.subtitleBackgroundColor];
-                final hasBackground =
-                    bgColor != null && bgColor != Colors.transparent;
-
-                return Container(
+              return RepaintBoundary(
+                child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: hasBackground
@@ -1469,7 +1490,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                       : null,
                   child: outlineColorKey == 'Clear'
                       ? Text(
-                          lines,
+                          lines.join('\n'),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: textColor,
@@ -1479,7 +1500,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                         )
                       : OutlinedText(
                           text: Text(
-                            lines,
+                            lines.join('\n'),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: textColor,
@@ -1494,9 +1515,9 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                             )
                           ],
                         ),
-                );
-              }(),
-            ),
+                ),
+              );
+            }),
           ),
         ));
   }
@@ -1753,11 +1774,12 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                   final index = entry.key;
                   final e = entry.value;
                   return NyantvOnTap(
-                    onTap: () {
+                    onTap: () async {
                       selectedSubIndex.value = index;
                       Get.back();
+                      final subUrl = await _normalizeVtt(e!.file!);
                       _betterPlayer.setSubtitleTrack(base_player.SubtitleTrack(
-                          id: e!.file!, url: e.file, title: e.label));
+                          id: subUrl, url: subUrl, title: e.label));
                     },
                     child: subtitleTile(e?.label ?? 'None', Iconsax.subtitle5,
                         selectedSubIndex.value == index),

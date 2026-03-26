@@ -1598,23 +1598,17 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
           canPop: false,
           onPopInvoked: (didPop) {
             if (didPop) return;
-
             if (isEpisodeDialogOpen.value) {
               isEpisodeDialogOpen.value = false;
               _menuInteractionPaused = false;
               _startHideControlsTimer();
               return;
             }
-            if (!isLocked.value) {
-              if (widget.shouldTrack) {
-                discordRPC.updateMediaPresence(media: anilistData.value);
-              }
-              Get.back();
-            }
-
-            if (settings.isTV.value && showControls.value) {
+            if (showControls.value) {
               toggleControls(val: false);
-            } else {
+              return;
+            }
+            if (!isLocked.value) {
               if (widget.shouldTrack) {
                 discordRPC.updateMediaPresence(media: anilistData.value);
               }
