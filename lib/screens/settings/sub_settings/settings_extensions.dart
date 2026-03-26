@@ -41,16 +41,26 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
 
   @override
   void dispose() {
-    for (final n in _managerFocusNodes) n.dispose();
+    for (final n in _managerFocusNodes) {
+      n.dispose();
+    }
     _fabFocusNode.dispose();
-    for (final n in _repoCopyNodes) n.dispose();
-    for (final n in _repoDeleteNodes) n.dispose();
+    for (final n in _repoCopyNodes) {
+      n.dispose();
+    }
+    for (final n in _repoDeleteNodes) {
+      n.dispose();
+    }
     super.dispose();
   }
 
   void _rebuildRepoFocusNodes(int count) {
-    for (final n in _repoCopyNodes) n.dispose();
-    for (final n in _repoDeleteNodes) n.dispose();
+    for (final n in _repoCopyNodes) {
+      n.dispose();
+    }
+    for (final n in _repoDeleteNodes) {
+      n.dispose();
+    }
     _repoCopyNodes.clear();
     _repoDeleteNodes.clear();
     for (int i = 0; i < count; i++) {

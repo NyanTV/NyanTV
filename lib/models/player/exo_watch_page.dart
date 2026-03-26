@@ -391,17 +391,22 @@ class _ExoWatchPageState extends State<ExoWatchPage>
           _keyboardListenerFocusNode.unfocus();
         }
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted || !showControls.value || generation != _focusGeneration)
+          if (!mounted || !showControls.value || generation != _focusGeneration) {
             return;
+          }
           Future.delayed(const Duration(milliseconds: 250), () {
             if (!mounted ||
                 !showControls.value ||
-                generation != _focusGeneration) return;
+                generation != _focusGeneration) {
+              return;
+            }
             if (exoActiveSkip.value != null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted ||
                     !showControls.value ||
-                    generation != _focusGeneration) return;
+                    generation != _focusGeneration) {
+                  return;
+                }
                 if (_skipOpEdFocusNode.canRequestFocus) {
                   _skipOpEdFocusNode.requestFocus();
                 }
@@ -504,7 +509,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     if (firstTime) {
       await _subtitleServer.start();
       _betterPlayer = BetterPlayerImpl(
-        configuration: base_player.PlayerConfiguration(
+        configuration: const base_player.PlayerConfiguration(
           playerType: base_player.PlayerType.betterPlayer,
           autoPlay: true,
           useBuffering: true,
