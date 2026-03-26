@@ -278,8 +278,9 @@ class _GitHubRepoDialogState extends State<GitHubRepoDialog> {
                         child: Focus(
                           focusNode: _cancelFocusNode,
                           onKeyEvent: (node, event) {
-                            if (event is! KeyDownEvent)
+                            if (event is! KeyDownEvent) {
                               return KeyEventResult.ignored;
+                            }
                             if (event.logicalKey ==
                                 LogicalKeyboardKey.arrowUp) {
                               _focusNode.requestFocus();
@@ -328,8 +329,9 @@ class _GitHubRepoDialogState extends State<GitHubRepoDialog> {
                         child: Focus(
                           focusNode: _submitFocusNode,
                           onKeyEvent: (node, event) {
-                            if (event is! KeyDownEvent)
+                            if (event is! KeyDownEvent) {
                               return KeyEventResult.ignored;
+                            }
                             if (event.logicalKey ==
                                 LogicalKeyboardKey.arrowUp) {
                               _focusNode.requestFocus();

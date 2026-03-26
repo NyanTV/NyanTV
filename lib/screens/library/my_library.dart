@@ -550,8 +550,9 @@ class _MyLibraryState extends State<MyLibrary> with TVScrollMixin {
                                   },
                                   child: Focus(
                                     onKeyEvent: (_, event) {
-                                      if (event is! KeyDownEvent)
+                                      if (event is! KeyDownEvent) {
                                         return KeyEventResult.ignored;
+                                      }
                                       if (event.logicalKey ==
                                           LogicalKeyboardKey.arrowRight) {
                                         _searchBarInputFocusNode.requestFocus();
