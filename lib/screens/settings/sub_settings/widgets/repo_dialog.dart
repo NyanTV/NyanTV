@@ -6,6 +6,7 @@ import 'package:nyantv/utils/tv_text_field.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class GitHubRepoDialog extends StatefulWidget {
@@ -36,6 +37,8 @@ class _GitHubRepoDialogState extends State<GitHubRepoDialog> {
   final FocusNode _focusNode = FocusNode();
   String? _errorMessage;
   bool _isLoading = false;
+  final FocusNode _cancelFocusNode = FocusNode();
+  final FocusNode _submitFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -52,6 +55,8 @@ class _GitHubRepoDialogState extends State<GitHubRepoDialog> {
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
+    _cancelFocusNode.dispose();
+    _submitFocusNode.dispose();
     super.dispose();
   }
 
@@ -189,10 +194,21 @@ class _GitHubRepoDialogState extends State<GitHubRepoDialog> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: TvTextField(
-                        controller: _controller,
-                        focusNode: _focusNode,
-                        decoration: InputDecoration(
+                      child: KeyboardListener(
+                        focusNode: FocusNode(),
+                        onKeyEvent: (event) {
+                          if (event is KeyDownEvent && _focusNode.hasFocus) {
+                            if (event.logicalKey ==
+                                LogicalKeyboardKey.arrowDown) {
+                              _cancelFocusNode.requestFocus();
+                            }
+                          }
+                        },
+                        child: TvTextField(
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          keyboardType: TextInputType.url,
+                          decoration: InputDecoration(
                             hintText: 'https://github.com/username/repo.json',
                             hintStyle: TextStyle(
                               color:
@@ -213,18 +229,20 @@ class _GitHubRepoDialogState extends State<GitHubRepoDialog> {
                             focusedBorder: InputBorder.none,
                             errorBorder: InputBorder.none,
                             focusedErrorBorder: InputBorder.none,
-                            disabledBorder: InputBorder.none),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface,
+                            disabledBorder: InputBorder.none,
+                          ),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurface,
+                          ),
+                          onSubmitted: (_) => _handleSubmit(),
+                          onChanged: (value) {
+                            if (_errorMessage != null) {
+                              setState(() {
+                                _errorMessage = null;
+                              });
+                            }
+                          },
                         ),
-                        onSubmitted: (_) => _handleSubmit(),
-                        onChanged: (value) {
-                          if (_errorMessage != null) {
-                            setState(() {
-                              _errorMessage = null;
-                            });
-                          }
-                        },
                       ),
                     ),
                   ),
@@ -257,53 +275,114 @@ class _GitHubRepoDialogState extends State<GitHubRepoDialog> {
                   Row(
                     children: [
                       Expanded(
-                        child: TextButton(
-                          onPressed: _isLoading
-                              ? null
-                              : () => Navigator.of(context).pop(),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        child: Focus(
+                          focusNode: _cancelFocusNode,
+                          onKeyEvent: (node, event) {
+                            if (event is! KeyDownEvent)
+                              return KeyEventResult.ignored;
+                            if (event.logicalKey ==
+                                LogicalKeyboardKey.arrowUp) {
+                              _focusNode.requestFocus();
+                              return KeyEventResult.handled;
+                            }
+                            if (event.logicalKey ==
+                                LogicalKeyboardKey.arrowRight) {
+                              _submitFocusNode.requestFocus();
+                              return KeyEventResult.handled;
+                            }
+                            if (event.logicalKey == LogicalKeyboardKey.select ||
+                                event.logicalKey == LogicalKeyboardKey.enter) {
+                              Navigator.of(context).pop();
+                              return KeyEventResult.handled;
+                            }
+                            return KeyEventResult.ignored;
+                          },
+                          child: TextButton(
+                            onPressed: _isLoading
+                                ? null
+                                : () => Navigator.of(context).pop(),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                side: _cancelFocusNode.hasFocus
+                                    ? BorderSide(
+                                        color: colorScheme.primary,
+                                        width: 2,
+                                      )
+                                    : BorderSide.none,
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            'Cancel',
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w500,
+                            child: Text(
+                              'Cancel',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: FilledButton(
-                          onPressed: _isLoading ? null : _handleSubmit,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: colorScheme.primary,
-                            foregroundColor: colorScheme.onPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        child: Focus(
+                          focusNode: _submitFocusNode,
+                          onKeyEvent: (node, event) {
+                            if (event is! KeyDownEvent)
+                              return KeyEventResult.ignored;
+                            if (event.logicalKey ==
+                                LogicalKeyboardKey.arrowUp) {
+                              _focusNode.requestFocus();
+                              return KeyEventResult.handled;
+                            }
+                            if (event.logicalKey ==
+                                LogicalKeyboardKey.arrowLeft) {
+                              _cancelFocusNode.requestFocus();
+                              return KeyEventResult.handled;
+                            }
+                            if (event.logicalKey == LogicalKeyboardKey.select ||
+                                event.logicalKey == LogicalKeyboardKey.enter) {
+                              _handleSubmit();
+                              return KeyEventResult.handled;
+                            }
+                            return KeyEventResult.ignored;
+                          },
+                          child: FilledButton(
+                            onPressed: _isLoading ? null : _handleSubmit,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: _submitFocusNode.hasFocus
+                                  ? colorScheme.primary.withOpacity(0.85)
+                                  : colorScheme.primary,
+                              foregroundColor: colorScheme.onPrimary,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                side: _submitFocusNode.hasFocus
+                                    ? BorderSide(
+                                        color: colorScheme.onPrimary
+                                            .withOpacity(0.4),
+                                        width: 2,
+                                      )
+                                    : BorderSide.none,
+                              ),
+                              elevation: 0,
                             ),
-                            elevation: 0,
+                            child: _isLoading
+                                ? SizedBox(
+                                    height: 16,
+                                    width: 16,
+                                    child: ExpressiveLoadingIndicator(
+                                      color: colorScheme.onPrimary,
+                                    ),
+                                  )
+                                : Text(
+                                    'Add Repository',
+                                    style: theme.textTheme.labelLarge?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: colorScheme.onPrimary,
+                                    ),
+                                  ),
                           ),
-                          child: _isLoading
-                              ? SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child: ExpressiveLoadingIndicator(
-                                    color: colorScheme.onPrimary,
-                                  ),
-                                )
-                              : Text(
-                                  'Add Repository',
-                                  style: theme.textTheme.labelLarge?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: colorScheme.onPrimary,
-                                  ),
-                                ),
                         ),
                       ),
                     ],

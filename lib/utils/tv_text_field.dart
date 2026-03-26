@@ -16,6 +16,7 @@ class TvTextField extends StatefulWidget {
   final bool enabled;
   final TextInputType? keyboardType;
   final bool obscureText;
+  final TextInputAction? textInputAction;
 
   const TvTextField({
     super.key,
@@ -32,6 +33,7 @@ class TvTextField extends StatefulWidget {
     this.enabled = true,
     this.keyboardType,
     this.obscureText = false,
+    this.textInputAction,
   });
 
   @override
@@ -85,17 +87,40 @@ class _TvTextFieldState extends State<TvTextField> with WidgetsBindingObserver {
   }
 
   bool _onHardwareKey(KeyEvent event) {
-    if (!_readOnly && event is KeyDownEvent) {
+    if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.goBack ||
           event.logicalKey == LogicalKeyboardKey.escape) {
-        setState(() {
-          _readOnly = true;
-          _keyboardOpenedByUs = false;
-        });
-        _channel.invokeMethod('hide');
+        if (!_readOnly) {
+          setState(() {
+            _readOnly = true;
+            _keyboardOpenedByUs = false;
+          });
+          _channel.invokeMethod('hide');
+          return true;
+        } else if (_focusNode.hasFocus) {
+          _focusNode.unfocus();
+          return true;
+        }
+      }
+    }
+
+    if (_readOnly && _focusNode.hasFocus && event is KeyDownEvent) {
+      TraversalDirection? dir;
+      if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+        dir = TraversalDirection.down;
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        dir = TraversalDirection.up;
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        dir = TraversalDirection.left;
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+        dir = TraversalDirection.right;
+      }
+      if (dir != null) {
+        FocusManager.instance.primaryFocus?.focusInDirection(dir);
         return true;
       }
     }
+
     return false;
   }
 
@@ -106,6 +131,21 @@ class _TvTextFieldState extends State<TvTextField> with WidgetsBindingObserver {
     HardwareKeyboard.instance.removeHandler(_onHardwareKey);
     if (_ownsFocusNode) _focusNode.dispose();
     super.dispose();
+  }
+
+  void _handleEnter() {
+    if (_readOnly) {
+      _showKeyboard();
+    } else {
+      final text = widget.controller?.text ?? '';
+      widget.onSubmitted?.call(text);
+      setState(() {
+        _readOnly = true;
+        _keyboardOpenedByUs = false;
+      });
+      _channel.invokeMethod('hide');
+      if (widget.onSubmitted == null) _focusNode.unfocus();
+    }
   }
 
   void _showKeyboard() {
@@ -128,8 +168,8 @@ class _TvTextFieldState extends State<TvTextField> with WidgetsBindingObserver {
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.select): _showKeyboard,
-        const SingleActivator(LogicalKeyboardKey.enter): _showKeyboard,
-        const SingleActivator(LogicalKeyboardKey.numpadEnter): _showKeyboard,
+        const SingleActivator(LogicalKeyboardKey.enter): _handleEnter,
+        const SingleActivator(LogicalKeyboardKey.numpadEnter): _handleEnter,
       },
       child: TextField(
         focusNode: _focusNode,
@@ -142,6 +182,7 @@ class _TvTextFieldState extends State<TvTextField> with WidgetsBindingObserver {
             _keyboardOpenedByUs = false;
           });
           _channel.invokeMethod('hide');
+          if (widget.onSubmitted == null) _focusNode.unfocus();
         },
         decoration:
             widget.decoration ?? InputDecoration(hintText: widget.hintText),
@@ -153,9 +194,9 @@ class _TvTextFieldState extends State<TvTextField> with WidgetsBindingObserver {
         obscureText: widget.obscureText,
         autofocus: false,
         readOnly: _readOnly,
-        showCursor: !_readOnly, // neu — kein Cursor wenn readOnly
-        enableInteractiveSelection:
-            !_readOnly, // neu — keine Selection wenn readOnly
+        showCursor: !_readOnly,
+        enableInteractiveSelection: !_readOnly,
+        textInputAction: widget.textInputAction ?? TextInputAction.done,
       ),
     );
   }
