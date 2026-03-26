@@ -1,5 +1,4 @@
 // ignore_for_file: invalid_use_of_protected_member
-// lib/screens/anime/watch_page.dart
 import 'dart:async';
 import 'package:nyantv/utils/logger.dart';
 import 'dart:io';
@@ -9,6 +8,7 @@ import 'package:nyantv/models/Offline/Hive/video.dart' as model;
 import 'package:nyantv/constants/contants.dart';
 import 'package:nyantv/controllers/offline/offline_storage_controller.dart';
 import 'package:nyantv/models/player/player_adaptor.dart';
+import 'package:nyantv/models/player/shared_player_widgets.dart';
 import 'package:nyantv/controllers/settings/methods.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:nyantv/controllers/source/source_controller.dart';
@@ -34,7 +34,6 @@ import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart' as d;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -71,14 +70,8 @@ class LibmpvWatchPage extends StatefulWidget {
   State<LibmpvWatchPage> createState() => _LibmpvWatchPageState();
 }
 
-class _ActiveSkip {
-  final String label;
-  final int end;
-  final int start;
-  _ActiveSkip({required this.label, required this.end, required this.start});
-}
-
-final Rx<_ActiveSkip?> activeSkip = Rx<_ActiveSkip?>(null);
+// Uses ActiveSkip from shared_player_widgets.dart
+final Rx<ActiveSkip?> activeSkip = Rx<ActiveSkip?>(null);
 
 class _LibmpvWatchPageState extends State<LibmpvWatchPage>
     with TickerProviderStateMixin, TVScrollMixin, WidgetsBindingObserver {
@@ -632,7 +625,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
         if (timeSinceLastUpdate >= _periodicUpdateInterval &&
             !_isManualSeeking) {
           _scheduleDiscordUpdate(isPaused: false);
-        } else {}
+        }
       } else {
         if (!_isManualSeeking) {
           _scheduleDiscordUpdate(isPaused: false);
@@ -698,13 +691,8 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
 
       return PlayerConfiguration(
         options: {
-          // ── Rendering ──────────────────────────────────────────────────
-          // Do NOT force "vo: gpu" or "gpu-context: android" here.
-          // media_kit sets a sane default; overriding it breaks Amlogic/MTK.
           if (useHW) "hwdec": "mediacodec-copy" else "hwdec": "no",
-          "vd-lavc-threads": "0", // auto thread count
-
-          // ── Cache / demuxer ────────────────────────────────────────────
+          "vd-lavc-threads": "0",
           "cache": "yes",
           "cache-secs": "${config.cacheSecs}",
           "demuxer-max-bytes": config.demuxerMax,
@@ -713,29 +701,16 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
           "demuxer-seekable-cache": "yes",
           "demuxer-force-seekable": "yes",
           "cache-on-disk": "no",
-
-          // ── Cache pause / resume ───────────────────────────────────────
-          // cache-pause:       pause when buffer runs dry  (prevents stutter)
-          // cache-pause-wait:  resume only after X seconds of buffer are full
-          // cache-pause-initial: also pause at the very first open
           "cache-pause": "yes",
           "cache-pause-initial": "yes",
           "cache-pause-wait": config.extraMpvOptions['cache-pause-wait'] ?? '3',
-
-          // ── Network ────────────────────────────────────────────────────
           "stream-buffer-size": "${config.bufferBytes}",
           "network-timeout": config.extraMpvOptions['network-timeout'] ?? '20',
-          "tcp-nodelay": "yes", // disables Nagle → lower latency per chunk
-          "tls-verify": "no", // faster TLS handshake on Android TV
-
-          // ── Seek quality ───────────────────────────────────────────────
-          "hr-seek": "yes", // accurate seek → less A/V gap after resume
-          "audio-buffer": "0.2", // small audio buffer → less desync
-
-          // ── Playlist pre-fetch ─────────────────────────────────────────
-          "prefetch-playlist": "yes", // pre-opens next segment URL
-
-          // ── Spread any remaining profile-specific overrides ────────────
+          "tcp-nodelay": "yes",
+          "tls-verify": "no",
+          "hr-seek": "yes",
+          "audio-buffer": "0.2",
+          "prefetch-playlist": "yes",
           ...config.extraMpvOptions,
         },
         bufferSize: config.bufferBytes,
@@ -766,13 +741,11 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
     final bool hasInitialSeek = startTimeMilliseconds > 0;
 
     if (firstTime) {
-      // IMPORTANT: Use the buffer profile configuration
       player = Player(
         configuration: getPlayerConfig(areShadersEnabled),
       );
 
       if (settings.isTV.value) {
-        // Log the active buffer configuration
         final profile = settings.tvBufferProfile.value;
         final config = DeviceRamHelper.getConfig(profile);
         Logger.i('=== TV PLAYER INITIALIZED ===');
@@ -870,17 +843,14 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
   }
 
   StreamSubscription? _initialSeekSubscription;
-  //bool _hasPerformedInitialSeek = false;
 
   Future<void> _performInitialSeek(int startTimeMilliseconds) async {
     if (startTimeMilliseconds <= 0) {
       Logger.i('No initial seek needed');
-      //_hasPerformedInitialSeek = true;
       return;
     }
 
     Logger.i('Scheduling initial seek → ${startTimeMilliseconds}ms');
-    //_hasPerformedInitialSeek = false;
     _initialSeekSubscription?.cancel();
 
     final completer = Completer<void>();
@@ -908,7 +878,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
         player.seek(seekPos);
       }
 
-      // _hasPerformedInitialSeek = true;
       Logger.i('Initial seek done');
 
       if (mounted) {
@@ -923,7 +892,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
         Logger.i('Seek timeout — forcing seek');
         seekDone = true;
         _initialSeekSubscription?.cancel();
-        //_hasPerformedInitialSeek = true;
         player.seek(Duration(milliseconds: startTimeMilliseconds));
         if (!completer.isCompleted) completer.complete();
       }
@@ -987,7 +955,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
         final isAnimating = _controlsClosedAt != null &&
             DateTime.now().difference(_controlsClosedAt!).inMilliseconds < 250;
 
-        final candidates = <_ActiveSkip>[];
+        final candidates = <ActiveSkip>[];
 
         void checkSegment(SkipIntervals? seg, String label, bool autoSkip) {
           if (seg == null || autoSkip) return;
@@ -995,7 +963,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
             final secsIn = pos - seg.start;
             if (secsIn < 15 || showControls.value || isAnimating) {
               candidates.add(
-                  _ActiveSkip(label: label, end: seg.end, start: seg.start));
+                  ActiveSkip(label: label, end: seg.end, start: seg.start));
             }
           }
         }
@@ -1141,7 +1109,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
     currentPosition.value = position;
     formattedTime.value = formatDuration(position);
     currentEpisode.value.timeStampInMilliseconds = position.inSeconds * 1000;
-
     _isSeeking = false;
   }
 
@@ -1383,7 +1350,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
     }
 
     await Future.delayed(const Duration(milliseconds: 200));
-
     Logger.i('Buffering complete after seek (${attempts * 100}ms)');
   }
 
@@ -1533,16 +1499,12 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
   void setShaders(int key, {bool showMessage = true}) async {
     if (key == -1) {
       PlayerShaders.setShaders(player, '');
-      if (showMessage) {
-        snackBar("Cleared Shaders");
-      }
+      if (showMessage) snackBar("Cleared Shaders");
       return;
     }
     final shaders = PlayerShaders.getShaders();
     PlayerShaders.setShaders(player, shaders[key]);
-    if (showMessage) {
-      snackBar('Applied ${shaders[key]}');
-    }
+    if (showMessage) snackBar('Applied ${shaders[key]}');
   }
 
   KeyEventResult handlePlayerKeyEvent(FocusNode node, KeyEvent e) {
@@ -1591,9 +1553,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
         autofocus: !settings.isTV.value,
         canRequestFocus: canFocus,
         skipTraversal: settings.isTV.value && showControls.value,
-        onKeyEvent: (node, event) {
-          return handlePlayerKeyEvent(node, event);
-        },
+        onKeyEvent: (node, event) => handlePlayerKeyEvent(node, event),
         child: PopScope(
           canPop: false,
           onPopInvoked: (didPop) {
@@ -1626,7 +1586,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                 _buildRippleEffect(),
                 _build2xThingy(),
                 Obx(() => isBufferingVisible.value && !showControls.value
-                    ? _buildBufferingIndicator()
+                    ? const PlayerBufferingIndicator()
                     : const SizedBox.shrink()),
                 Obx(() => AnimatedPositioned(
                       duration: const Duration(milliseconds: 300),
@@ -1760,7 +1720,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                   FocusScope.of(context)
                       .requestFocus(_keyboardListenerFocusNode);
                 }
-
                 if (!showControls.value) {
                   toggleControls(val: true);
                 } else {
@@ -1995,34 +1954,11 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                                 language: e.label ?? '??'));
                             Get.back();
                           },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 5.0),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 2.5, horizontal: 10),
-                              title: NyantvText(
-                                text: e.label ?? '??',
-                                variant: TextVariant.bold,
-                                size: 16,
-                                color: isSelected
-                                    ? Colors.black
-                                    : Theme.of(context).colorScheme.primary,
-                              ),
-                              tileColor: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .surfaceContainer,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              trailing: Icon(
-                                Iconsax.music,
-                                color: isSelected
-                                    ? Colors.black
-                                    : Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
+                          child: buildSubtitleTile(
+                            e.label ?? '??',
+                            Iconsax.music,
+                            isSelected,
+                            context,
                           ),
                         );
                       },
@@ -2074,33 +2010,8 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                         ));
                         Get.back();
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5.0),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 2.5, horizontal: 10),
-                          title: NyantvText(
-                            text: e.quality,
-                            variant: TextVariant.bold,
-                            size: 16,
-                            color: isSelected
-                                ? Colors.black
-                                : Theme.of(context).colorScheme.primary,
-                          ),
-                          tileColor: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.surfaceContainer,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          trailing: Icon(
-                            Iconsax.play5,
-                            color: isSelected
-                                ? Colors.black
-                                : Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
+                      child: buildSubtitleTile(
+                          e.quality, Iconsax.play5, isSelected, context),
                     );
                   }).toList(),
                 ),
@@ -2139,8 +2050,8 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                         Get.back();
                         player.setSubtitleTrack(SubtitleTrack.no());
                       },
-                      child: subtitleTile("None", Iconsax.subtitle5,
-                          selectedSubIndex.value == -1),
+                      child: buildSubtitleTile("None", Iconsax.subtitle5,
+                          selectedSubIndex.value == -1, context),
                     ),
                     ...subtitles.asMap().entries.map((entry) {
                       final index = entry.key;
@@ -2151,8 +2062,11 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                           Get.back();
                           player.setSubtitleTrack(SubtitleTrack.uri(e!.file!));
                         },
-                        child: subtitleTile(e?.label ?? 'None',
-                            Iconsax.subtitle5, selectedSubIndex.value == index),
+                        child: buildSubtitleTile(
+                            e?.label ?? 'None',
+                            Iconsax.subtitle5,
+                            selectedSubIndex.value == index,
+                            context),
                       );
                     }),
                     NyantvOnTap(
@@ -2178,8 +2092,11 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                               duration: 2000);
                         }
                       },
-                      child: subtitleTile("Add Subtitle", Iconsax.add,
-                          selectedSubIndex.value == subtitles.length + 1),
+                      child: buildSubtitleTile(
+                          "Add Subtitle",
+                          Iconsax.add,
+                          selectedSubIndex.value == subtitles.length + 1,
+                          context),
                     ),
                   ],
                 ),
@@ -2189,7 +2106,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
         });
   }
 
-  void _executeSkipOpEd(_ActiveSkip skip) {
+  void _executeSkipOpEd(ActiveSkip skip) {
     final dur = Duration(seconds: skip.end);
     player.seek(dur);
     currentPosition.value = dur;
@@ -2203,31 +2120,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
         _skipButtonFocusNode.requestFocus();
       }
     });
-  }
-
-  Widget subtitleTile(String text, IconData icon, bool isSelected) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5.0),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 2.5, horizontal: 10),
-        title: NyantvText(
-          text: text,
-          variant: TextVariant.bold,
-          size: 16,
-          color:
-              isSelected ? Colors.black : Theme.of(context).colorScheme.primary,
-        ),
-        tileColor: isSelected
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.surfaceContainer,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        trailing: Icon(icon,
-            color: isSelected
-                ? Colors.black
-                : Theme.of(context).colorScheme.primary),
-      ),
-    );
   }
 
   Color _getFgColor() {
@@ -2325,7 +2217,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   if (!isLocked.value) ...[
-                                    _buildIcon(
+                                    buildPlayerIcon(
                                         onTap: () {
                                           isEpisodeDialogOpen.value =
                                               !isEpisodeDialogOpen.value;
@@ -2337,14 +2229,14 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                                           }
                                         },
                                         icon: HugeIcons.strokeRoundedFolder03),
-                                    _buildIcon(
+                                    buildPlayerIcon(
                                         onTap: () {
                                           _pauseForMenuInteraction();
                                           showPlaybackSpeedDialog(context);
                                         },
                                         icon: HugeIcons.strokeRoundedClock01),
                                   ],
-                                  _buildIcon(
+                                  buildPlayerIcon(
                                       onTap: () =>
                                           isLocked.value = !isLocked.value,
                                       icon: isLocked.value
@@ -2465,8 +2357,18 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                                   Positioned.fill(
                                     child: IgnorePointer(
                                       child: Obx(() {
+                                        // Reactive on segment key changes
                                         _activeSegmentKey.value;
-                                        return _buildSegmentOverlay();
+                                        if (skipTimes.value == null) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        return SegmentOverlay(
+                                          skipTimes: skipTimes.value!,
+                                          currentPosition:
+                                              currentPosition.value,
+                                          episodeDuration:
+                                              episodeDuration.value,
+                                        );
                                       }),
                                     ),
                                   ),
@@ -2483,21 +2385,21 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                                 BlurWrapper(
                                   child: Row(
                                     children: [
-                                      _buildIcon(
+                                      buildPlayerIcon(
                                           onTap: () {
                                             _pauseForMenuInteraction();
                                             playerSettingsSheet(context);
                                           },
                                           icon: HugeIcons
                                               .strokeRoundedSettings01),
-                                      _buildIcon(
+                                      buildPlayerIcon(
                                           onTap: () {
                                             _pauseForMenuInteraction();
                                             showTrackSelector();
                                           },
                                           icon: HugeIcons
                                               .strokeRoundedFolderVideo),
-                                      _buildIcon(
+                                      buildPlayerIcon(
                                           onTap: () {
                                             _pauseForMenuInteraction();
                                             showSubtitleSelector();
@@ -2506,7 +2408,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                                               HugeIcons.strokeRoundedSubtitle),
                                       if (episode.value.audios != null &&
                                           episode.value.audios!.isNotEmpty)
-                                        _buildIcon(
+                                        buildPlayerIcon(
                                             onTap: () {
                                               _pauseForMenuInteraction();
                                               showAudioSelector();
@@ -2519,13 +2421,13 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                                 BlurWrapper(
                                   child: Row(
                                     children: [
-                                      _buildIcon(
+                                      buildPlayerIcon(
                                           onTap: () {
                                             _pauseForMenuInteraction();
                                             showColorProfileSheet(context);
                                           },
                                           icon: Icons.hdr_on_rounded),
-                                      _buildIcon(
+                                      buildPlayerIcon(
                                           onTap: () {
                                             final newIndex =
                                                 (resizeModeList.indexOf(
@@ -2538,7 +2440,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                                           icon: Icons.aspect_ratio_rounded),
                                       if (!Platform.isAndroid &&
                                           !Platform.isIOS)
-                                        _buildIcon(
+                                        buildPlayerIcon(
                                             onTap: () async {
                                               isFullscreen.value =
                                                   !isFullscreen.value;
@@ -2565,7 +2467,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                   Positioned(
                       right: 10,
                       top: MediaQuery.of(context).size.height * 0.48,
-                      child: _buildIcon(icon: Icons.arrow_back_ios)),
+                      child: buildPlayerIcon(icon: Icons.arrow_back_ios)),
               ],
             ),
           ),
@@ -2603,7 +2505,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                     itemCount: cursedSpeed.length,
                     itemBuilder: (context, index) {
                       final e = cursedSpeed[index];
-
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 3.0),
                         child: _buildSpeedOption(
@@ -2675,15 +2576,13 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                       "You're trying to rewind? You haven't even made it past the intro.");
                 } else {
                   isSwitchingEpisode = true;
-                  player.pause().then((_) {
-                    fetchEpisode(true);
-                  });
+                  player.pause().then((_) => fetchEpisode(true));
                 }
               },
             ),
             Obx(
               () => isBuffering.value
-                  ? _buildBufferingIndicator()
+                  ? const PlayerBufferingIndicator()
                   : buildPlayButton(
                       isPlaying: isPlaying,
                       focusNode: _playPauseFocusNode,
@@ -2705,9 +2604,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                       "That's it, genius. You ran out of episodes. Try a book next time.");
                 } else {
                   isSwitchingEpisode = true;
-                  player.pause().then((_) {
-                    fetchEpisode(false);
-                  });
+                  player.pause().then((_) => fetchEpisode(false));
                 }
               },
             ),
@@ -2791,7 +2688,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                   _startHideControlsTimer();
                   return KeyEventResult.handled;
                 }
-
                 if (key == LogicalKeyboardKey.arrowLeft) {
                   if (currentEpisode.value.number.toInt() > 1) {
                     _prevEpFocusNode.requestFocus();
@@ -2799,7 +2695,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                   _startHideControlsTimer();
                   return KeyEventResult.handled;
                 }
-
                 if (key == LogicalKeyboardKey.arrowRight) {
                   if (currentEpisode.value.number.toInt() <
                       episodeList.value.last.number.toInt()) {
@@ -2808,7 +2703,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                   _startHideControlsTimer();
                   return KeyEventResult.handled;
                 }
-
                 return KeyEventResult.ignored;
               },
               child: GestureDetector(
@@ -2821,7 +2715,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
             ),
           ),
         );
-        return _TVFocusGlass(
+        return TVFocusGlass(
             borderRadius: borderRadius, focusNode: focusNode, child: tvInner);
       }
 
@@ -2868,32 +2762,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
     }
   }
 
-  Widget _buildSkipButtonChild(bool invert) {
-    return invert
-        ? Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.fast_rewind_rounded, color: Colors.white),
-              const SizedBox(width: 5),
-              NyantvText(
-                  text: "-${settings.skipDuration}s",
-                  variant: TextVariant.semiBold,
-                  color: Colors.white),
-            ],
-          )
-        : Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              NyantvText(
-                  text: "+${settings.skipDuration}s",
-                  variant: TextVariant.semiBold,
-                  color: Colors.white),
-              const SizedBox(width: 5),
-              const Icon(Icons.fast_forward_rounded, color: Colors.white),
-            ],
-          );
-  }
-
   Widget _buildSkipButton(bool invert) {
     final borderRadius = BorderRadius.circular(20.multiplyRoundness());
 
@@ -2906,12 +2774,16 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
         borderRadius: borderRadius,
         backgroundColor: Colors.transparent,
         onTap: () => _doSkip(invert),
-        child: _buildSkipButtonChild(invert),
+        // Use shared SkipButtonContent instead of local duplicate
+        child: SkipButtonContent(
+          invert: invert,
+          skipDuration: settings.skipDuration,
+        ),
       ),
     );
 
     if (settings.isTV.value) {
-      return _TVFocusGlass(
+      return TVFocusGlass(
         borderRadius: borderRadius,
         focusNode: _skipButtonFocusNode,
         child: Focus(
@@ -3091,19 +2963,16 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                 _startHideControlsTimer();
                 return KeyEventResult.handled;
               }
-
               if (isPrev && key == LogicalKeyboardKey.arrowRight) {
                 _playPauseFocusNode.requestFocus();
                 _startHideControlsTimer();
                 return KeyEventResult.handled;
               }
-
               if (isNext && key == LogicalKeyboardKey.arrowLeft) {
                 _playPauseFocusNode.requestFocus();
                 _startHideControlsTimer();
                 return KeyEventResult.handled;
               }
-
               return KeyEventResult.ignored;
             },
             child: GestureDetector(
@@ -3116,7 +2985,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
           ),
         ),
       );
-      return _TVFocusGlass(
+      return TVFocusGlass(
           borderRadius: borderRadius, focusNode: focusNode, child: tvInner);
     }
 
@@ -3145,88 +3014,16 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
     );
   }
 
-  Widget _buildBufferingIndicator() {
-    final size = getResponsiveSize(context, mobileSize: 50, desktopSize: 70);
-    return Padding(
-      padding: EdgeInsets.symmetric(
-          horizontal:
-              getResponsiveSize(context, mobileSize: 25, desktopSize: 50)),
-      child: SizedBox(
-          height: size, width: size, child: const NyantvProgressIndicator()),
-    );
-  }
-
-  Widget _buildIcon({VoidCallback? onTap, IconData? icon}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3),
-      child: NyantvOnTap(
-        onTap: () {
-          onTap?.call();
-        },
-        child: IconButton(
-            onPressed: onTap,
-            icon: Icon(
-              icon,
-              color: Colors.white,
-            )),
-      ),
-    );
-  }
-
-  Color rotateHue(Color base, double degrees) {
-    final hsl = HSLColor.fromColor(base);
-    return hsl.withHue((hsl.hue + degrees) % 360).toColor();
-  }
-
-  Widget _buildSegmentOverlay() {
-    if (skipTimes.value == null) return const SizedBox.shrink();
-    final totalMs = episodeDuration.value.inMilliseconds.toDouble();
-    if (totalMs <= 0) return const SizedBox.shrink();
-
-    return LayoutBuilder(builder: (context, constraints) {
-      const hPad = 10.0;
-      final trackWidth = constraints.maxWidth - hPad * 2;
-      const markerH = 7.0;
-      final markerTop = (constraints.maxHeight - markerH) / 2;
-
-      final cs = Theme.of(context).colorScheme;
-      final currentSecs = currentPosition.value.inSeconds;
-
-      final segments = <(SkipIntervals?, Color)>[
-        (skipTimes.value?.op, rotateHue(cs.primary, 45)),
-        (skipTimes.value?.mixedOp, rotateHue(cs.primary, 45)),
-        (skipTimes.value?.ed, cs.secondary),
-        (skipTimes.value?.mixedEd, cs.secondary),
-        (skipTimes.value?.recap, cs.tertiary),
-      ];
-
-      final markers = <Widget>[];
-      for (final (seg, color) in segments) {
-        if (seg == null) continue;
-        if (seg.end <= currentSecs) continue;
-        final effectiveStart =
-            seg.start < currentSecs ? currentSecs : seg.start;
-        final startPx = hPad + (effectiveStart * 1000 / totalMs) * trackWidth;
-        final endPx = hPad + (seg.end * 1000 / totalMs) * trackWidth;
-        final w = endPx - startPx;
-        if (w <= 0) continue;
-        markers.add(Positioned(
-          left: startPx,
-          width: w,
-          top: markerTop,
-          height: markerH,
-          child: Container(
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.95),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+  // Uses shared SkipOpEdButton widget
+  Widget _buildSkipOpEdButton() {
+    return Obx(() => SkipOpEdButton(
+          skip: activeSkip.value,
+          focusNode: _skipOpEdFocusNode,
+          onSkip: () {
+            final skip = activeSkip.value;
+            if (skip != null) _executeSkipOpEd(skip);
+          },
         ));
-      }
-
-      if (markers.isEmpty) return const SizedBox.shrink();
-      return Stack(children: markers);
-    });
   }
 
   void showColorProfileSheet(BuildContext context) {
@@ -3247,129 +3044,6 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
           settings.preferences.put('currentVisualSettings', sett);
         },
       ),
-    );
-  }
-
-  Widget _buildSkipOpEdButton() {
-    return Obx(() {
-      final skip = activeSkip.value;
-      if (skip == null) return const SizedBox.shrink();
-
-      final borderRadius = BorderRadius.circular(20.multiplyRoundness());
-
-      final btn = BlurWrapper(
-        borderRadius: borderRadius,
-        child: Focus(
-          focusNode: _skipOpEdFocusNode,
-          onKeyEvent: (node, event) {
-            if (event is! KeyDownEvent) return KeyEventResult.ignored;
-            final key = event.logicalKey;
-            if (key == LogicalKeyboardKey.enter ||
-                key == LogicalKeyboardKey.select) {
-              _executeSkipOpEd(skip);
-              return KeyEventResult.handled;
-            }
-            return KeyEventResult.ignored;
-          },
-          child: NyanTVButton(
-            height: 50,
-            width: 160,
-            variant: ButtonVariant.simple,
-            borderRadius: borderRadius,
-            backgroundColor: Colors.transparent,
-            onTap: () {
-              _executeSkipOpEd(skip);
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.fast_forward_rounded, color: Colors.white),
-                const SizedBox(width: 5),
-                NyantvText(
-                  text: skip.label,
-                  variant: TextVariant.semiBold,
-                  color: Colors.white,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      return _TVFocusGlass(
-        borderRadius: borderRadius,
-        focusNode: _skipOpEdFocusNode,
-        child: btn,
-      );
-    });
-  }
-}
-
-class _TVFocusGlass extends StatefulWidget {
-  final Widget child;
-  final BorderRadius borderRadius;
-  final FocusNode? focusNode;
-  const _TVFocusGlass({
-    required this.child,
-    required this.borderRadius,
-    this.focusNode,
-  });
-  @override
-  State<_TVFocusGlass> createState() => _TVFocusGlassState();
-}
-
-class _TVFocusGlassState extends State<_TVFocusGlass> {
-  bool _focused = false;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.focusNode?.addListener(_onFocusChange);
-  }
-
-  @override
-  void didUpdateWidget(_TVFocusGlass old) {
-    super.didUpdateWidget(old);
-    if (old.focusNode != widget.focusNode) {
-      old.focusNode?.removeListener(_onFocusChange);
-      widget.focusNode?.addListener(_onFocusChange);
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.focusNode?.removeListener(_onFocusChange);
-    super.dispose();
-  }
-
-  void _onFocusChange() {
-    final hasFocus = widget.focusNode?.hasFocus ?? false;
-    if (_focused != hasFocus) {
-      setState(() => _focused = hasFocus);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      decoration: BoxDecoration(
-        borderRadius: widget.borderRadius,
-        border: Border.all(
-          color: _focused ? Colors.white.withOpacity(0.75) : Colors.transparent,
-          width: 2,
-        ),
-        color: _focused ? Colors.white.withOpacity(0.12) : Colors.transparent,
-        boxShadow: _focused
-            ? [
-                BoxShadow(
-                    color: Colors.white.withOpacity(0.08),
-                    blurRadius: 10,
-                    spreadRadius: 1)
-              ]
-            : null,
-      ),
-      child: widget.child,
     );
   }
 }

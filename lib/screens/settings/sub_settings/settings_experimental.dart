@@ -15,7 +15,6 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 
 class SettingsExperimental extends StatefulWidget {

@@ -9,7 +9,6 @@ import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart' as d;
 import 'package:nyantv/screens/anime/details_page.dart';
 import 'package:nyantv/main.dart';
 import 'package:nyantv/utils/logger.dart';
-import 'extensions.dart';
 import 'package:get/get.dart';
 
 class Deeplink {

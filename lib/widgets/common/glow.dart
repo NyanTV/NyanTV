@@ -7,7 +7,6 @@ import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shimmer/shimmer.dart';
 
 enum GradientVariant {
   subtle,

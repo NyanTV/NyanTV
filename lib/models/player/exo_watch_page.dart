@@ -17,6 +17,7 @@ import 'package:nyantv/models/Offline/Hive/episode.dart';
 import 'package:nyantv/models/player/video_player_impl.dart';
 import 'package:nyantv/models/player/base_player.dart' as base_player;
 import 'package:nyantv/models/player/player_adaptor.dart';
+import 'package:nyantv/models/player/shared_player_widgets.dart';
 import 'package:nyantv/screens/anime/watch/controller/tv_remote_handler.dart';
 import 'package:nyantv/screens/anime/widgets/episode_watch_screen.dart';
 import 'package:nyantv/screens/anime/widgets/video_slider.dart';
@@ -34,7 +35,6 @@ import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart' as d;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -71,14 +71,7 @@ class ExoWatchPage extends StatefulWidget {
   State<ExoWatchPage> createState() => _ExoWatchPageState();
 }
 
-class _ExoActiveSkip {
-  final String label;
-  final int end;
-  final int start;
-  _ExoActiveSkip({required this.label, required this.end, required this.start});
-}
-
-final Rx<_ExoActiveSkip?> exoActiveSkip = Rx<_ExoActiveSkip?>(null);
+final Rx<ActiveSkip?> exoActiveSkip = Rx<ActiveSkip?>(null);
 
 class _ExoWatchPageState extends State<ExoWatchPage>
     with TickerProviderStateMixin, TVScrollMixin, WidgetsBindingObserver {
@@ -667,15 +660,15 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     if (skipTimes.value == null) return;
     final isAnimating = _controlsClosedAt != null &&
         DateTime.now().difference(_controlsClosedAt!).inMilliseconds < 250;
-    final candidates = <_ExoActiveSkip>[];
+    final candidates = <ActiveSkip>[];
 
     void checkSegment(SkipIntervals? seg, String label, bool autoSkip) {
       if (seg == null || autoSkip) return;
       if (pos >= seg.start && pos < seg.end) {
         final secsIn = pos - seg.start;
         if (secsIn < 15 || showControls.value || isAnimating) {
-          candidates.add(
-              _ExoActiveSkip(label: label, end: seg.end, start: seg.start));
+          candidates
+              .add(ActiveSkip(label: label, end: seg.end, start: seg.start));
         }
       }
     }
@@ -829,13 +822,11 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode != 200) return url;
-
       String content = response.body;
       content = content.replaceAllMapped(
         RegExp(r'(\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}\.\d{3})'),
         (m) => '00:${m[1]} --> 00:${m[2]}',
       );
-
       if (_activeSubUrl != null) {
         _subtitleServer.remove(_activeSubUrl!);
       }
@@ -1158,10 +1149,8 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     if (settings.isTV.value) {
       return _tvRemoteHandler!.handleKeyEvent(node, e);
     }
-
     if (e is! KeyDownEvent) return KeyEventResult.ignored;
     final key = e.logicalKey;
-
     if (key == LogicalKeyboardKey.space) {
       _betterPlayer.playOrPause();
     } else if (key == LogicalKeyboardKey.arrowLeft) {
@@ -1269,7 +1258,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                 _buildRippleEffect(),
                 _build2xThingy(),
                 Obx(() => isBufferingVisible.value && !showControls.value
-                    ? _buildBufferingIndicator()
+                    ? const PlayerBufferingIndicator()
                     : const SizedBox.shrink()),
                 Obx(() => AnimatedPositioned(
                       duration: const Duration(milliseconds: 300),
@@ -1471,7 +1460,6 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                   .map((l) => l.trim())
                   .toList();
               if (lines.isEmpty) return const SizedBox.shrink();
-
               final textColor =
                   fontColorOptions[settings.subtitleColor] ?? Colors.white;
               final outlineColorKey = settings.subtitleOutlineColor;
@@ -1481,7 +1469,6 @@ class _ExoWatchPageState extends State<ExoWatchPage>
               final bgColor = colorOptions[settings.subtitleBackgroundColor];
               final hasBackground =
                   bgColor != null && bgColor != Colors.transparent;
-
               return RepaintBoundary(
                 child: Container(
                   padding:
@@ -1772,8 +1759,8 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                     _betterPlayer
                         .setSubtitleTrack(base_player.SubtitleTrack.no());
                   },
-                  child: subtitleTile(
-                      "None", Iconsax.subtitle5, selectedSubIndex.value == -1),
+                  child: buildSubtitleTile("None", Iconsax.subtitle5,
+                      selectedSubIndex.value == -1, context),
                 ),
                 ...subtitles.asMap().entries.map((entry) {
                   final index = entry.key;
@@ -1786,8 +1773,11 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                       _betterPlayer.setSubtitleTrack(base_player.SubtitleTrack(
                           id: subUrl, url: subUrl, title: e.label));
                     },
-                    child: subtitleTile(e?.label ?? 'None', Iconsax.subtitle5,
-                        selectedSubIndex.value == index),
+                    child: buildSubtitleTile(
+                        e?.label ?? 'None',
+                        Iconsax.subtitle5,
+                        selectedSubIndex.value == index,
+                        context),
                   );
                 }),
                 NyantvOnTap(
@@ -1809,8 +1799,8 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                       snackBar('No subtitle file selected.', duration: 2000);
                     }
                   },
-                  child: subtitleTile("Add Subtitle", Iconsax.add,
-                      selectedSubIndex.value == subtitles.length + 1),
+                  child: buildSubtitleTile("Add Subtitle", Iconsax.add,
+                      selectedSubIndex.value == subtitles.length + 1, context),
                 ),
               ],
             ),
@@ -1820,7 +1810,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     );
   }
 
-  void _executeSkipOpEd(_ExoActiveSkip skip) {
+  void _executeSkipOpEd(ActiveSkip skip) {
     final dur = Duration(seconds: skip.end);
     _betterPlayer.seek(dur);
     currentPosition.value = dur;
@@ -1833,31 +1823,6 @@ class _ExoWatchPageState extends State<ExoWatchPage>
         _skipButtonFocusNode.requestFocus();
       }
     });
-  }
-
-  Widget subtitleTile(String text, IconData icon, bool isSelected) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5.0),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 2.5, horizontal: 10),
-        title: NyantvText(
-            text: text,
-            variant: TextVariant.bold,
-            size: 16,
-            color: isSelected
-                ? Colors.black
-                : Theme.of(context).colorScheme.primary),
-        tileColor: isSelected
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.surfaceContainer,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        trailing: Icon(icon,
-            color: isSelected
-                ? Colors.black
-                : Theme.of(context).colorScheme.primary),
-      ),
-    );
   }
 
   Color _getFgColor() {
@@ -1881,7 +1846,6 @@ class _ExoWatchPageState extends State<ExoWatchPage>
   Widget _buildControls() {
     return Obx(() {
       final themeFgColor = _getFgColor().obs;
-
       return AnimatedPositioned(
         duration: const Duration(milliseconds: 300),
         left: 0,
@@ -1967,7 +1931,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   if (!isLocked.value) ...[
-                                    _buildIcon(
+                                    buildPlayerIcon(
                                         onTap: () {
                                           isEpisodeDialogOpen.value =
                                               !isEpisodeDialogOpen.value;
@@ -1979,14 +1943,14 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                                           }
                                         },
                                         icon: HugeIcons.strokeRoundedFolder03),
-                                    _buildIcon(
+                                    buildPlayerIcon(
                                         onTap: () {
                                           _pauseForMenuInteraction();
                                           showPlaybackSpeedDialog(context);
                                         },
                                         icon: HugeIcons.strokeRoundedClock01),
                                   ],
-                                  _buildIcon(
+                                  buildPlayerIcon(
                                       onTap: () =>
                                           isLocked.value = !isLocked.value,
                                       icon: isLocked.value
@@ -2105,7 +2069,16 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                                     child: IgnorePointer(
                                       child: Obx(() {
                                         _activeSegmentKey.value;
-                                        return _buildSegmentOverlay();
+                                        if (skipTimes.value == null) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        return SegmentOverlay(
+                                          skipTimes: skipTimes.value!,
+                                          currentPosition:
+                                              currentPosition.value,
+                                          episodeDuration:
+                                              episodeDuration.value,
+                                        );
                                       }),
                                     ),
                                   ),
@@ -2122,21 +2095,21 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                                 BlurWrapper(
                                   child: Row(
                                     children: [
-                                      _buildIcon(
+                                      buildPlayerIcon(
                                           onTap: () {
                                             _pauseForMenuInteraction();
                                             playerSettingsSheet(context);
                                           },
                                           icon: HugeIcons
                                               .strokeRoundedSettings01),
-                                      _buildIcon(
+                                      buildPlayerIcon(
                                           onTap: () {
                                             _pauseForMenuInteraction();
                                             showTrackSelector();
                                           },
                                           icon: HugeIcons
                                               .strokeRoundedFolderVideo),
-                                      _buildIcon(
+                                      buildPlayerIcon(
                                           onTap: () {
                                             _pauseForMenuInteraction();
                                             showSubtitleSelector();
@@ -2145,7 +2118,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                                               HugeIcons.strokeRoundedSubtitle),
                                       if (episode.value.audios != null &&
                                           episode.value.audios!.isNotEmpty)
-                                        _buildIcon(
+                                        buildPlayerIcon(
                                             onTap: () {
                                               _pauseForMenuInteraction();
                                               showAudioSelector();
@@ -2158,7 +2131,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                                 BlurWrapper(
                                   child: Row(
                                     children: [
-                                      _buildIcon(
+                                      buildPlayerIcon(
                                           onTap: () {
                                             final newIndex =
                                                 (resizeModeList.indexOf(
@@ -2177,7 +2150,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                                           icon: Icons.aspect_ratio_rounded),
                                       if (!Platform.isAndroid &&
                                           !Platform.isIOS)
-                                        _buildIcon(
+                                        buildPlayerIcon(
                                             onTap: () async {
                                               isFullscreen.value =
                                                   !isFullscreen.value;
@@ -2291,7 +2264,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
             ),
             Obx(
               () => isBuffering.value
-                  ? _buildBufferingIndicator()
+                  ? const PlayerBufferingIndicator()
                   : _buildPlayButton(
                       isPlaying: isPlaying,
                       focusNode: _playPauseFocusNode,
@@ -2362,7 +2335,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
       );
 
       if (settings.isTV.value) {
-        return _TVFocusGlass(
+        return TVFocusGlass(
           borderRadius: borderRadius,
           focusNode: focusNode,
           child: Container(
@@ -2376,9 +2349,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                 canRequestFocus: focusNode != null && showControls.value,
                 skipTraversal: !showControls.value,
                 onKeyEvent: (node, event) {
-                  if (event is! KeyDownEvent) {
-                    return KeyEventResult.ignored;
-                  }
+                  if (event is! KeyDownEvent) return KeyEventResult.ignored;
                   final key = event.logicalKey;
                   if (key == LogicalKeyboardKey.enter ||
                       key == LogicalKeyboardKey.select) {
@@ -2448,32 +2419,6 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     });
   }
 
-  Widget _buildSkipButtonChild(bool invert) {
-    return invert
-        ? Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.fast_rewind_rounded, color: Colors.white),
-              const SizedBox(width: 5),
-              NyantvText(
-                  text: "-${settings.skipDuration}s",
-                  variant: TextVariant.semiBold,
-                  color: Colors.white),
-            ],
-          )
-        : Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              NyantvText(
-                  text: "+${settings.skipDuration}s",
-                  variant: TextVariant.semiBold,
-                  color: Colors.white),
-              const SizedBox(width: 5),
-              const Icon(Icons.fast_forward_rounded, color: Colors.white),
-            ],
-          );
-  }
-
   Widget _buildSkipButton(bool invert) {
     final borderRadius = BorderRadius.circular(20.multiplyRoundness());
 
@@ -2486,12 +2431,13 @@ class _ExoWatchPageState extends State<ExoWatchPage>
         borderRadius: borderRadius,
         backgroundColor: Colors.transparent,
         onTap: () => _doSkip(invert),
-        child: _buildSkipButtonChild(invert),
+        child: SkipButtonContent(
+            invert: invert, skipDuration: settings.skipDuration),
       ),
     );
 
     if (settings.isTV.value) {
-      return _TVFocusGlass(
+      return TVFocusGlass(
         borderRadius: borderRadius,
         focusNode: _skipButtonFocusNode,
         child: Focus(
@@ -2578,7 +2524,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
       final isPrev = icon == Icons.skip_previous_rounded;
       final isNext = icon == Icons.skip_next_rounded;
 
-      return _TVFocusGlass(
+      return TVFocusGlass(
         borderRadius: borderRadius,
         focusNode: focusNode,
         child: Container(
@@ -2596,9 +2542,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
               canRequestFocus: focusNode != null && showControls.value,
               skipTraversal: !showControls.value,
               onKeyEvent: (node, event) {
-                if (event is! KeyDownEvent) {
-                  return KeyEventResult.ignored;
-                }
+                if (event is! KeyDownEvent) return KeyEventResult.ignored;
                 final key = event.logicalKey;
                 if (key == LogicalKeyboardKey.enter ||
                     key == LogicalKeyboardKey.select) {
@@ -2671,201 +2615,15 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     );
   }
 
-  Widget _buildBufferingIndicator() {
-    final size = getResponsiveSize(context, mobileSize: 50, desktopSize: 70);
-    return Padding(
-      padding: EdgeInsets.symmetric(
-          horizontal:
-              getResponsiveSize(context, mobileSize: 25, desktopSize: 50)),
-      child: SizedBox(
-          height: size, width: size, child: const NyantvProgressIndicator()),
-    );
-  }
-
-  Widget _buildIcon({VoidCallback? onTap, IconData? icon}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3),
-      child: NyantvOnTap(
-        onTap: () {
-          onTap?.call();
-        },
-        child:
-            IconButton(onPressed: onTap, icon: Icon(icon, color: Colors.white)),
-      ),
-    );
-  }
-
-  Color rotateHue(Color base, double degrees) {
-    final hsl = HSLColor.fromColor(base);
-    return hsl.withHue((hsl.hue + degrees) % 360).toColor();
-  }
-
-  Widget _buildSegmentOverlay() {
-    if (skipTimes.value == null) return const SizedBox.shrink();
-    final totalMs = episodeDuration.value.inMilliseconds.toDouble();
-    if (totalMs <= 0) return const SizedBox.shrink();
-
-    return LayoutBuilder(builder: (context, constraints) {
-      const hPad = 10.0;
-      final trackWidth = constraints.maxWidth - hPad * 2;
-      const markerH = 7.0;
-      final markerTop = (constraints.maxHeight - markerH) / 2;
-
-      final cs = Theme.of(context).colorScheme;
-      final currentSecs = currentPosition.value.inSeconds;
-
-      final segments = <(SkipIntervals?, Color)>[
-        (skipTimes.value?.op, rotateHue(cs.primary, 45)),
-        (skipTimes.value?.mixedOp, rotateHue(cs.primary, 45)),
-        (skipTimes.value?.ed, cs.secondary),
-        (skipTimes.value?.mixedEd, cs.secondary),
-        (skipTimes.value?.recap, cs.tertiary),
-      ];
-
-      final markers = <Widget>[];
-      for (final (seg, color) in segments) {
-        if (seg == null) continue;
-        if (seg.end <= currentSecs) continue;
-        final effectiveStart =
-            seg.start < currentSecs ? currentSecs : seg.start;
-        final startPx = hPad + (effectiveStart * 1000 / totalMs) * trackWidth;
-        final endPx = hPad + (seg.end * 1000 / totalMs) * trackWidth;
-        final w = endPx - startPx;
-        if (w <= 0) continue;
-        markers.add(Positioned(
-          left: startPx,
-          width: w,
-          top: markerTop,
-          height: markerH,
-          child: Container(
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.95),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ));
-      }
-
-      if (markers.isEmpty) return const SizedBox.shrink();
-      return Stack(children: markers);
-    });
-  }
-
   Widget _buildSkipOpEdButton() {
-    return Obx(() {
-      final skip = exoActiveSkip.value;
-      if (skip == null) return const SizedBox.shrink();
-
-      final borderRadius = BorderRadius.circular(20.multiplyRoundness());
-
-      final btn = BlurWrapper(
-        borderRadius: borderRadius,
-        child: Focus(
+    return Obx(() => SkipOpEdButton(
+          skip: exoActiveSkip.value,
           focusNode: _skipOpEdFocusNode,
-          onKeyEvent: (node, event) {
-            if (event is! KeyDownEvent) return KeyEventResult.ignored;
-            final key = event.logicalKey;
-            if (key == LogicalKeyboardKey.enter ||
-                key == LogicalKeyboardKey.select) {
-              _executeSkipOpEd(skip);
-              return KeyEventResult.handled;
+          onSkip: () {
+            if (exoActiveSkip.value != null) {
+              _executeSkipOpEd(exoActiveSkip.value!);
             }
-            return KeyEventResult.ignored;
           },
-          child: NyanTVButton(
-            height: 50,
-            width: 160,
-            variant: ButtonVariant.simple,
-            borderRadius: borderRadius,
-            backgroundColor: Colors.transparent,
-            onTap: () => _executeSkipOpEd(skip),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.fast_forward_rounded, color: Colors.white),
-                const SizedBox(width: 5),
-                NyantvText(
-                    text: skip.label,
-                    variant: TextVariant.semiBold,
-                    color: Colors.white),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      return _TVFocusGlass(
-        borderRadius: borderRadius,
-        focusNode: _skipOpEdFocusNode,
-        child: btn,
-      );
-    });
-  }
-}
-
-class _TVFocusGlass extends StatefulWidget {
-  final Widget child;
-  final BorderRadius borderRadius;
-  final FocusNode? focusNode;
-  const _TVFocusGlass({
-    required this.child,
-    required this.borderRadius,
-    this.focusNode,
-  });
-  @override
-  State<_TVFocusGlass> createState() => _TVFocusGlassState();
-}
-
-class _TVFocusGlassState extends State<_TVFocusGlass> {
-  bool _focused = false;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.focusNode?.addListener(_onFocusChange);
-  }
-
-  @override
-  void didUpdateWidget(_TVFocusGlass old) {
-    super.didUpdateWidget(old);
-    if (old.focusNode != widget.focusNode) {
-      old.focusNode?.removeListener(_onFocusChange);
-      widget.focusNode?.addListener(_onFocusChange);
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.focusNode?.removeListener(_onFocusChange);
-    super.dispose();
-  }
-
-  void _onFocusChange() {
-    final hasFocus = widget.focusNode?.hasFocus ?? false;
-    if (_focused != hasFocus) setState(() => _focused = hasFocus);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      decoration: BoxDecoration(
-        borderRadius: widget.borderRadius,
-        border: Border.all(
-          color: _focused ? Colors.white.withOpacity(0.75) : Colors.transparent,
-          width: 2,
-        ),
-        color: _focused ? Colors.white.withOpacity(0.12) : Colors.transparent,
-        boxShadow: _focused
-            ? [
-                BoxShadow(
-                    color: Colors.white.withOpacity(0.08),
-                    blurRadius: 10,
-                    spreadRadius: 1)
-              ]
-            : null,
-      ),
-      child: widget.child,
-    );
+        ));
   }
 }

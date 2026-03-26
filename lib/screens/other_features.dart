@@ -133,7 +133,6 @@ class _FeatureCard extends StatelessWidget {
   final String description;
   final Color color;
   final Color onColor;
-  final bool isFullWidth;
   final VoidCallback onTap;
 
   const _FeatureCard({
@@ -142,7 +141,6 @@ class _FeatureCard extends StatelessWidget {
     required this.description,
     required this.color,
     required this.onColor,
-    this.isFullWidth = false,
     required this.onTap,
   });
 
@@ -155,7 +153,7 @@ class _FeatureCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: EdgeInsets.all(isFullWidth ? 20 : 16),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -169,14 +167,14 @@ class _FeatureCard extends StatelessWidget {
                 child: Icon(
                   icon,
                   color: onColor,
-                  size: isFullWidth ? 32 : 28,
+                  size: 28,
                 ),
               ),
-              SizedBox(height: isFullWidth ? 16 : 12),
+              const SizedBox(height: 12),
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: isFullWidth ? 22 : 18,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: onColor,
                 ),
@@ -185,11 +183,11 @@ class _FeatureCard extends StatelessWidget {
               Text(
                 description,
                 style: TextStyle(
-                  fontSize: isFullWidth ? 14 : 13,
+                  fontSize: 13,
                   color: onColor.withOpacity(0.8),
                   height: 1.3,
                 ),
-                maxLines: isFullWidth ? 2 : 3,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
             ],

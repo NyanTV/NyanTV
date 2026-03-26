@@ -4,7 +4,6 @@ import 'package:nyantv/screens/search/source_search_page.dart';
 import 'package:nyantv/utils/extension_utils.dart';
 import 'package:nyantv/utils/logger.dart';
 import 'dart:async';
-import 'dart:io';
 import 'package:nyantv/controllers/cacher/cache_controller.dart';
 import 'package:nyantv/controllers/service_handler/params.dart';
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
