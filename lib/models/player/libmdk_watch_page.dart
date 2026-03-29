@@ -49,7 +49,7 @@ import 'package:nyantv/controllers/discord/discord_rpc.dart';
 import 'package:nyantv/main.dart';
 import 'package:nyantv/controllers/tv/tv_watch_next_service.dart';
 
-class ExoWatchPage extends StatefulWidget {
+class LibmdkWatchPage extends StatefulWidget {
   final model.Video episodeSrc;
   final Episode currentEpisode;
   final List<Episode> episodeList;
@@ -57,7 +57,7 @@ class ExoWatchPage extends StatefulWidget {
   final List<model.Video> episodeTracks;
   final bool shouldTrack;
 
-  const ExoWatchPage({
+  const LibmdkWatchPage({
     super.key,
     required this.episodeSrc,
     required this.episodeList,
@@ -68,12 +68,12 @@ class ExoWatchPage extends StatefulWidget {
   });
 
   @override
-  State<ExoWatchPage> createState() => _ExoWatchPageState();
+  State<LibmdkWatchPage> createState() => _LibmdkWatchPageState();
 }
 
-final Rx<ActiveSkip?> exoActiveSkip = Rx<ActiveSkip?>(null);
+final Rx<ActiveSkip?> LibmdkActiveSkip = Rx<ActiveSkip?>(null);
 
-class _ExoWatchPageState extends State<ExoWatchPage>
+class _LibmdkWatchPageState extends State<LibmdkWatchPage>
     with TickerProviderStateMixin, TVScrollMixin, WidgetsBindingObserver {
   late Rx<model.Video> episode;
   late Rx<Episode> currentEpisode;
@@ -90,7 +90,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
 
   late BetterPlayerImpl _betterPlayer;
   bool _isPlayerInitialized = false;
-  Widget? _cachedVideoWidget;
+  //Widget? _cachedVideoWidget;
 
   final isPlaying = true.obs;
   final currentPosition = const Duration(milliseconds: 0).obs;
@@ -265,7 +265,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
             .setCurrentMedia(widget.anilistData.id.toString());
       } catch (_) {}
     }
-    await _initExoPlayer(false);
+    await _initLibmdkPlayer(false);
     _waitForPlayerReady().then((_) {
       if (mounted) {
         isSwitchingEpisode = false;
@@ -298,7 +298,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     skipTimes.value = null;
     _initRxVariables();
     _initHiveVariables();
-    _initExoPlayer(true);
+    _initLibmdkPlayer(true);
 
     if (widget.currentEpisode.number.toInt() > 1) {
       trackAnilistAndLocal(
@@ -384,7 +384,9 @@ class _ExoWatchPageState extends State<ExoWatchPage>
           _keyboardListenerFocusNode.unfocus();
         }
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted || !showControls.value || generation != _focusGeneration) {
+          if (!mounted ||
+              !showControls.value ||
+              generation != _focusGeneration) {
             return;
           }
           Future.delayed(const Duration(milliseconds: 250), () {
@@ -393,7 +395,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                 generation != _focusGeneration) {
               return;
             }
-            if (exoActiveSkip.value != null) {
+            if (LibmdkActiveSkip.value != null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted ||
                     !showControls.value ||
@@ -460,7 +462,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
       }
     });
 
-    ever(exoActiveSkip, (skip) {
+    ever(LibmdkActiveSkip, (skip) {
       if (!settings.isTV.value || !mounted || !showControls.value) return;
       if (skip == null) {
         Future.delayed(const Duration(milliseconds: 50), () {
@@ -489,7 +491,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     }
   }
 
-  Future<void> _initExoPlayer(bool firstTime) async {
+  Future<void> _initLibmdkPlayer(bool firstTime) async {
     final savedEpisode = offlineStorage.getWatchedEpisode(
         widget.anilistData.id, currentEpisode.value.number);
     int savedMs = (savedEpisode?.number ?? 0) == currentEpisode.value.number
@@ -510,7 +512,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
         ),
       );
       await _betterPlayer.initialize();
-      _attachExoListeners();
+      _attachLibmdkListeners();
     } else {
       currentPosition.value = Duration.zero;
       episodeDuration.value = Duration.zero;
@@ -524,13 +526,25 @@ class _ExoWatchPageState extends State<ExoWatchPage>
       startPosition: startMs > 0 ? Duration(milliseconds: startMs) : null,
     );
 
+    //_cachedVideoWidget = _betterPlayer.getVideoWidget(
+    //    fit: resizeModes[resizeMode.value] ?? BoxFit.contain);
+
     if (firstTime) {
-      _cachedVideoWidget = _betterPlayer.getVideoWidget(
-          fit: resizeModes[resizeMode.value] ?? BoxFit.contain);
+      _attachLibmdkListeners();
+
+      await _waitForPlayerReady();
       if (mounted) setState(() => _isPlayerInitialized = true);
+
+      isSwitchingEpisode = false;
+      _performDiscordUpdate(isPaused: false);
+
+      Future.delayed(const Duration(seconds: 10), () {
+        if (mounted && episodeDuration.value.inMilliseconds == 0) {
+          _performDiscordUpdate(isPaused: false);
+        }
+      });
     } else {
-      _cachedVideoWidget = _betterPlayer.getVideoWidget(
-          fit: resizeModes[resizeMode.value] ?? BoxFit.contain);
+      await _waitForPlayerReady();
       if (mounted) setState(() {});
     }
 
@@ -539,23 +553,9 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     isOPSkippedOnce.value = false;
     isEDSkippedOnce.value = false;
     _fetchSkipTimes();
-
-    if (firstTime) {
-      _waitForPlayerReady().then((_) {
-        if (mounted) {
-          isSwitchingEpisode = false;
-          _performDiscordUpdate(isPaused: false);
-        }
-      });
-      Future.delayed(const Duration(seconds: 10), () {
-        if (mounted && episodeDuration.value.inMilliseconds == 0) {
-          _performDiscordUpdate(isPaused: false);
-        }
-      });
-    }
   }
 
-  void _attachExoListeners() {
+  void _attachLibmdkListeners() {
     _positionSub = _betterPlayer.positionStream.listen((e) {
       if (_isSeeking) return;
       if (_lastPosition.inSeconds != e.inSeconds) {
@@ -590,7 +590,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
         }
       }
       if (skipTimes.value != null && settings.isTV.value) {
-        _updateExoActiveSkip(e.inSeconds);
+        _updateLibmdkActiveSkip(e.inSeconds);
       }
     });
 
@@ -603,6 +603,8 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     _playingSub = _betterPlayer.playingStream.listen((e) {
       isPlaying.value = e;
       if (e) {
+        _bufferingDebounceTimer?.cancel();
+        isBufferingVisible.value = false;
         _menuInteractionPaused = false;
         _startHideControlsTimer();
         setExcludedScreen(true);
@@ -656,7 +658,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     });
   }
 
-  void _updateExoActiveSkip(int pos) {
+  void _updateLibmdkActiveSkip(int pos) {
     if (skipTimes.value == null) return;
     final isAnimating = _controlsClosedAt != null &&
         DateTime.now().difference(_controlsClosedAt!).inMilliseconds < 250;
@@ -684,10 +686,10 @@ class _ExoWatchPageState extends State<ExoWatchPage>
         skipTimes.value!.recap, 'Skip Recap', playerSettings.autoSkipRecap);
 
     if (candidates.isEmpty) {
-      exoActiveSkip.value = null;
+      LibmdkActiveSkip.value = null;
     } else {
       candidates.sort((a, b) => b.start.compareTo(a.start));
-      exoActiveSkip.value = candidates.first;
+      LibmdkActiveSkip.value = candidates.first;
     }
   }
 
@@ -708,14 +710,15 @@ class _ExoWatchPageState extends State<ExoWatchPage>
 
   Future<void> _waitForPlayerReady() async {
     int attempts = 0;
-    while (attempts < 30) {
+    while (attempts < 50) {
       if (episodeDuration.value.inMilliseconds > 0) {
-        await Future.delayed(const Duration(milliseconds: 300));
+        await Future.delayed(const Duration(milliseconds: 150));
         return;
       }
-      await Future.delayed(const Duration(milliseconds: 200));
+      await Future.delayed(const Duration(milliseconds: 100));
       attempts++;
     }
+    await Future.delayed(const Duration(milliseconds: 150));
   }
 
   Future<void> _performDiscordUpdate({bool isPaused = false}) async {
@@ -974,7 +977,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     currentEpisode.value.source = sourceController.activeSource.value!.name;
     currentEpisode.value.currentTrack = preferredStream;
     currentEpisode.value.videoTracks = video;
-    await _initExoPlayer(false);
+    await _initLibmdkPlayer(false);
     _waitForPlayerReady().then((_) {
       if (mounted) {
         isSwitchingEpisode = false;
@@ -1302,10 +1305,10 @@ class _ExoWatchPageState extends State<ExoWatchPage>
   }
 
   Widget _buildVideoView() {
-    if (!_isPlayerInitialized || _cachedVideoWidget == null) {
-      return const SizedBox.shrink();
-    }
-    return _cachedVideoWidget!;
+    if (!_isPlayerInitialized) return const SizedBox.shrink();
+    return _betterPlayer.getVideoWidget(
+      fit: resizeModes[resizeMode.value] ?? BoxFit.contain,
+    );
   }
 
   Obx _buildPlayer(BuildContext context) {
@@ -1345,7 +1348,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                     episode.value = src;
                     episodeTracks.value = streamList;
                     currentEpisode.value = selectedEpisode;
-                    _initExoPlayer(false);
+                    _initLibmdkPlayer(false);
                   },
                 ),
               ),
@@ -1386,7 +1389,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                   episode.value = src;
                   episodeTracks.value = streamList;
                   currentEpisode.value = selectedEpisode;
-                  _initExoPlayer(false);
+                  _initLibmdkPlayer(false);
                 },
               ),
             ),
@@ -1817,7 +1820,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
     _scheduleDiscordUpdate(isPaused: false);
     Future.delayed(const Duration(milliseconds: 50), () {
       if (!mounted) return;
-      if (exoActiveSkip.value != null) {
+      if (LibmdkActiveSkip.value != null) {
         _skipOpEdFocusNode.requestFocus();
       } else {
         _skipButtonFocusNode.requestFocus();
@@ -1995,7 +1998,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                                 children: [
                                   const SizedBox(width: 8),
                                   if (!isLocked.value &&
-                                      exoActiveSkip.value == null)
+                                      LibmdkActiveSkip.value == null)
                                     _buildSkipButton(false),
                                 ],
                               ),
@@ -2140,11 +2143,11 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                                                     resizeModeList.length;
                                             resizeMode.value =
                                                 resizeModeList[newIndex];
-                                            _cachedVideoWidget =
-                                                _betterPlayer.getVideoWidget(
-                                                    fit: resizeModes[
-                                                            resizeMode.value] ??
-                                                        BoxFit.contain);
+                                            //_cachedVideoWidget =
+                                            //    _betterPlayer.getVideoWidget(
+                                            //        fit: resizeModes[
+                                            //                resizeMode.value] ??
+                                            //            BoxFit.contain);
                                             if (mounted) setState(() {});
                                           },
                                           icon: Icons.aspect_ratio_rounded),
@@ -2358,7 +2361,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                     return KeyEventResult.handled;
                   }
                   if (key == LogicalKeyboardKey.arrowDown) {
-                    if (exoActiveSkip.value != null) {
+                    if (LibmdkActiveSkip.value != null) {
                       _skipOpEdFocusNode.requestFocus();
                     } else {
                       _skipButtonFocusNode.requestFocus();
@@ -2551,7 +2554,7 @@ class _ExoWatchPageState extends State<ExoWatchPage>
                   return KeyEventResult.handled;
                 }
                 if (key == LogicalKeyboardKey.arrowDown) {
-                  if (exoActiveSkip.value != null) {
+                  if (LibmdkActiveSkip.value != null) {
                     _skipOpEdFocusNode.requestFocus();
                   } else {
                     _skipButtonFocusNode.requestFocus();
@@ -2617,11 +2620,11 @@ class _ExoWatchPageState extends State<ExoWatchPage>
 
   Widget _buildSkipOpEdButton() {
     return Obx(() => SkipOpEdButton(
-          skip: exoActiveSkip.value,
+          skip: LibmdkActiveSkip.value,
           focusNode: _skipOpEdFocusNode,
           onSkip: () {
-            if (exoActiveSkip.value != null) {
-              _executeSkipOpEd(exoActiveSkip.value!);
+            if (LibmdkActiveSkip.value != null) {
+              _executeSkipOpEd(LibmdkActiveSkip.value!);
             }
           },
         ));

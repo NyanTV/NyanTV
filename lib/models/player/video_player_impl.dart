@@ -123,6 +123,10 @@ class BetterPlayerImpl extends BasePlayer {
     if (v.isPlaying != _state.isPlaying) {
       _state = _state.copyWith(isPlaying: v.isPlaying);
       _play.add(v.isPlaying);
+      if (v.isPlaying && _state.isBuffering) {
+        _state = _state.copyWith(isBuffering: false);
+        _buff.add(false);
+      }
     }
     if (v.isBuffering != _state.isBuffering) {
       _state = _state.copyWith(isBuffering: v.isBuffering);
@@ -331,6 +335,7 @@ class BetterPlayerImpl extends BasePlayer {
     if (c == null || !c.value.isInitialized) {
       return const ColoredBox(color: Colors.black);
     }
+
     return ColoredBox(
       color: Colors.black,
       child: FittedBox(

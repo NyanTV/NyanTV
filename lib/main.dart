@@ -29,6 +29,7 @@ import 'package:nyantv/controllers/services/anilist/anilist_data.dart';
 import 'package:nyantv/screens/home_page.dart';
 import 'package:nyantv/screens/nyan_dvd.dart';
 import 'package:nyantv/utils/deeplink.dart';
+import 'package:nyantv/utils/device_ram.dart';
 import 'package:nyantv/utils/logger.dart';
 import 'package:nyantv/utils/register_protocol/register_protocol.dart';
 import 'package:nyantv/widgets/adaptive_wrapper.dart';
@@ -45,6 +46,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:fvp/fvp.dart' as fvp;
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -171,6 +173,15 @@ void main(List<String> args) async {
     HttpOverrides.global = MyHttpoverrides();
     await initializeHive();
     _initializeGetxController();
+
+    final settings = Get.find<Settings>();
+    final profile = settings.tvBufferProfile.value;
+    final config = DeviceRamHelper.getConfig(profile);
+    fvp.registerWith(
+        options: config.fvpOptions(
+      isApple: Platform.isIOS || Platform.isMacOS,
+    ));
+
     initDeepLinkListener();
     initializeDateFormatting();
 

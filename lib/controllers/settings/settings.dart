@@ -373,7 +373,7 @@ class Settings extends GetxController {
       _setPlayerSetting((s) => s?.markAsCompleted = value);
 
   String get playerEngine =>
-      preferences.get('player_engine', defaultValue: 'libmpv') as String;
+      preferences.get('player_engine', defaultValue: 'libmdk') as String;
   set playerEngine(String value) {
     if (_isInitialized) preferences.put('player_engine', value);
   }

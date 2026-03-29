@@ -31,7 +31,7 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
   Rx<Color> outlineColor = Colors.black.obs;
   final styles = ['Regular', 'Accent', 'Blurred Accent'];
   final selectedStyleIndex = 0.obs;
-  final engines = ['libmpv', 'exoplayer'];
+  final engines = ['libmdk', 'libmpv'];
   late RxString selectedEngine;
 
   @override
@@ -55,7 +55,7 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
       title: 'Player Engine',
       items: engines,
       selectedItem: selectedEngine,
-      getTitle: (e) => e == 'libmpv' ? 'LibMPV' : 'ExoPlayer',
+      getTitle: (e) => e == 'libmdk' ? 'LibMDK' : 'LibMPV',
       onItemSelected: (e) {
         settings.playerEngine = e;
         selectedEngine.value = e;
@@ -255,9 +255,9 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                 icon: Icons.video_settings_rounded,
                                 onTap: showPlayerEngineDialog,
                                 title: "Player Engine",
-                                description: selectedEngine.value == 'libmpv'
-                                    ? 'LibMPV'
-                                    : 'ExoPlayer',
+                                description: selectedEngine.value == 'libmdk'
+                                    ? 'LibMDK'
+                                    : 'LibMPV',
                               ),
                               CustomTile(
                                 padding: 10,

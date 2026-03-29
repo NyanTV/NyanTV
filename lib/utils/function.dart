@@ -9,7 +9,7 @@ import 'package:nyantv/models/Offline/Hive/episode.dart';
 import 'package:nyantv/models/Offline/Hive/offline_media.dart';
 import 'package:nyantv/models/models_convertor/carousel/carousel_data.dart';
 import 'package:nyantv/models/models_convertor/carousel_mapper.dart';
-import 'package:nyantv/models/player/exo_watch_page.dart';
+import 'package:nyantv/models/player/libmdk_watch_page.dart';
 import 'package:nyantv/models/player/libmpv_watch_page.dart';
 import 'package:nyantv/models/Offline/Hive/video.dart' as model;
 import 'package:nyantv/models/Media/media.dart' as nyantv;
@@ -380,8 +380,8 @@ void navigateToPlayer({
   bool shouldTrack = true,
 }) {
   final engine = Get.find<Settings>().playerEngine;
-  if (engine == 'exoplayer') {
-    navigate(() => ExoWatchPage(
+  if (engine == 'libmdk') {
+    navigate(() => LibmdkWatchPage(
           episodeSrc: episodeSrc,
           episodeList: episodeList,
           anilistData: anilistData,

@@ -1,9 +1,7 @@
-// lib/utils/device_ram.dart
-
 enum BufferProfile {
-  low,       // 32MB,  60s  — ≤2GB RAM
-  medium,    // 64MB,  90s  — ≤3GB RAM  (DEFAULT)
-  high,      // 96MB,  120s — 4GB RAM
+  low, //       32MB,  60s  — ≤2GB RAM
+  medium, //    64MB,  90s  — ≤3GB RAM (DEFAULT)
+  high, //      96MB,  120s — 4GB RAM
   ultraHigh, // 128MB, 180s — 6GB+ RAM (flagship TV boxes)
 }
 
@@ -13,8 +11,19 @@ class BufferConfig {
   final int demuxerMaxMB;
   final int demuxerBackMB;
 
-  /// Extra MPV options injected per profile
+  /// Extra MPV options injected per profile (libmpv / media_kit only)
   final Map<String, String> extraMpvOptions;
+
+  /// Decoder priority list for fvp/libmdk.
+  /// Platform-specific names: AMediaCodec (Android), VideoToolbox (iOS/macOS),
+  /// D3D11 (Windows), VAAPI/VDPAU (Linux). FFmpeg = SW fallback.
+  final List<String> fvpDecoders;
+
+  /// fvp lowLatency option.
+  /// 0 = prefer large buffer (best for slow networks / TV boxes)
+  /// 1 = balanced
+  /// 2 = lowest latency (live streams)
+  final int fvpLowLatency;
 
   const BufferConfig({
     required this.bufferMB,
@@ -22,11 +31,25 @@ class BufferConfig {
     required this.demuxerMaxMB,
     required this.demuxerBackMB,
     this.extraMpvOptions = const {},
+    this.fvpDecoders = const ['AMediaCodec', 'FFmpeg'],
+    this.fvpLowLatency = 0,
   });
 
   int get bufferBytes => bufferMB * 1024 * 1024;
   String get demuxerMax => '${demuxerMaxMB}M';
   String get demuxerBack => '${demuxerBackMB}M';
+
+  /// On iOS/macOS, AMediaCodec is replaced with VideoToolbox.
+  Map<String, dynamic> fvpOptions({required bool isApple}) {
+    final decoders = fvpDecoders
+        .map((d) => (d == 'AMediaCodec' && isApple) ? 'VideoToolbox' : d)
+        .toList();
+
+    return {
+      'video.decoders': decoders,
+      'lowLatency': fvpLowLatency,
+    };
+  }
 }
 
 class DeviceRamHelper {
@@ -63,7 +86,10 @@ class DeviceRamHelper {
             'cache-pause-wait': '5',
             'network-timeout': '30',
           },
+          fvpDecoders: ['FFmpeg'],
+          fvpLowLatency: 0,
         );
+
       case BufferProfile.medium:
         return const BufferConfig(
           bufferMB: 64,
@@ -74,7 +100,11 @@ class DeviceRamHelper {
             'cache-pause-wait': '4',
             'network-timeout': '25',
           },
+          // HW with SW fallback
+          fvpDecoders: ['AMediaCodec', 'FFmpeg'],
+          fvpLowLatency: 0,
         );
+
       case BufferProfile.high:
         return const BufferConfig(
           bufferMB: 96,
@@ -85,7 +115,10 @@ class DeviceRamHelper {
             'cache-pause-wait': '3',
             'network-timeout': '20',
           },
+          fvpDecoders: ['AMediaCodec', 'FFmpeg'],
+          fvpLowLatency: 0,
         );
+
       case BufferProfile.ultraHigh:
         return const BufferConfig(
           bufferMB: 128,
@@ -96,6 +129,9 @@ class DeviceRamHelper {
             'cache-pause-wait': '2',
             'network-timeout': '15',
           },
+          // HW only, no SW fallback needed
+          fvpDecoders: ['AMediaCodec'],
+          fvpLowLatency: 0,
         );
     }
   }
