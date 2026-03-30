@@ -100,8 +100,6 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
 
   String posterColor = '';
 
-  bool _heroComplete = false;
-
   static final Set<String> _visitedIds = {};
 
   void _onPageSelected(int index) {
@@ -117,23 +115,16 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
     final isCached = _visitedIds.contains(widget.media.id);
     _visitedIds.add(widget.media.id);
     if (isCached) {
-      _heroComplete = true;
       final cached = Get.find<CacheController>().getDetailById(widget.media.id);
       anilistData = cached;
       posterColor = cached?.color ?? '';
     }
 
+    _checkAnimePresence();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _fetchAnilistData();
-      _checkAnimePresence();
-
-      if (!isCached) {
-        Future.delayed(const Duration(milliseconds: 350), () {
-          if (!mounted) return;
-          setState(() => _heroComplete = true);
-        });
-      }
     });
   }
 
@@ -194,9 +185,6 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
     animeProgress.value = currentAnime.value?.episodeCount?.toInt() ?? 0;
     animeScore.value = currentAnime.value?.score?.toDouble() ?? 0.0;
     animeStatus.value = currentAnime.value?.watchingStatus ?? "";
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() {});
-    });
   }
 
   void _checkAnimePresence() {
@@ -404,57 +392,10 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_heroComplete) {
-      return PlatformBuilder(
-        strictMode: true,
-        androidBuilder: _buildShellLayout(context),
-        desktopBuilder: _buildShellLayout(context),
-      );
-    }
     return PlatformBuilder(
       strictMode: true,
       androidBuilder: _buildAndroidLayout(context),
       desktopBuilder: _buildDesktopLayout(context),
-    );
-  }
-
-  Widget _buildShellLayout(BuildContext context) {
-    bool isTV = Get.find<Settings>().isTV.value;
-    final isDesktop = isTV ? true : MediaQuery.of(context).size.width > 600;
-
-    return Glow(
-      color: posterColor,
-      child: Scaffold(
-        extendBody: true,
-        bottomNavigationBar:
-            !isDesktop && sourceController.shouldShowExtensions.value
-                ? _buildMobiledNav()
-                : null,
-        body: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (isDesktop) _buildDesktopNav(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 120),
-                child: Column(
-                  children: [
-                    GradientPoster(
-                      data: null,
-                      tag: widget.tag,
-                      posterUrl: widget.media.poster,
-                    ),
-                    const SizedBox(
-                      height: 400,
-                      child: Center(child: NyantvProgressIndicator()),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -492,10 +433,12 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
       padding: const EdgeInsets.only(bottom: 120),
       child: Column(
         children: [
-          GradientPoster(
-            data: anilistData,
-            tag: widget.tag,
-            posterUrl: widget.media.poster,
+          RepaintBoundary(
+            child: GradientPoster(
+              data: anilistData,
+              tag: widget.tag,
+              posterUrl: widget.media.poster,
+            ),
           ),
           if (anilistData != null) ...[
             Padding(
@@ -624,10 +567,10 @@ class _AnimeDetailsPageState extends State<AnimeDetailsPage> {
             },
             children: [
               if (anilistData != null)
-                _buildCommonInfo(context)
+                RepaintBoundary(child: _buildCommonInfo(context))
               else
                 const SizedBox.shrink(),
-              _buildEpisodeSection(context),
+              RepaintBoundary(child: _buildEpisodeSection(context)),
             ],
           )
         ],
