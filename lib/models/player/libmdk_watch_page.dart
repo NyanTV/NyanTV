@@ -71,7 +71,7 @@ class LibmdkWatchPage extends StatefulWidget {
   State<LibmdkWatchPage> createState() => _LibmdkWatchPageState();
 }
 
-final Rx<ActiveSkip?> LibmdkActiveSkip = Rx<ActiveSkip?>(null);
+final Rx<ActiveSkip?> libmdkActiveSkip = Rx<ActiveSkip?>(null);
 
 class _LibmdkWatchPageState extends State<LibmdkWatchPage>
     with TickerProviderStateMixin, TVScrollMixin, WidgetsBindingObserver {
@@ -395,7 +395,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
                 generation != _focusGeneration) {
               return;
             }
-            if (LibmdkActiveSkip.value != null) {
+            if (libmdkActiveSkip.value != null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted ||
                     !showControls.value ||
@@ -462,7 +462,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
       }
     });
 
-    ever(LibmdkActiveSkip, (skip) {
+    ever(libmdkActiveSkip, (skip) {
       if (!settings.isTV.value || !mounted || !showControls.value) return;
       if (skip == null) {
         Future.delayed(const Duration(milliseconds: 50), () {
@@ -590,7 +590,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
         }
       }
       if (skipTimes.value != null && settings.isTV.value) {
-        _updateLibmdkActiveSkip(e.inSeconds);
+        _updatelibmdkActiveSkip(e.inSeconds);
       }
     });
 
@@ -658,7 +658,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
     });
   }
 
-  void _updateLibmdkActiveSkip(int pos) {
+  void _updatelibmdkActiveSkip(int pos) {
     if (skipTimes.value == null) return;
     final isAnimating = _controlsClosedAt != null &&
         DateTime.now().difference(_controlsClosedAt!).inMilliseconds < 250;
@@ -686,10 +686,10 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
         skipTimes.value!.recap, 'Skip Recap', playerSettings.autoSkipRecap);
 
     if (candidates.isEmpty) {
-      LibmdkActiveSkip.value = null;
+      libmdkActiveSkip.value = null;
     } else {
       candidates.sort((a, b) => b.start.compareTo(a.start));
-      LibmdkActiveSkip.value = candidates.first;
+      libmdkActiveSkip.value = candidates.first;
     }
   }
 
@@ -1202,7 +1202,9 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
     if (mounted) {
       try {
         discordRPC.updateMediaPresence(media: anilistData.value);
-      } catch (e) {}
+      } catch (e) {
+        Logger.e('RPC-update error: $e');
+      }
     }
     _tvRemoteHandler?.dispose();
     _tvRemoteHandler = null;
@@ -1820,7 +1822,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
     _scheduleDiscordUpdate(isPaused: false);
     Future.delayed(const Duration(milliseconds: 50), () {
       if (!mounted) return;
-      if (LibmdkActiveSkip.value != null) {
+      if (libmdkActiveSkip.value != null) {
         _skipOpEdFocusNode.requestFocus();
       } else {
         _skipButtonFocusNode.requestFocus();
@@ -1998,7 +2000,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
                                 children: [
                                   const SizedBox(width: 8),
                                   if (!isLocked.value &&
-                                      LibmdkActiveSkip.value == null)
+                                      libmdkActiveSkip.value == null)
                                     _buildSkipButton(false),
                                 ],
                               ),
@@ -2361,7 +2363,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
                     return KeyEventResult.handled;
                   }
                   if (key == LogicalKeyboardKey.arrowDown) {
-                    if (LibmdkActiveSkip.value != null) {
+                    if (libmdkActiveSkip.value != null) {
                       _skipOpEdFocusNode.requestFocus();
                     } else {
                       _skipButtonFocusNode.requestFocus();
@@ -2554,7 +2556,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
                   return KeyEventResult.handled;
                 }
                 if (key == LogicalKeyboardKey.arrowDown) {
-                  if (LibmdkActiveSkip.value != null) {
+                  if (libmdkActiveSkip.value != null) {
                     _skipOpEdFocusNode.requestFocus();
                   } else {
                     _skipButtonFocusNode.requestFocus();
@@ -2620,11 +2622,11 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
 
   Widget _buildSkipOpEdButton() {
     return Obx(() => SkipOpEdButton(
-          skip: LibmdkActiveSkip.value,
+          skip: libmdkActiveSkip.value,
           focusNode: _skipOpEdFocusNode,
           onSkip: () {
-            if (LibmdkActiveSkip.value != null) {
-              _executeSkipOpEd(LibmdkActiveSkip.value!);
+            if (libmdkActiveSkip.value != null) {
+              _executeSkipOpEd(libmdkActiveSkip.value!);
             }
           },
         ));
