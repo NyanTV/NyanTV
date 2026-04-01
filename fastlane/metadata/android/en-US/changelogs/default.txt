@@ -1,14 +1,21 @@
 ### 🌟 Features
--   introducing exoplayer as a secondary media player, faster than libmpv
--   sora and cloudstream plugins
--   skip button for intro recap and outro on shows when using simkl
+-   local subtitle server to reformat some subtitle timestamps for exoplayer compatibility
 
 ### 🔧 Bug Fixes & Improvements
--   repo buttons unfocusable
--   extensions page being unresponsive
--   skip buttons such as the opening and ending not working when using mal as service provider
+-   libmpv player endless buffering
+-   fvck the exoplayer using libmdk now
+-   bug that disallowed adding repos
+-   subtitles bug
+-   exoplayer navigation not using tvremotehandler
+-   exoplayer crashing and showing a white screen when no subtitles available
+-   watch next widget race condition
+-   critical bug that instantly closed the watch page
+
+### 🚀 Performance Improvements
+-   reduce layout rebuilds and jank on details page
 
 ### 🧹 Chores & Documentation
--   add webhook to changelog
+-   even more duplicates
+-   remove duplicate code
 
  
