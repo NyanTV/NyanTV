@@ -29,7 +29,6 @@ import 'package:nyantv/widgets/helper/tv_wrapper.dart';
 import 'package:nyantv/screens/anime/watch/controller/tv_remote_handler.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_button.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
-import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart' as d;
 import 'package:file_picker/file_picker.dart';
@@ -1556,25 +1555,18 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
         onKeyEvent: (node, event) => handlePlayerKeyEvent(node, event),
         child: PopScope(
           canPop: false,
-          onPopInvoked: (didPop) {
-            if (didPop) return;
-            if (isEpisodeDialogOpen.value) {
-              isEpisodeDialogOpen.value = false;
-              _menuInteractionPaused = false;
-              _startHideControlsTimer();
-              return;
-            }
-            if (showControls.value) {
-              toggleControls(val: false);
-              return;
-            }
-            if (!isLocked.value) {
-              if (widget.shouldTrack) {
-                discordRPC.updateMediaPresence(media: anilistData.value);
-              }
-              Get.back();
-            }
-          },
+          onPopInvoked: (didPop) => handlePlayerPopInvoked(
+            didPop: didPop,
+            isEpisodeDialogOpen: isEpisodeDialogOpen,
+            isMenuInteractionPaused: _menuInteractionPaused,
+            startHideControlsTimer: _startHideControlsTimer,
+            showControls: showControls,
+            toggleControls: () => toggleControls(val: false),
+            isLocked: isLocked.value,
+            shouldTrack: widget.shouldTrack,
+            onDiscordUpdate: () =>
+                discordRPC.updateMediaPresence(media: anilistData.value),
+          ),
           child: Scaffold(
             body: Stack(
               alignment: Alignment.center,
@@ -2166,88 +2158,36 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                         return KeyEventResult.ignored;
                       },
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        transform: Matrix4.identity()
-                          ..translate(0.0, showControls.value ? 0.0 : -100.0),
-                        padding: EdgeInsets.symmetric(
-                            vertical: 15.0,
-                            horizontal: isEpisodeDialogOpen.value ? 0 : 10),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (!isLocked.value) ...[
-                              BlurWrapper(
-                                child: IconButton(
-                                    onPressed: () => Get.back(),
-                                    icon: const Icon(
-                                        Icons.arrow_back_ios_new_rounded,
-                                        color: Colors.white)),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                width: getResponsiveSize(context,
-                                    mobileSize: Get.width * 0.3,
-                                    desktopSize: isEpisodeDialogOpen.value
-                                        ? Get.width * 0.3
-                                        : (Get.width * 0.6)),
-                                padding: const EdgeInsets.only(top: 3.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    NyantvText(
-                                      text:
-                                          'Episode ${currentEpisode.value.number}: ${currentEpisode.value.title}',
-                                      variant: TextVariant.semiBold,
-                                      maxLines: 3,
-                                      color: themeFgColor.value,
-                                    ),
-                                    NyantvText(
-                                      text:
-                                          anilistData.value.title.toUpperCase(),
-                                      variant: TextVariant.bold,
-                                      color: Colors.white.withOpacity(0.8),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            const Spacer(),
-                            BlurWrapper(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  if (!isLocked.value) ...[
-                                    buildPlayerIcon(
-                                        onTap: () {
-                                          isEpisodeDialogOpen.value =
-                                              !isEpisodeDialogOpen.value;
-                                          if (isEpisodeDialogOpen.value) {
-                                            _pauseForMenuInteraction();
-                                          } else {
-                                            _menuInteractionPaused = false;
-                                            _startHideControlsTimer();
-                                          }
-                                        },
-                                        icon: HugeIcons.strokeRoundedFolder03),
-                                    buildPlayerIcon(
-                                        onTap: () {
-                                          _pauseForMenuInteraction();
-                                          showPlaybackSpeedDialog(context);
-                                        },
-                                        icon: HugeIcons.strokeRoundedClock01),
-                                  ],
-                                  buildPlayerIcon(
-                                      onTap: () =>
-                                          isLocked.value = !isLocked.value,
-                                      icon: isLocked.value
-                                          ? Icons.lock
-                                          : Icons.lock_open),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                          duration: const Duration(milliseconds: 300),
+                          transform: Matrix4.identity()
+                            ..translate(0.0, showControls.value ? 0.0 : -100.0),
+                          padding: EdgeInsets.symmetric(
+                              vertical: 15.0,
+                              horizontal: isEpisodeDialogOpen.value ? 0 : 10),
+                          child: PlayerControlsHeader(
+                            isLocked: isLocked.value,
+                            isEpisodeDialogOpen: isEpisodeDialogOpen.value,
+                            episodeNumber: currentEpisode.value.number,
+                            episodeTitle: currentEpisode.value.title,
+                            animeTitle: anilistData.value.title,
+                            fgColor: themeFgColor.value,
+                            onBack: () => Get.back(),
+                            onEpisodeDialog: () {
+                              isEpisodeDialogOpen.value =
+                                  !isEpisodeDialogOpen.value;
+                              isEpisodeDialogOpen.value
+                                  ? _pauseForMenuInteraction()
+                                  : _startHideControlsTimer();
+                              _menuInteractionPaused =
+                                  !isEpisodeDialogOpen.value;
+                            },
+                            onSpeedDialog: () {
+                              _pauseForMenuInteraction();
+                              showPlaybackSpeedDialog(context);
+                            },
+                            onToggleLock: () =>
+                                isLocked.value = !isLocked.value,
+                          )),
                     ),
                     const Spacer(),
                     AnimatedContainer(
@@ -2259,34 +2199,13 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              NyantvTextSpans(
-                                maxLines: 1,
-                                spans: [
-                                  NyantvTextSpan(
-                                      text: '${formattedTime.value} ',
-                                      variant: TextVariant.semiBold,
-                                      color:
-                                          themeFgColor.value.withOpacity(0.8)),
-                                  NyantvTextSpan(
-                                    variant: TextVariant.semiBold,
-                                    text: ' /  ${formattedDuration.value}',
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  const SizedBox(width: 8),
-                                  if (!isLocked.value &&
-                                      activeSkip.value == null)
-                                    _buildSkipButton(false),
-                                ],
-                              ),
-                            ],
+                          PlayerTimeRow(
+                            formattedTime: formattedTime.value,
+                            formattedDuration: formattedDuration.value,
+                            fgColor: themeFgColor.value,
+                            isLocked: isLocked.value,
+                            activeSkip: activeSkip.value,
+                            skipButton: _buildSkipButton(false),
                           ),
                           IgnorePointer(
                             ignoring: isLocked.value,

@@ -96,13 +96,6 @@ class SourceController extends GetxController implements BaseService {
     super.onClose();
   }
 
-  void _scheduleRebuild() {
-    _refreshVisibility();
-    if (!_homeReady) return;
-    _rebuildTimer?.cancel();
-    _rebuildTimer = Timer(const Duration(milliseconds: 150), _syncSections);
-  }
-
   void _initialize() async {
     isar = await StorageProvider().initDB(null);
     await DartotsuExtensionBridge().init(isar, 'NyanTV');

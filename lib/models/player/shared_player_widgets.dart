@@ -2,10 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:nyantv/controllers/settings/methods.dart';
 import 'package:nyantv/utils/skip_times.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_button.dart';
+import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:nyantv/widgets/helper/tv_wrapper.dart';
@@ -321,5 +324,171 @@ class SkipOpEdButton extends StatelessWidget {
       focusNode: focusNode,
       child: btn,
     );
+  }
+}
+
+class PlayerControlsHeader extends StatelessWidget {
+  final bool isLocked;
+  final bool isEpisodeDialogOpen;
+  final String episodeNumber;
+  final String? episodeTitle;
+  final String animeTitle;
+  final Color fgColor;
+  final VoidCallback onBack;
+  final VoidCallback onEpisodeDialog;
+  final VoidCallback onSpeedDialog;
+  final VoidCallback onToggleLock;
+
+  const PlayerControlsHeader({
+    super.key,
+    required this.isLocked,
+    required this.isEpisodeDialogOpen,
+    required this.episodeNumber,
+    required this.episodeTitle,
+    required this.animeTitle,
+    required this.fgColor,
+    required this.onBack,
+    required this.onEpisodeDialog,
+    required this.onSpeedDialog,
+    required this.onToggleLock,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!isLocked) ...[
+          BlurWrapper(
+            child: IconButton(
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            width: getResponsiveSize(context,
+                mobileSize: Get.width * 0.3,
+                desktopSize:
+                    isEpisodeDialogOpen ? Get.width * 0.3 : Get.width * 0.6),
+            padding: const EdgeInsets.only(top: 3.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                NyantvText(
+                  text:
+                      'Episode $episodeNumber${episodeTitle != null ? ': $episodeTitle' : ''}',
+                  variant: TextVariant.semiBold,
+                  maxLines: 3,
+                  color: fgColor,
+                ),
+                NyantvText(
+                  text: animeTitle.toUpperCase(),
+                  variant: TextVariant.bold,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+              ],
+            ),
+          ),
+        ],
+        const Spacer(),
+        BlurWrapper(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (!isLocked) ...[
+                buildPlayerIcon(
+                    onTap: onEpisodeDialog,
+                    icon: HugeIcons.strokeRoundedFolder03),
+                buildPlayerIcon(
+                    onTap: onSpeedDialog, icon: HugeIcons.strokeRoundedClock01),
+              ],
+              buildPlayerIcon(
+                onTap: onToggleLock,
+                icon: isLocked ? Icons.lock : Icons.lock_open,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class PlayerTimeRow extends StatelessWidget {
+  final String formattedTime;
+  final String formattedDuration;
+  final Color fgColor;
+  final bool isLocked;
+  final ActiveSkip? activeSkip;
+  final Widget skipButton;
+
+  const PlayerTimeRow({
+    super.key,
+    required this.formattedTime,
+    required this.formattedDuration,
+    required this.fgColor,
+    required this.isLocked,
+    required this.activeSkip,
+    required this.skipButton,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        NyantvTextSpans(
+          maxLines: 1,
+          spans: [
+            NyantvTextSpan(
+              text: '$formattedTime ',
+              variant: TextVariant.semiBold,
+              color: fgColor.withOpacity(0.8),
+            ),
+            NyantvTextSpan(
+              variant: TextVariant.semiBold,
+              text: ' /  $formattedDuration',
+            ),
+          ],
+        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            const SizedBox(width: 8),
+            if (!isLocked && activeSkip == null) skipButton,
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+void handlePlayerPopInvoked({
+  required bool didPop,
+  required RxBool isEpisodeDialogOpen,
+  required bool isMenuInteractionPaused,
+  required VoidCallback startHideControlsTimer,
+  required RxBool showControls,
+  required VoidCallback toggleControls,
+  required bool isLocked,
+  required bool shouldTrack,
+  required VoidCallback onDiscordUpdate,
+}) {
+  if (didPop) return;
+  if (isEpisodeDialogOpen.value) {
+    isEpisodeDialogOpen.value = false;
+    startHideControlsTimer();
+    return;
+  }
+  if (showControls.value) {
+    toggleControls();
+    return;
+  }
+  if (!isLocked) {
+    if (shouldTrack) onDiscordUpdate();
+    Get.back();
   }
 }
