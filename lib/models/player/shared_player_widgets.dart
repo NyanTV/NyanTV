@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:nyantv/controllers/settings/methods.dart';
+import 'package:nyantv/models/Offline/Hive/video.dart' as model;
+import 'package:nyantv/screens/anime/widgets/video_slider.dart';
 import 'package:nyantv/utils/skip_times.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_button.dart';
@@ -12,6 +14,7 @@ import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:nyantv/widgets/helper/platform_builder.dart';
 import 'package:nyantv/widgets/helper/tv_wrapper.dart';
+import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 
 class ActiveSkip {
   final String label;
@@ -491,4 +494,87 @@ void handlePlayerPopInvoked({
     if (shouldTrack) onDiscordUpdate();
     Get.back();
   }
+}
+
+class PlayerSeekBar extends StatelessWidget {
+  final Duration currentPosition;
+  final Duration episodeDuration;
+  final Duration buffered;
+  final Color trackColor;
+  final Color inactiveColor;
+  final bool isLocked;
+  final EpisodeSkipTimes? skipTimes;
+  final VoidCallback onSeekStart;
+  final ValueChanged<double> onChanged;
+  final ValueChanged<double> onSeekEnd;
+
+  const PlayerSeekBar({
+    super.key,
+    required this.currentPosition,
+    required this.episodeDuration,
+    required this.buffered,
+    required this.trackColor,
+    required this.inactiveColor,
+    required this.isLocked,
+    required this.skipTimes,
+    required this.onSeekStart,
+    required this.onChanged,
+    required this.onSeekEnd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      ignoring: isLocked,
+      child: SizedBox(
+        height: 27,
+        child: Stack(
+          children: [
+            VideoSliderTheme(
+              color: trackColor,
+              inactiveTrackColor: inactiveColor,
+              child: Slider(
+                focusNode:
+                    FocusNode(canRequestFocus: false, skipTraversal: true),
+                min: 0,
+                value: currentPosition.inMilliseconds.toDouble(),
+                max: (currentPosition.inMilliseconds >
+                            episodeDuration.inMilliseconds
+                        ? currentPosition.inMilliseconds
+                        : episodeDuration.inMilliseconds)
+                    .toDouble(),
+                secondaryTrackValue: buffered.inMilliseconds.toDouble(),
+                onChangeStart: (_) => onSeekStart(),
+                onChanged: onChanged,
+                onChangeEnd: onSeekEnd,
+              ),
+            ),
+            if (skipTimes != null)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: SegmentOverlay(
+                    skipTimes: skipTimes!,
+                    currentPosition: currentPosition,
+                    episodeDuration: episodeDuration,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+model.Video fetchPreferredStream(
+  List<model.Video> video,
+  String preferredQuality,
+) {
+  return video.firstWhere(
+    (e) => e.quality == preferredQuality,
+    orElse: () {
+      snackBar("Preferred Stream Not Found, Selecting ${video[0].quality}");
+      return video[0];
+    },
+  );
 }

@@ -20,7 +20,6 @@ import 'package:nyantv/models/player/player_adaptor.dart';
 import 'package:nyantv/models/player/shared_player_widgets.dart';
 import 'package:nyantv/screens/anime/watch/controller/tv_remote_handler.dart';
 import 'package:nyantv/screens/anime/widgets/episode_watch_screen.dart';
-import 'package:nyantv/screens/anime/widgets/video_slider.dart';
 import 'package:nyantv/screens/settings/sub_settings/settings_player.dart';
 import 'package:nyantv/utils/string_extensions.dart';
 import 'package:nyantv/widgets/common/checkmark_tile.dart';
@@ -246,13 +245,8 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
         .getVideoList(
             d.DEpisode(episodeNumber: episode.number, url: episode.link));
     final video = resp.map((e) => model.Video.fromVideo(e)).toList();
-    final preferredStream = video.firstWhere(
-      (e) => e.quality == this.episode.value.quality,
-      orElse: () {
-        snackBar("Preferred Stream Not Found, Selecting ${video[0].quality}");
-        return video[0];
-      },
-    );
+    final preferredStream =
+        fetchPreferredStream(video, this.episode.value.quality);
     this.episode.value = preferredStream;
     episodeTracks.value = video;
     currentEpisode.value.source = sourceController.activeSource.value!.name;
@@ -964,13 +958,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
         .getVideoList(d.DEpisode(
             episodeNumber: episodeToNav.number, url: episodeToNav.link));
     final video = resp.map((e) => model.Video.fromVideo(e)).toList();
-    final preferredStream = video.firstWhere(
-      (e) => e.quality == episode.value.quality,
-      orElse: () {
-        snackBar("Preferred Stream Not Found, Selecting ${video[0].quality}");
-        return video[0];
-      },
-    );
+    final preferredStream = fetchPreferredStream(video, episode.value.quality);
     episode.value = preferredStream;
     episodeTracks.value = video;
     currentEpisode.value.source = sourceController.activeSource.value!.name;
@@ -1926,91 +1914,49 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
                             activeSkip: libmdkActiveSkip.value,
                             skipButton: _buildSkipButton(false),
                           ),
-                          IgnorePointer(
-                            ignoring: isLocked.value,
-                            child: SizedBox(
-                              height: 27,
-                              child: Stack(
-                                children: [
-                                  VideoSliderTheme(
-                                    color: themeFgColor.value,
-                                    inactiveTrackColor:
-                                        _getBgColor().withOpacity(0.1),
-                                    child: Slider(
-                                      focusNode: FocusNode(
-                                          canRequestFocus: false,
-                                          skipTraversal: true),
-                                      min: 0,
-                                      value: currentPosition
-                                          .value.inMilliseconds
-                                          .toDouble(),
-                                      max: (currentPosition
-                                                      .value.inMilliseconds >
-                                                  episodeDuration
-                                                      .value.inMilliseconds
-                                              ? currentPosition
-                                                  .value.inMilliseconds
-                                              : episodeDuration
-                                                  .value.inMilliseconds)
-                                          .toDouble(),
-                                      secondaryTrackValue: bufferred
-                                          .value.inMilliseconds
-                                          .toDouble(),
-                                      onChangeStart: (_) {
-                                        startSeeking();
-                                        _isManualSeeking = true;
-                                      },
-                                      onChangeEnd: (val) async {
-                                        if (episodeDuration.value.inMilliseconds
-                                                .toDouble() !=
-                                            0.0) {
-                                          final newPosition = Duration(
-                                              milliseconds: val.toInt());
-                                          _betterPlayer.seek(newPosition);
-                                          endSeeking(newPosition);
-                                          await _waitForBufferingAfterSeek();
-                                          _isManualSeeking = false;
-                                          if (mounted &&
-                                              !isSwitchingEpisode &&
-                                              isPlaying.value) {
-                                            _scheduleDiscordUpdate(
-                                                isPaused: false);
-                                          }
-                                        }
-                                      },
-                                      onChanged: (val) {
-                                        if (episodeDuration.value.inMilliseconds
-                                                .toDouble() !=
-                                            0.0) {
-                                          currentPosition.value = Duration(
-                                              milliseconds: val.toInt());
-                                          formattedTime.value = formatDuration(
-                                              currentPosition.value);
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                  Positioned.fill(
-                                    child: IgnorePointer(
-                                      child: Obx(() {
-                                        _activeSegmentKey.value;
-                                        if (skipTimes.value == null) {
-                                          return const SizedBox.shrink();
-                                        }
-                                        return SegmentOverlay(
-                                          skipTimes: skipTimes.value!,
-                                          currentPosition:
-                                              currentPosition.value,
-                                          episodeDuration:
-                                              episodeDuration.value,
-                                        );
-                                      }),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                          Obx(() {
+                            _activeSegmentKey.value;
+                            return PlayerSeekBar(
+                              currentPosition: currentPosition.value,
+                              episodeDuration: episodeDuration.value,
+                              buffered: bufferred.value,
+                              trackColor: themeFgColor.value,
+                              inactiveColor: _getBgColor().withOpacity(0.1),
+                              isLocked: isLocked.value,
+                              skipTimes: skipTimes.value,
+                              onSeekStart: () {
+                                startSeeking();
+                                _isManualSeeking = true;
+                              },
+                              onChanged: (val) {
+                                if (episodeDuration.value.inMilliseconds
+                                        .toDouble() !=
+                                    0.0) {
+                                  currentPosition.value =
+                                      Duration(milliseconds: val.toInt());
+                                  formattedTime.value =
+                                      formatDuration(currentPosition.value);
+                                }
+                              },
+                              onSeekEnd: (val) async {
+                                if (episodeDuration.value.inMilliseconds
+                                        .toDouble() !=
+                                    0.0) {
+                                  final newPosition =
+                                      Duration(milliseconds: val.toInt());
+                                  _betterPlayer.seek(newPosition);
+                                  endSeeking(newPosition);
+                                  await _waitForBufferingAfterSeek();
+                                  _isManualSeeking = false;
+                                  if (mounted &&
+                                      !isSwitchingEpisode &&
+                                      isPlaying.value) {
+                                    _scheduleDiscordUpdate(isPaused: false);
+                                  }
+                                }
+                              },
+                            );
+                          }),
                           const SizedBox(height: 5),
                           if (!isLocked.value)
                             Row(
