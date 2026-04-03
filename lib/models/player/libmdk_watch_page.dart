@@ -22,6 +22,7 @@ import 'package:nyantv/screens/anime/watch/controller/tv_remote_handler.dart';
 import 'package:nyantv/screens/anime/widgets/episode_watch_screen.dart';
 import 'package:nyantv/screens/settings/sub_settings/settings_player.dart';
 import 'package:nyantv/utils/string_extensions.dart';
+import 'package:nyantv/utils/vtt_translator.dart';
 import 'package:nyantv/widgets/common/checkmark_tile.dart';
 import 'package:nyantv/widgets/common/glow.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_titlebar.dart';
@@ -638,8 +639,8 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
     _rateSub = _betterPlayer.rateStream.listen((e) {
       playbackSpeed.value = e;
     });
-    _subtitleSub = _betterPlayer.subtitleStream.listen((e) {
-      subtitleText.value = e;
+    _subtitleSub = _betterPlayer.subtitleStream.listen((lines) {
+      subtitleText.value = lines;
     });
     _completedSub = _betterPlayer.completedStream.listen((completed) {
       if (completed &&
@@ -823,6 +824,12 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
         RegExp(r'(\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}\.\d{3})'),
         (m) => '00:${m[1]} --> 00:${m[2]}',
       );
+
+      final lang = settings.subtitleTranslationLang;
+      if (lang != 'none') {
+        content = await VttTranslator.translate(content, lang);
+      }
+
       if (_activeSubUrl != null) {
         _subtitleServer.remove(_activeSubUrl!);
       }

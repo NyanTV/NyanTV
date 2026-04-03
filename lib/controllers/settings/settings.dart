@@ -32,6 +32,7 @@ class Settings extends GetxController {
   final mpvPath = ''.obs;
   DateTime? _lastUpdateCheck;
   static const _updateCheckCooldown = Duration(hours: 1);
+  static const _subtitleLangKey = 'subtitleTranslationLang';
 
   // Flag to track initialization
   bool _isInitialized = false;
@@ -324,6 +325,12 @@ class Settings extends GetxController {
       _getPlayerSetting((s) => s.subtitleOutlineColor);
   set subtitleOutlineColor(String value) =>
       _setPlayerSetting((s) => s?.subtitleOutlineColor = value);
+
+  String get subtitleTranslationLang =>
+      preferences.get(_subtitleLangKey, defaultValue: 'none') as String;
+
+  set subtitleTranslationLang(String val) =>
+      preferences.put(_subtitleLangKey, val);
 
   int get skipDuration => _getPlayerSetting((s) => s.skipDuration);
   set skipDuration(int value) =>

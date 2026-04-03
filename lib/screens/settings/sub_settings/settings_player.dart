@@ -1,6 +1,7 @@
 // lib/screens/settings/sub_settings/settings_player.dart
 import 'package:nyantv/constants/contants.dart';
 import 'package:nyantv/controllers/settings/settings.dart';
+import 'package:nyantv/utils/subtitle_translator.dart';
 import 'package:nyantv/widgets/common/checkmark_tile.dart';
 import 'package:nyantv/widgets/common/custom_tiles.dart';
 import 'package:nyantv/widgets/common/glow.dart';
@@ -33,6 +34,7 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
   final selectedStyleIndex = 0.obs;
   final engines = ['libmdk', 'libmpv'];
   late RxString selectedEngine;
+  late RxString selectedTranslationLang;
 
   @override
   void initState() {
@@ -40,6 +42,7 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
     speed.value = settings.speed;
     selectedStyleIndex.value = settings.playerStyle;
     selectedEngine = settings.playerEngine.obs;
+    selectedTranslationLang = settings.subtitleTranslationLang.obs;
   }
 
   String numToPlayerStyle(int i) {
@@ -193,6 +196,22 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
           ),
         );
       },
+    );
+  }
+
+  void _showSubtitleTranslationDialog() {
+    final items = ['none', ...SubtitleTranslator.languages.keys];
+    showSelectionDialog<String>(
+      title: 'Subtitle Translation',
+      items: items,
+      selectedItem: selectedTranslationLang,
+      getTitle: (e) =>
+          e == 'none' ? 'Disabled' : SubtitleTranslator.languages[e] ?? e,
+      onItemSelected: (e) {
+        selectedTranslationLang.value = e;
+        settings.subtitleTranslationLang = e;
+      },
+      leadingIcon: Icons.translate,
     );
   }
 
@@ -398,6 +417,21 @@ class _SettingsPlayerState extends State<SettingsPlayer> {
                                   onChanged: (e) {
                                     settings.transitionSubtitle = e;
                                   }),
+                              CustomTile(
+                                padding: 10,
+                                icon: Icons.translate,
+                                title: 'Subtitle Translation',
+                                description: selectedTranslationLang.value ==
+                                        'none'
+                                    ? 'Disabled'
+                                    : SubtitleTranslator.languages[
+                                            selectedTranslationLang.value] ??
+                                        selectedTranslationLang.value,
+                                isDescBold: true,
+                                descColor:
+                                    Theme.of(context).colorScheme.primary,
+                                onTap: _showSubtitleTranslationDialog,
+                              ),
                               CustomTile(
                                 padding: 10,
                                 description: 'Change subtitle colors',
