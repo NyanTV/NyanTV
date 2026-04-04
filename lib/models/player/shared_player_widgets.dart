@@ -4,10 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:http/http.dart' as http;
 import 'package:nyantv/controllers/settings/methods.dart';
 import 'package:nyantv/models/Offline/Hive/video.dart' as model;
 import 'package:nyantv/screens/anime/widgets/video_slider.dart';
 import 'package:nyantv/utils/skip_times.dart';
+import 'package:nyantv/utils/subtitle_server.dart';
+import 'package:nyantv/utils/vtt_translator.dart';
+import 'package:nyantv/controllers/settings/settings.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_text.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_button.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_textspan.dart';
@@ -577,4 +581,41 @@ model.Video fetchPreferredStream(
       return video[0];
     },
   );
+}
+
+class SubtitleManager {
+  final _server = SubtitleServer();
+  String? _activeUrl;
+  bool _disposed = false;
+
+  Future<void> start() => _server.start();
+
+  Future<String> normalizeVtt(String url) async {
+    _disposed = false;
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode != 200 || _disposed) return url;
+      String content = response.body;
+      content = content.replaceAllMapped(
+        RegExp(r'(\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}\.\d{3})'),
+        (m) => '00:${m[1]} --> 00:${m[2]}',
+      );
+      final lang = Get.find<Settings>().subtitleTranslationLang;
+      if (lang != 'none' && !_disposed) {
+        content = await VttTranslator.translate(content, lang, () => _disposed);
+      }
+      if (_disposed) return url;
+      if (_activeUrl != null) _server.remove(_activeUrl!);
+      _activeUrl = _server.serve(content);
+      return _activeUrl!;
+    } catch (e) {
+      return url;
+    }
+  }
+
+  void dispose() {
+    _disposed = true;
+    _server.dispose();
+    _activeUrl = null;
+  }
 }

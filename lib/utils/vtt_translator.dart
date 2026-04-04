@@ -3,7 +3,8 @@ import 'package:nyantv/utils/subtitle_translator.dart';
 class VttTranslator {
   static const _maxCuesPerChunk = 15;
 
-  static Future<String> translate(String vttContent, String targetLang) async {
+  static Future<String> translate(
+      String vttContent, String targetLang, bool Function() isCancelled) async {
     if (targetLang == 'none') return vttContent;
 
     final blocks = vttContent.split(RegExp(r'\r?\n\r?\n'));
@@ -19,7 +20,8 @@ class VttTranslator {
       }
     }
 
-    final translated = await _translateInChunks(cueTexts, targetLang);
+    final translated =
+        await _translateInChunks(cueTexts, targetLang, isCancelled);
 
     for (int j = 0; j < cueIndices.length; j++) {
       final i = cueIndices[j];
@@ -34,16 +36,17 @@ class VttTranslator {
     return blocks.join('\n\n');
   }
 
-  static Future<List<String>> _translateInChunks(
-      List<String> texts, String targetLang) async {
+  static Future<List<String>> _translateInChunks(List<String> texts,
+      String targetLang, bool Function() isCancelled) async {
     final results = List<String>.filled(texts.length, '');
     int start = 0;
 
     while (start < texts.length) {
+      if (isCancelled()) return texts;
+
       final end = (start + _maxCuesPerChunk).clamp(0, texts.length);
       final chunk = texts.sublist(start, end);
       final joined = chunk.join('\n\n');
-
       final translatedJoined =
           await SubtitleTranslator.translate(joined, targetLang);
       final parts = translatedJoined.split(RegExp(r'\n\n'));
@@ -53,7 +56,7 @@ class VttTranslator {
       }
 
       start = end;
-      if (start < texts.length) {
+      if (start < texts.length && !isCancelled()) {
         await Future.delayed(const Duration(milliseconds: 500));
       }
     }

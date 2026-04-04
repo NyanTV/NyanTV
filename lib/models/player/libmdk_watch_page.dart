@@ -1,9 +1,7 @@
 // ignore_for_file: invalid_use_of_protected_member
 import 'dart:async';
-import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:nyantv/utils/logger.dart';
-import 'package:nyantv/utils/subtitle_server.dart';
 import 'package:nyantv/controllers/service_handler/params.dart';
 import 'package:nyantv/controllers/service_handler/service_handler.dart';
 import 'package:nyantv/models/Offline/Hive/video.dart' as model;
@@ -22,7 +20,6 @@ import 'package:nyantv/screens/anime/watch/controller/tv_remote_handler.dart';
 import 'package:nyantv/screens/anime/widgets/episode_watch_screen.dart';
 import 'package:nyantv/screens/settings/sub_settings/settings_player.dart';
 import 'package:nyantv/utils/string_extensions.dart';
-import 'package:nyantv/utils/vtt_translator.dart';
 import 'package:nyantv/widgets/common/checkmark_tile.dart';
 import 'package:nyantv/widgets/common/glow.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_titlebar.dart';
@@ -80,8 +77,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
   late RxList<Episode> episodeList;
   late Rx<nyantv.Media> anilistData;
   RxList<model.Track?> subtitles = <model.Track>[].obs;
-  final _subtitleServer = SubtitleServer();
-  String? _activeSubUrl;
+  final _subtitleManager = SubtitleManager();
 
   final offlineStorage = Get.find<OfflineStorageController>();
   late ServicesType mediaService;
@@ -496,7 +492,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
     final startMs = isNearEnd ? 0 : savedMs;
 
     if (firstTime) {
-      await _subtitleServer.start();
+      await _subtitleManager.start();
       _betterPlayer = BetterPlayerImpl(
         configuration: const base_player.PlayerConfiguration(
           playerType: base_player.PlayerType.betterPlayer,
@@ -815,32 +811,6 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
     prevRate.value = playerSettings.speed;
   }
 
-  Future<String> _normalizeVtt(String url) async {
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode != 200) return url;
-      String content = response.body;
-      content = content.replaceAllMapped(
-        RegExp(r'(\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}\.\d{3})'),
-        (m) => '00:${m[1]} --> 00:${m[2]}',
-      );
-
-      final lang = settings.subtitleTranslationLang;
-      if (lang != 'none') {
-        content = await VttTranslator.translate(content, lang);
-      }
-
-      if (_activeSubUrl != null) {
-        _subtitleServer.remove(_activeSubUrl!);
-      }
-      _activeSubUrl = _subtitleServer.serve(content);
-      return _activeSubUrl!;
-    } catch (e) {
-      Logger.i('VTT normalize error: $e');
-      return url;
-    }
-  }
-
   Future<void> _initSubs() async {
     subtitles.clear();
     selectedSubIndex.value = 0;
@@ -864,7 +834,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
           i?.file != null) {
         final index = subtitles.indexOf(i);
         selectedSubIndex.value = index;
-        final subUrl = await _normalizeVtt(i!.file!);
+        final subUrl = await _subtitleManager.normalizeVtt(i!.file!);
         await _betterPlayer.setSubtitleTrack(
           base_player.SubtitleTrack(id: subUrl, url: subUrl, title: i.label),
         );
@@ -1211,7 +1181,7 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
     _skipButtonFocusNode.dispose();
     _keyboardListenerFocusNode.dispose();
     WidgetsBinding.instance.removeObserver(this);
-    _subtitleServer.dispose();
+    _subtitleManager.dispose();
     super.dispose();
   }
 
@@ -1761,7 +1731,8 @@ class _LibmdkWatchPageState extends State<LibmdkWatchPage>
                     onTap: () async {
                       selectedSubIndex.value = index;
                       Get.back();
-                      final subUrl = await _normalizeVtt(e!.file!);
+                      final subUrl =
+                          await _subtitleManager.normalizeVtt(e!.file!);
                       _betterPlayer.setSubtitleTrack(base_player.SubtitleTrack(
                           id: subUrl, url: subUrl, title: e.label));
                     },

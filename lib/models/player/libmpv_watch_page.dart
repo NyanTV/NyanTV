@@ -114,6 +114,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
   RxInt skipDuration = 10.obs;
   final isLocked = false.obs;
   RxList<String> subtitleText = [''].obs;
+  final _subtitleManager = SubtitleManager();
   RxInt subtitleDelay = 0.obs;
   FocusNode? _lastControlsFocusNode;
 
@@ -768,6 +769,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
             configuration: const VideoControllerConfiguration(
                 androidAttachSurfaceAfterVideoParameters: true));
       }
+      await _subtitleManager.start();
     } else {
       currentPosition.value = Duration.zero;
       episodeDuration.value = Duration.zero;
@@ -1140,7 +1142,8 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
           i?.file != null) {
         final index = subtitles.indexOf(i);
         selectedSubIndex.value = index;
-        await player.setSubtitleTrack(SubtitleTrack.uri(i!.file!));
+        final subUrl = await _subtitleManager.normalizeVtt(i!.file!);
+        await player.setSubtitleTrack(SubtitleTrack.uri(subUrl));
         break;
       }
     }
@@ -1442,6 +1445,7 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
     _bufferingDebounceTimer?.cancel();
     _scrollController.dispose();
     _skipOpEdFocusNode.dispose();
+    _subtitleManager.dispose();
     disposeTVScroll();
     setExcludedScreen(false);
 
@@ -2037,10 +2041,12 @@ class _LibmpvWatchPageState extends State<LibmpvWatchPage>
                       final index = entry.key;
                       final e = entry.value;
                       return NyantvOnTap(
-                        onTap: () {
+                        onTap: () async {
                           selectedSubIndex.value = index;
                           Get.back();
-                          player.setSubtitleTrack(SubtitleTrack.uri(e!.file!));
+                          final subUrl =
+                              await _subtitleManager.normalizeVtt(e!.file!);
+                          player.setSubtitleTrack(SubtitleTrack.uri(subUrl));
                         },
                         child: buildSubtitleTile(
                             e?.label ?? 'None',
