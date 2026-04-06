@@ -61,6 +61,7 @@
 - [x] Watch next widget for Android Home Launcher
 - [x] Simkl integration
 - [x] MAL integration
+- [x]  Real-time Subtitle translation
 - [x] Skip Buttons (Opening / Ending) for MAL, Anilist (via Aniskip) & Simkl (via IntroDB)
 
 </details>
@@ -75,6 +76,8 @@ For detailed setup instructions, check out the [Wiki](https://github.com/NyanTV/
 > Add your **Discord account** in the **NyanTV settings** to help spread it
 >
 > ⭐ **Star this repository to support the developer & encourage the development of the app!**
+>
+> ❤️ Heart this project at [__**miyomi.pages.dev**__](https://miyomi.pages.dev/software/nyantv) (No login required)
 
 <div align="center">
 <a href='https://ko-fi.com/hoemotion' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://ko-fi.com/img/githubbutton_sm.svg' border='0' alt='Leave a tip at ko-fi.com' /></a>
