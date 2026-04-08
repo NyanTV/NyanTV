@@ -24,23 +24,37 @@ class _SettingsExtensionsState extends State<SettingsExtensions> {
   final List<FocusNode> _repoCopyNodes = [];
   final List<FocusNode> _repoDeleteNodes = [];
 
+  Worker? _managersWorker;
+
   Extension get _manager => em.managers[_managerIndex];
 
   @override
   void initState() {
     super.initState();
-    for (int i = 0; i < em.managers.length; i++) {
-      _managerFocusNodes.add(FocusNode());
-    }
+    _syncManagerFocusNodes(em.managers.length);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_managerFocusNodes.isNotEmpty) {
         _managerFocusNodes[_managerIndex].requestFocus();
       }
     });
+    _managersWorker = ever(em.managers, (managers) {
+      if (!mounted) return;
+      setState(() => _syncManagerFocusNodes(managers.length));
+    });
+  }
+
+  void _syncManagerFocusNodes(int count) {
+    while (_managerFocusNodes.length < count) {
+      _managerFocusNodes.add(FocusNode());
+    }
+    while (_managerFocusNodes.length > count) {
+      _managerFocusNodes.removeLast().dispose();
+    }
   }
 
   @override
   void dispose() {
+    _managersWorker?.dispose();
     for (final n in _managerFocusNodes) {
       n.dispose();
     }
