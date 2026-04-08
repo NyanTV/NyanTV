@@ -1,7 +1,6 @@
 // android/app/src/main/kotlin/com/mukatos/nyantv/MainActivity.kt
 package com.mukatos.nyantv
 
-import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
@@ -11,7 +10,6 @@ import androidx.activity.addCallback
 import android.app.UiModeManager
 import android.content.Context
 import android.content.res.Configuration
-import android.view.inputmethod.InputMethodManager
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -19,6 +17,7 @@ class MainActivity : FlutterFragmentActivity() {
     private val CHANNEL = "app/architecture"
     private val PLATFORM_CHANNEL = "app.nyantv/platform"
     private val WATCH_NEXT_CHANNEL = "com.nyantv/tv_watch_next"
+    private val UNINSTALL_CHANNEL = "app.nyantv/uninstall"
 
     private lateinit var watchNextHelper: TvWatchNextHelper
 
@@ -39,8 +38,6 @@ class MainActivity : FlutterFragmentActivity() {
         super.configureFlutterEngine(flutterEngine)
         watchNextHelper = TvWatchNextHelper(this)
 
-        watchNextHelper = TvWatchNextHelper(this)
-
         onBackPressedDispatcher.addCallback(this) {
             MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "app/back")
                 .invokeMethod("onBack", null)
@@ -59,8 +56,7 @@ class MainActivity : FlutterFragmentActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "getCurrentArchitecture" -> {
-                    val architecture = getCurrentArchitecture()
-                    result.success(architecture)
+                    result.success(getCurrentArchitecture())
                 }
                 else -> result.notImplemented()
             }
@@ -68,14 +64,8 @@ class MainActivity : FlutterFragmentActivity() {
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, PLATFORM_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
-                "getUIMode" -> {
-                    val uiMode = getUIMode()
-                    result.success(uiMode)
-                }
-                "isTV" -> {
-                    val isTV = checkIfTV()
-                    result.success(isTV)
-                }
+                "getUIMode" -> result.success(getUIMode())
+                "isTV" -> result.success(checkIfTV())
                 else -> result.notImplemented()
             }
         }
@@ -98,6 +88,24 @@ class MainActivity : FlutterFragmentActivity() {
                         result.success(true)
                     } else {
                         result.error("INVALID_ARGS", "Missing mediaId", null)
+                    }
+                }
+                else -> result.notImplemented()
+            }
+        }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, UNINSTALL_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "uninstallPackage" -> {
+                    val packageName = call.argument<String>("package")
+                    if (packageName != null) {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_DELETE).apply {
+                            data = android.net.Uri.parse("package:$packageName")
+                        }
+                        startActivity(intent)
+                        result.success(null)
+                    } else {
+                        result.error("INVALID", "No package name provided", null)
                     }
                 }
                 else -> result.notImplemented()

@@ -16,8 +16,10 @@ import 'package:nyantv/utils/storage_provider.dart';
 import 'package:nyantv/widgets/common/search_bar.dart';
 import 'package:nyantv/widgets/non_widgets/snackbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
+import 'package:dartotsu_extension_bridge/Services/Aniyomi/AniyomiExtensions.dart';
 import 'package:hive/hive.dart';
 
 final sourceController = Get.put(SourceController());
@@ -101,6 +103,23 @@ class SourceController extends GetxController implements BaseService {
     await DartotsuExtensionBridge().init(isar, 'NyanTV');
 
     final em = Get.find<ExtensionManager>();
+
+    void registerAniyomiHandler() {
+      final aniyomi = em.findById('aniyomi');
+      if (aniyomi is AniyomiExtensions &&
+          aniyomi.onUninstallRequested == null) {
+        aniyomi.onUninstallRequested = (packageName) async {
+          const channel = MethodChannel('app.nyantv/uninstall');
+          await channel
+              .invokeMethod('uninstallPackage', {'package': packageName});
+        };
+        Logger.i('Aniyomi uninstall handler registered');
+      }
+    }
+
+    registerAniyomiHandler();
+    ever(em.managers, (_) => registerAniyomiHandler());
+
     ever(em.installedAnimeExtensions, (list) {
       installedExtensions.value = list;
       installedDownloaderExtensions.value =

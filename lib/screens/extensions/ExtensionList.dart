@@ -3,6 +3,7 @@ import 'package:nyantv/controllers/source/source_controller.dart';
 import 'package:nyantv/utils/language.dart';
 import 'package:nyantv/widgets/custom_widgets/custom_button.dart';
 import 'package:dartotsu_extension_bridge/dartotsu_extension_bridge.dart';
+import 'package:dartotsu_extension_bridge/Services/Aniyomi/Models/Source.dart';
 import 'package:flutter/material.dart';
 import 'package:grouped_list/sliver_grouped_list.dart';
 import 'package:get/get.dart';
@@ -129,6 +130,7 @@ class _ExtensionListState extends State<ExtensionList>
     } else {
       _recommendedEntries.clear();
     }
+
     if (widget.showRecommended && _recommendedEntries.isNotEmpty) {
       _firstVisibleItem = _getFirstSorted(_recommendedEntries);
     } else if (widget.installed && _updateEntries.isNotEmpty) {
@@ -247,9 +249,19 @@ class _ExtensionListState extends State<ExtensionList>
     final installedSet =
         installedExtensions.map((e) => '${e.name}_${e.lang}').toSet();
 
+    final installedPkgNames = installedExtensions
+        .whereType<ASource>()
+        .map((e) => e.pkgName)
+        .whereType<String>()
+        .toSet();
+
     final notInstalled = availableExtensions.where((available) {
       final key = '${available.name}_${available.lang}';
-      return !installedSet.contains(key);
+      if (installedSet.contains(key)) return false;
+      if (available is ASource && available.pkgName != null) {
+        if (installedPkgNames.contains(available.pkgName)) return false;
+      }
+      return true;
     }).toList();
 
     return _filterData(notInstalled);

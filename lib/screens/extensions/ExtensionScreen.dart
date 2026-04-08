@@ -115,7 +115,12 @@ class _ExtensionScreenState extends State<ExtensionScreen>
     _workers = [
       ever(sourceController.installedExtensions, (_) {
         _updateExtensionCounts();
+        _reloadTrigger.value++;
         _restoreFocusAfterRebuild();
+      }),
+      ever(sourceController.availableExtensions, (_) {
+        _updateExtensionCounts();
+        _reloadTrigger.value++;
       }),
       ever(_selectedLanguage, (_) => _updateExtensionCounts()),
     ];

@@ -16,6 +16,7 @@ import 'package:dartotsu_extension_bridge/Services/Aniyomi/Models/Source.dart';
 import 'package:dartotsu_extension_bridge/Services/Sora/Models/Source.dart';
 import 'package:dartotsu_extension_bridge/Services/CloudStream/Models/CloudStreamSource.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nyantv/widgets/custom_widgets/nyantv_progress.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -101,12 +102,13 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
 
   Future<void> _handleSourceAction() async {
     if (_isLoading.value) return;
-
     _isLoading.value = true;
     try {
       await widget.source.install();
-      await sortExtensions();
-      widget.onUpdate?.call();
+      if (widget.source is! ASource) {
+        await sortExtensions();
+        widget.onUpdate?.call();
+      }
     } catch (e) {
       Logger.i(e.toString());
     } finally {
@@ -308,12 +310,26 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
               _isLoading.value = true;
               try {
                 Logger.i("Uninstalling => ${widget.source.id}");
-                await widget.source.uninstall();
-                await sortExtensions();
-                widget.onUpdate?.call();
+                if (widget.source is ASource) {
+                  final aSource = widget.source as ASource;
+                  final pkgName = (aSource.pkgName?.isNotEmpty == true)
+                      ? aSource.pkgName
+                      : widget.source.id;
+                  if (pkgName != null && pkgName.isNotEmpty) {
+                    await widget.source.uninstall();
+                    _isLoading.value = false;
+                  } else {
+                    Logger.i("ASource has no pkgName and no id!");
+                    _isLoading.value = false;
+                  }
+                } else {
+                  await widget.source.uninstall();
+                  await sortExtensions();
+                  widget.onUpdate?.call();
+                  _isLoading.value = false;
+                }
               } catch (e) {
                 Logger.i("Uninstall Failed => ${e.toString()}");
-              } finally {
                 _isLoading.value = false;
               }
             });
