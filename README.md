@@ -46,7 +46,9 @@
 ## Preview
 
 <p align="center">
-<img src="./github_assets/screenshots/preview.webp" height="300"/>
+<img src="./github_assets/screenshots/preview.webp" width="100%" alt="NyanTV Preview Slideshow">
+<br>
+<a href="https://github.com/NyanTV/NyanTV/wiki/Screenshots">Static preview</a>
 </p>
 
 ## Upcoming Features
