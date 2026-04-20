@@ -1,7 +1,7 @@
 name: nyantv
 description: "A multi-service Tracking Client"
 publish_to: "GitHub"
-version: 0.2.4+46
+version: 0.2.5+47
 environment:
   sdk: ">=3.4.4 <4.0.0"
   flutter: ">=3.0.0"
@@ -42,7 +42,7 @@ dependencies:
   dartotsu_extension_bridge:
     git:
       url: https://github.com/NyanTV/DartotsuExtensionBridge.git
-      ref: 8c6d2d3
+      ref: 0d3ec97
   outlined_text: ^1.0.1
   media_kit:
     git:
@@ -142,5 +142,5 @@ inno_bundle:
   id: 1E872EE2-D856-43CC-AD79-14E9B7D7E985
   publisher: hoemotion
   name: NyanTV
-  version: 0.2.4
+  version: 0.2.5
   admin: auto

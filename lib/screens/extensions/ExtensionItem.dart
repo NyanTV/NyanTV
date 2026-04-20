@@ -317,6 +317,8 @@ class _ExtensionListTileWidgetState extends State<ExtensionListTileWidget> {
                       : widget.source.id;
                   if (pkgName != null && pkgName.isNotEmpty) {
                     await widget.source.uninstall();
+                    await sortExtensions();
+                    widget.onUpdate?.call();
                     _isLoading.value = false;
                   } else {
                     Logger.i("ASource has no pkgName and no id!");
