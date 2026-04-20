@@ -718,7 +718,7 @@ class _SettingsExperimentalState extends State<SettingsExperimental>
                             Expanded(
                               child: Text(
                                 'Higher buffer = better skip performance but uses more RAM. '
-                                'Only affects Android TV devices.',
+                                'Only affects libmpv player.',
                                 style: TextStyle(
                                   color: Theme.of(context)
                                       .colorScheme
