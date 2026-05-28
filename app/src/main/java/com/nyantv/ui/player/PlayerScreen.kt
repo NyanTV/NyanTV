@@ -98,7 +98,9 @@ fun PlayerScreen(
     var showSubPicker             by remember { mutableStateOf(false) }
     var showTrackingConsentDialog by remember { mutableStateOf(false) }
 
-    val anyPanelOpen = showSubSettings || showStreamPicker || showSubPicker
+    val anyPanelOpen = showSubSettings || showStreamPicker || showSubPicker ||
+            state.pendingEpisodeVideos.isNotEmpty() ||
+            state.fillerWarning != null
 
     val mainFocusRequester    = remember { FocusRequester() }
     val playBtnFocusRequester = remember { FocusRequester() }

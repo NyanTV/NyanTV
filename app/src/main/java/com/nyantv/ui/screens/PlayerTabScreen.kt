@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -37,6 +38,9 @@ import com.nyantv.player.*
 import com.nyantv.ui.player.PlayerArgs
 import com.nyantv.ui.player.StreamTrack
 import com.nyantv.ui.player.SubtitleTrack
+import com.nyantv.ui.utils.displayName
+import com.nyantv.ui.utils.focusBorder
+import com.nyantv.ui.utils.resolveEpisodeMeta
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import kotlinx.coroutines.delay
@@ -277,6 +281,8 @@ fun PlayerTabScreen(
                                     PlayerArgs.resumePositionMs    = watchProgress
                                         ?.takeIf { it.episodeNumber.toInt() == state.selectedEpisode?.episode_number?.toInt() }
                                         ?.positionMs ?: 0L
+                                    PlayerArgs.episodeMeta         = state.episodeMeta
+                                    PlayerArgs.title = state.selectedEpisode?.displayName(state.episodeMeta) ?: ""
                                     vm.clearStreams()
                                     onEpisodeSelected()
                                 },
@@ -362,7 +368,9 @@ private fun EpisodeRow(
     progressFraction: Float?,
     onClick:          () -> Unit,
 ) {
-    val title = meta?.title?.takeIf { it.isNotBlank() }
+    val title = episode.name.takeIf { it.contains(":") }
+        ?: meta?.title?.takeIf { it.isNotBlank() }
+            ?.let { "Episode ${episode.episode_number.toInt()}: $it" }
         ?: episode.name.ifBlank { "Episode ${episode.episode_number.toInt()}" }
     val description = meta?.summary?.takeIf { it.isNotBlank() }
         ?: meta?.overview?.takeIf { it.isNotBlank() }
@@ -454,19 +462,6 @@ private fun EpisodeRow(
     }
 }
 
-private fun Map<String, AniZipEpisodeMeta>.resolveEpisodeMeta(episodeNumber: Float): AniZipEpisodeMeta? {
-    if (isEmpty()) return null
-    val keys = linkedSetOf<String>()
-    if (episodeNumber % 1f == 0f) {
-        keys.add(episodeNumber.toInt().toString())
-        keys.add(episodeNumber.toString())
-    } else {
-        keys.add("%.1f".format(episodeNumber))
-        keys.add(episodeNumber.toString())
-    }
-    return keys.firstNotNullOfOrNull { this[it] }
-}
-
 // ── Result Picker Overlay ─────────────────────────────────────────────────────
 
 @Composable
@@ -494,53 +489,69 @@ private fun ResultPickerOverlay(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
-                modifier          = Modifier.fillMaxWidth().padding(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(
-                    onClick  = onDismiss,
-                    modifier = Modifier
-                        .focusRequester(backButtonFocusReq)
-                        .onPreviewKeyEvent { event ->
-                            event.type == KeyEventType.KeyDown && (event.key == Key.DirectionUp || event.key == Key.DirectionRight)
-                        },
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-                Text(
-                    "Search result",
-                    style    = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+                val searchButtonFocusReq = remember { FocusRequester() }
 
-            OutlinedTextField(
-                value         = query,
-                onValueChange = { query = it },
-                modifier      = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
-                    .focusRequester(searchFocusReq)
-                    .onPreviewKeyEvent { event ->
-                        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                        when (event.key) {
-                            Key.DirectionUp    -> { backButtonFocusReq.requestFocus(); true }
-                            Key.DirectionDown  -> { focusManager.moveFocus(FocusDirection.Down); true }
-                            Key.DirectionLeft  -> true
-                            Key.DirectionRight -> query.selection.end == query.text.length
-                            else -> false
-                        }
-                    },
-                placeholder  = { Text("Search…") },
-                singleLine   = true,
-                trailingIcon = {
-                    IconButton(onClick = { onSearch(query.text) }) {
+                OutlinedTextField(
+                    value         = query,
+                    onValueChange = { query = it },
+                    modifier      = Modifier
+                        .weight(1f)
+                        .focusRequester(searchFocusReq)
+                        .onPreviewKeyEvent { event ->
+                            if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                            when (event.key) {
+                                Key.DirectionUp    -> { backButtonFocusReq.requestFocus(); true }
+                                Key.DirectionDown  -> { focusManager.moveFocus(FocusDirection.Down); true }
+                                Key.DirectionLeft  -> true
+                                Key.DirectionRight -> { searchButtonFocusReq.requestFocus(); true }
+                                else -> false
+                            }
+                        },
+                    placeholder  = { Text("Search…") },
+                    singleLine   = true,
+                )
+
+                Spacer(Modifier.width(8.dp))
+
+                CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+                    FilledIconButton(
+                        onClick = { onSearch(query.text) },
+                        modifier = Modifier
+                            .focusRequester(searchButtonFocusReq)
+                            .onPreviewKeyEvent { event ->
+                                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                                when (event.key) {
+                                    Key.DirectionUp -> {
+                                        searchFocusReq.requestFocus(); true
+                                    }
+
+                                    Key.DirectionDown -> {
+                                        focusManager.moveFocus(FocusDirection.Down); true
+                                    }
+
+                                    Key.DirectionLeft -> {
+                                        searchFocusReq.requestFocus(); true
+                                    }
+
+                                    Key.DirectionCenter,
+                                    Key.Enter -> {
+                                        onSearch(query.text); true
+                                    }
+
+                                    else -> false
+                                }
+                            }
+                            .focusBorder(CircleShape),
+                    ) {
                         Icon(Icons.Default.Search, contentDescription = "Search")
                     }
-                },
-            )
-
-            Spacer(Modifier.height(8.dp))
+                }
+            }
 
             when (val ss = state.searchState) {
                 is SearchState.Loading -> Box(

@@ -1,5 +1,6 @@
 package com.nyantv.ui.player
 
+import com.nyantv.AniZipEpisodeMeta
 import com.nyantv.EpisodeSkipTimes
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Video
@@ -38,12 +39,13 @@ object PlayerArgs {
     var onLoadEpisodeVideos: (suspend (SEpisode) -> List<Video>)? = null
     var fillerEpisodes: Set<Int> = emptySet()
     var skipTimes:           EpisodeSkipTimes?   = null
+    var episodeMeta: Map<String, AniZipEpisodeMeta> = emptyMap()
 
     fun consume(): Snapshot {
         val snapshot = Snapshot(
             streams, subtitleTracks, initialStreamIndex, title,
             mediaId, resumePositionMs, serviceKey, anilistId, malId,
-            episodes, currentEpisodeIndex, onLoadEpisodeVideos, fillerEpisodes, skipTimes,
+            episodes, currentEpisodeIndex, onLoadEpisodeVideos, fillerEpisodes, skipTimes, episodeMeta,
         )
         clear()
         return snapshot
@@ -64,6 +66,7 @@ object PlayerArgs {
         onLoadEpisodeVideos = null
         fillerEpisodes      = emptySet()
         skipTimes           = null
+        episodeMeta         = emptyMap()
     }
 
     data class Snapshot(
@@ -81,5 +84,6 @@ object PlayerArgs {
         val onLoadEpisodeVideos: (suspend (SEpisode) -> List<Video>)? = null,
         val fillerEpisodes:      Set<Int>                             = emptySet(),
         val skipTimes:           EpisodeSkipTimes?                    = null,
+        val episodeMeta:         Map<String, AniZipEpisodeMeta>       = emptyMap()
     )
 }

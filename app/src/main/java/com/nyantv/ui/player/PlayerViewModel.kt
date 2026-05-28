@@ -11,6 +11,7 @@ import android.view.Surface
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
+import com.nyantv.AniZipEpisodeMeta
 import com.nyantv.EpisodeSkipTimes
 import com.nyantv.SkipInterval
 import com.nyantv.player.EpisodeProgress
@@ -18,6 +19,7 @@ import com.nyantv.player.IPlayerCallback
 import com.nyantv.player.IPlayerService
 import com.nyantv.player.PlayerService
 import com.nyantv.player.WatchHistoryStore
+import com.nyantv.ui.utils.displayName
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Video
 import kotlinx.coroutines.flow.*
@@ -199,6 +201,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
      */
 
     private var episodes: List<SEpisode> = emptyList()
+    private var episodeMeta: Map<String, AniZipEpisodeMeta> = emptyMap()
     private var currentEpisodeIndex: Int = -1
     private var onLoadEpisodeVideos: (suspend (SEpisode) -> List<Video>)? = null
     fun loadTracks(snapshot: PlayerArgs.Snapshot) {
@@ -229,10 +232,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
         initialSubIdx?.let { loadSubtitleByIndex(it) }
 
-        episodes            = snapshot.episodes
-        currentEpisodeIndex = snapshot.currentEpisodeIndex
-        onLoadEpisodeVideos = snapshot.onLoadEpisodeVideos
-        fillerEpisodes      = snapshot.fillerEpisodes
+        episodes                 = snapshot.episodes
+        currentEpisodeIndex      = snapshot.currentEpisodeIndex
+        onLoadEpisodeVideos      = snapshot.onLoadEpisodeVideos
+        fillerEpisodes           = snapshot.fillerEpisodes
         mediaId                  = snapshot.mediaId
         serviceKey               = snapshot.serviceKey
         anilistId                = snapshot.anilistId
@@ -242,6 +245,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         pendingResumeMs          = snapshot.resumePositionMs
         hasResumed               = false
         lastSavedPositionMs      = -1L
+        episodeMeta              = snapshot.episodeMeta
 
         _state.update {
             it.copy(
@@ -297,13 +301,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             _state.update {
                 it.copy(
                     fillerWarning = FillerWarning(
-                        targetEpisodeName  = episode.name.ifBlank { "Episode ${episode.episode_number.toInt()}" },
+                        targetEpisodeName  = episode.displayName(episodeMeta),
                         delta              = delta,
                         nextNonFillerIndex = nextNonFillerIndex,
                         nextNonFillerName  = nextNonFillerIndex?.let { idx ->
-                            episodes.getOrNull(idx)?.let { ep ->
-                                ep.name.ifBlank { "Episode ${ep.episode_number.toInt()}" }
-                            }
+                            episodes.getOrNull(idx)?.displayName(episodeMeta)
                         },
                     )
                 )
@@ -336,6 +338,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val targetIndex = currentEpisodeIndex + delta
         val episode     = episodes.getOrNull(targetIndex) ?: return
         val loader      = onLoadEpisodeVideos ?: return
+        _pendingDelta = delta
 
         viewModelScope.launch {
             _state.update { it.copy(episodeNavigating = true) }
@@ -353,10 +356,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                             it.copy(
                                 episodeNavigating    = false,
                                 pendingEpisodeVideos = videos,
-                                pendingEpisodeName   = buildString {
-                                    append(episode.name.ifBlank { "Episode ${episode.episode_number.toInt()}" })
-                                    if (episode.episode_number.toInt() in fillerEpisodes) append(" (Filler)")
-                                },
+                                pendingEpisodeName   = episode.displayName(episodeMeta),
                             )
                         }
                     }
@@ -368,11 +368,12 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun confirmPendingEpisodeStream(index: Int) {
-        val videos  = _state.value.pendingEpisodeVideos
-        val episode = episodes.getOrNull(currentEpisodeIndex + _pendingDelta) ?: return
+        val videos      = _state.value.pendingEpisodeVideos
+        val targetIndex = currentEpisodeIndex + _pendingDelta
+        val episode     = episodes.getOrNull(targetIndex) ?: return
+        _pendingDelta   = 0
         viewModelScope.launch {
-            loadEpisodeVideos(videos, index, episode, currentEpisodeIndex + _pendingDelta)
-            _state.update { it.copy(pendingEpisodeVideos = emptyList()) }
+            loadEpisodeVideos(videos, index, episode, targetIndex)
         }
     }
 
@@ -418,7 +419,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 subtitleTracks        = subs,
                 selectedStreamIndex   = streamIndex,
                 selectedSubtitleIndex = initialSubIdx,
-                title                 = episode.name,
+                title                 = episode.displayName(episodeMeta),
                 episodeNavigating     = false,
                 hasNextEpisode        = newIndex in 0 until episodes.size - 1,
                 hasPrevEpisode        = newIndex > 0,

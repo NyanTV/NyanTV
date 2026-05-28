@@ -47,7 +47,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
+import com.nyantv.AniZipEpisodeMeta
 import com.nyantv.ui.theme.FocusIndication
+import eu.kanade.tachiyomi.animesource.model.SEpisode
 
 @Composable
 fun ScoreBadge(averageScore: Int?) {
@@ -274,4 +276,26 @@ fun SubScreenHeader(title: String, navController: NavController) {
             color      = MaterialTheme.colorScheme.onBackground
         )
     }
+}
+
+fun Map<String, AniZipEpisodeMeta>.resolveEpisodeMeta(episodeNumber: Float): AniZipEpisodeMeta? {
+    if (isEmpty()) return null
+    val keys = linkedSetOf<String>()
+    if (episodeNumber % 1f == 0f) {
+        keys.add(episodeNumber.toInt().toString())
+        keys.add(episodeNumber.toString())
+    } else {
+        keys.add("%.1f".format(episodeNumber))
+        keys.add(episodeNumber.toString())
+    }
+    return keys.firstNotNullOfOrNull { this[it] }
+}
+
+fun SEpisode.displayName(episodeMeta: Map<String, AniZipEpisodeMeta> = emptyMap()): String {
+    val meta = episodeMeta.resolveEpisodeMeta(episode_number)
+    val metaTitle = meta?.title?.takeIf { it.isNotBlank() }
+
+    return name.takeIf { it.contains(":") }
+        ?: metaTitle?.let { "Episode ${episode_number.toInt()}: $it" }
+        ?: name.ifBlank { "Episode ${episode_number.toInt()}" }
 }

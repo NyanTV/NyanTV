@@ -175,7 +175,7 @@ class PlayerTabViewModel(
             }
         }
         if (malId != null) {
-            loadEpisodeMetadata(malId)
+            loadEpisodeMetadata()//malId)
         }
     }
 
