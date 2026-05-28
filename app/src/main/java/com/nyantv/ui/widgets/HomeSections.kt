@@ -35,7 +35,9 @@ fun HomeSections(vm: AppViewModel, navController: NavController, onDetailClick: 
         title        = title,
         poster       = poster,
         episodes     = totalEpisodes,
-        averageScore = averageScore?.takeIf { it > 0f }
+        averageScore = averageScore?.takeIf { it > 0f },
+        serviceType  = service,
+        idMal        = if (service == ServiceType.MAL) id else null,
     )
     fun List<TrackedMedia>.toMedia() = map { it.toMedia() }
     fun navigate(id: String) = onDetailClick(id)
