@@ -310,8 +310,9 @@ class MalService(context: Context) : MediaService {
 
 private fun JsonObject.toMalMedia(): Media {
     val pic = this["main_picture"]?.jsonObject
+    val malId = this["id"]?.jsonPrimitive?.contentOrNull.orEmpty()
     return Media(
-        id           = this["id"]?.jsonPrimitive?.contentOrNull ?: "",
+        id           = malId,
         title        = this["title"]?.jsonPrimitive?.contentOrNull ?: "?",
         poster       = pic?.get("large")?.jsonPrimitive?.contentOrNull,
         description  = this["synopsis"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.contentOrNull,
@@ -321,6 +322,7 @@ private fun JsonObject.toMalMedia(): Media {
         genres       = this["genres"]?.takeIf { it !is JsonNull }?.jsonArray
             ?.mapNotNull { it.jsonObject["name"]?.jsonPrimitive?.contentOrNull }
             ?: emptyList(),
-        serviceType  = ServiceType.MAL
+        serviceType  = ServiceType.MAL,
+        idMal        = malId.takeIf { it.isNotBlank() }
     )
 }
