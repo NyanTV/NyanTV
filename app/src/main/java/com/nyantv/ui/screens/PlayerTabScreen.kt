@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.nyantv.AniZipEpisodeMeta
 import com.nyantv.player.*
 import com.nyantv.ui.player.PlayerArgs
 import com.nyantv.ui.player.StreamTrack
@@ -222,8 +223,10 @@ fun PlayerTabScreen(
                         val progressFraction = watchProgress
                             ?.takeIf { it.episodeNumber.toInt() == epNum && !isWatched }
                             ?.let { (it.positionMs.toFloat() / it.durationMs.toFloat()).coerceIn(0f, 1f) }
+                        val meta = state.episodeMeta.resolveEpisodeMeta(episode.episode_number)
                         EpisodeRow(
                             episode          = episode,
+                            meta             = meta,
                             isLoading        = state.selectedEpisode == episode && state.streamState is StreamState.Loading,
                             isFiller         = epNum in fillerEpisodes,
                             isWatched        = isWatched,
@@ -352,12 +355,21 @@ private fun SourceDropdown(
 @Composable
 private fun EpisodeRow(
     episode:          SEpisode,
+    meta:             AniZipEpisodeMeta?,
     isLoading:        Boolean,
     isFiller:         Boolean,
     isWatched:        Boolean,
     progressFraction: Float?,
     onClick:          () -> Unit,
 ) {
+    val title = meta?.title?.takeIf { it.isNotBlank() }
+        ?: episode.name.ifBlank { "Episode ${episode.episode_number.toInt()}" }
+    val description = meta?.summary?.takeIf { it.isNotBlank() }
+        ?: meta?.overview?.takeIf { it.isNotBlank() }
+    val infoParts = buildList {
+        meta?.rating?.takeIf { it.isNotBlank() }?.let { add("★ $it") }
+        meta?.airDate?.takeIf { it.isNotBlank() }?.let { add(it) }
+    }
     Surface(
         onClick  = onClick,
         modifier = Modifier
@@ -372,19 +384,49 @@ private fun EpisodeRow(
                 verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        episode.name.ifBlank { "Episode ${episode.episode_number.toInt()}" },
-                        style    = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    if (isFiller) {
-                        Text(
-                            "Filler Episode",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                Row(
+                    modifier              = Modifier.weight(1f),
+                    verticalAlignment     = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    meta?.image?.takeIf { it.isNotBlank() }?.let { image ->
+                        AsyncImage(
+                            model              = image,
+                            contentDescription = null,
+                            contentScale       = ContentScale.Crop,
+                            modifier           = Modifier.size(96.dp, 56.dp).clip(RoundedCornerShape(6.dp)),
                         )
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            title,
+                            style    = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        description?.let {
+                            Text(
+                                it,
+                                style    = MaterialTheme.typography.bodySmall,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                color    = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            )
+                        }
+                        if (infoParts.isNotEmpty()) {
+                            Text(
+                                infoParts.joinToString(" · "),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                            )
+                        }
+                        if (isFiller) {
+                            Text(
+                                "Filler Episode",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                            )
+                        }
                     }
                 }
                 if (isLoading)
@@ -410,6 +452,19 @@ private fun EpisodeRow(
             }
         }
     }
+}
+
+private fun Map<String, AniZipEpisodeMeta>.resolveEpisodeMeta(episodeNumber: Float): AniZipEpisodeMeta? {
+    if (isEmpty()) return null
+    val keys = linkedSetOf<String>()
+    if (episodeNumber % 1f == 0f) {
+        keys.add(episodeNumber.toInt().toString())
+        keys.add(episodeNumber.toString())
+    } else {
+        keys.add("%.1f".format(episodeNumber))
+        keys.add(episodeNumber.toString())
+    }
+    return keys.firstNotNullOfOrNull { this[it] }
 }
 
 // ── Result Picker Overlay ─────────────────────────────────────────────────────
