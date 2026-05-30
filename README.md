@@ -1,5 +1,5 @@
 <div align="center">
-<img src='github_assets/images/logo.png' alt='NyanTV Icon' style="border-radius: 50px; height: 150px; width: 150px;">
+<img src='https://files.catbox.moe/rlkc79.png' alt='NyanTV Icon' style="border-radius: 50px; height: 220px; width: 500px;">
 
 <p align="center">
    <img src="https://img.shields.io/badge/platforms-android tv-06599d?color=white&labelColor=black&style=for-the-badge"/>
