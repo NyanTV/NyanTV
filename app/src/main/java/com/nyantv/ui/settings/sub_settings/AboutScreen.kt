@@ -25,12 +25,113 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.nyantv.ui.utils.SubScreenHeader
 import androidx.core.net.toUri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import java.net.URL
+
+// ── Bot exclusion ─────────────────────────────────────────────────────────────
+
+private val EXCLUDED_IDS = setOf(
+    "198982749", // github-actions[bot]
+    "41898282",  // github-actions (actions-user)
+    "65916846",  // actions-user
+    "49699333",  // dependabot[bot]
+    "13309880",  // code-factor
+)
+
+private val EXCLUDED_LOGINS = setOf("actions-user", "code-factor", "github-actions", "dependabot", "openai")
+
+private fun isBot(login: String, id: String, type: String): Boolean {
+    val l = login.lowercase()
+    return l in EXCLUDED_LOGINS || id in EXCLUDED_IDS || type == "Bot" || l.endsWith("[bot]") || l.endsWith("-bot")
+}
+
+// ── Curated contributors (override display fields, pick up live counts) ───────
+
+private data class Contributor(val login: String, val id: String, val name: String, val avatar: String, val url: String, val role: String, val commits: Int = 0, val prs: Int = 0, val pinned: Boolean = false)
+
+private val CURATED = mapOf(
+    "itsmechinmoy" to Contributor("itsmechinmoy", "167056923", "itsmechinmoy", "https://avatars.githubusercontent.com/u/167056923", "https://github.com/itsmechinmoy", "Contributor & Early-Supporter", pinned = true),
+)
+
+// ── GitHub fetch ──────────────────────────────────────────────────────────────
+
+private suspend fun fetchContributors(): List<Contributor> = withContext(Dispatchers.IO) {
+    val byLogin = mutableMapOf<String, Contributor>()
+    var page = 1
+    while (true) {
+        val json = runCatching {
+            URL("https://api.github.com/repos/NyanTV/NyanTV/contributors?per_page=100&page=$page")
+                .openConnection().apply { setRequestProperty("Accept", "application/vnd.github.v3+json"); connectTimeout = 10_000; readTimeout = 10_000 }
+                .getInputStream().bufferedReader().readText()
+        }.getOrNull() ?: break
+        val arr = runCatching { JSONArray(json) }.getOrNull() ?: break
+        if (arr.length() == 0) break
+        for (i in 0 until arr.length()) {
+            val o = arr.getJSONObject(i)
+            val login = o.optString("login").trim().ifEmpty { continue }
+            val id = o.optInt("id").toString()
+            if (isBot(login, id, o.optString("type"))) continue
+            byLogin[login.lowercase()] = Contributor(login, id, login, o.optString("avatar_url"), o.optString("html_url"), "Contributor", commits = o.optInt("contributions"))
+        }
+        page++
+    }
+
+    val prCounts = mutableMapOf<String, Int>()
+    page = 1
+    while (true) {
+        val json = runCatching {
+            URL("https://api.github.com/repos/NyanTV/NyanTV/pulls?state=closed&per_page=100&page=$page")
+                .openConnection().apply { setRequestProperty("Accept", "application/vnd.github.v3+json"); connectTimeout = 10_000; readTimeout = 10_000 }
+                .getInputStream().bufferedReader().readText()
+        }.getOrNull() ?: break
+        val arr = runCatching { JSONArray(json) }.getOrNull() ?: break
+        if (arr.length() == 0) break
+        for (i in 0 until arr.length()) {
+            val o = arr.getJSONObject(i)
+            if (o.isNull("merged_at")) continue
+            val user = o.optJSONObject("user") ?: continue
+            val login = user.optString("login").trim().ifEmpty { continue }
+            val id = user.optInt("id").toString()
+            if (isBot(login, id, user.optString("type"))) continue
+            val key = login.lowercase()
+            prCounts[key] = (prCounts[key] ?: 0) + 1
+        }
+        page++
+    }
+
+    val result = (byLogin.keys + CURATED.keys).map { key ->
+        val c = CURATED[key]; val a = byLogin[key]
+        Contributor(
+            login   = c?.login ?: a?.login ?: key,
+            id      = c?.id ?: a?.id ?: "",
+            name    = c?.name ?: a?.name ?: key,
+            avatar  = c?.avatar ?: a?.avatar ?: "https://avatars.githubusercontent.com/$key",
+            url     = c?.url ?: a?.url ?: "https://github.com/$key",
+            role    = c?.role ?: "Contributor",
+            commits = a?.commits ?: 0,
+            prs     = prCounts[key] ?: 0,
+            pinned  = c?.pinned ?: false,
+        )
+    }
+    result.sortedWith(compareByDescending<Contributor> { it.pinned }.thenByDescending { it.commits })
+}
+
+// ── Screen ────────────────────────────────────────────────────────────────────
 
 @Composable
 fun AboutScreen(navController: NavController) {
     val context = LocalContext.current
     val version = remember {
         context.packageManager.getPackageInfo(context.packageName, 0).versionName
+    }
+
+    var contributors by remember { mutableStateOf<List<Contributor>>(emptyList()) }
+    var loading by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        contributors = runCatching { fetchContributors() }.getOrDefault(emptyList())
+        loading = false
     }
 
     fun openUrl(url: String) {
@@ -109,26 +210,38 @@ fun AboutScreen(navController: NavController) {
 
         // ── Contributors ─────────────────────────────────────────────────────────
         AboutSection(title = "Contributors", subtitle = "Thanks to everyone who helped build NyanTV") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AsyncImage(
-                    model = "https://avatars.githubusercontent.com/u/167056923",
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                )
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("itsmechinmoy", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                    Text("Contributor & Early-Supporter", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+            if (loading) {
+                Box(Modifier.fillMaxWidth().padding(vertical = 20.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                 }
-                IconButton(onClick = { openUrl("https://github.com/itsmechinmoy") }) {
-                    Icon(Icons.AutoMirrored.Filled.OpenInNew, null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), modifier = Modifier.size(18.dp))
+            } else {
+                contributors.forEachIndexed { index, c ->
+                    if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AsyncImage(model = c.avatar, contentDescription = null, modifier = Modifier.size(36.dp).clip(CircleShape))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(c.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                            Text(
+                                buildString {
+                                    append(c.role)
+                                    val stats = listOfNotNull(
+                                        if (c.commits > 0) "${c.commits} commit${if (c.commits == 1) "" else "s"}" else null,
+                                        if (c.prs > 0) "${c.prs} PR${if (c.prs == 1) "" else "s"}" else null,
+                                    )
+                                    if (stats.isNotEmpty()) append(" · ${stats.joinToString(" · ")}")
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
+                        IconButton(onClick = { openUrl(c.url) }) {
+                            Icon(Icons.AutoMirrored.Filled.OpenInNew, null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), modifier = Modifier.size(18.dp))
+                        }
+                    }
                 }
             }
         }
