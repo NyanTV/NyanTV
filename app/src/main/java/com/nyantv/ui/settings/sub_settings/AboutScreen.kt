@@ -38,6 +38,7 @@ private val EXCLUDED_IDS = setOf(
     "65916846",  // actions-user
     "49699333",  // dependabot[bot]
     "13309880",  // code-factor
+    "86238378",  // hoemotion (repo dev, shown separately)
 )
 
 private val EXCLUDED_LOGINS = setOf("actions-user", "code-factor", "github-actions", "dependabot", "openai")
@@ -49,7 +50,7 @@ private fun isBot(login: String, id: String, type: String): Boolean {
 
 // ── Curated contributors (override display fields, pick up live counts) ───────
 
-private data class Contributor(val login: String, val id: String, val name: String, val avatar: String, val url: String, val role: String, val commits: Int = 0, val prs: Int = 0, val pinned: Boolean = false)
+private data class Contributor(val login: String, val id: String, val name: String, val avatar: String, val url: String, val role: String, val commits: Int = 0, val pinned: Boolean = false)
 
 private val CURATED = mapOf(
     "itsmechinmoy" to Contributor("itsmechinmoy", "167056923", "itsmechinmoy", "https://avatars.githubusercontent.com/u/167056923", "https://github.com/itsmechinmoy", "Contributor & Early-Supporter", pinned = true),
@@ -78,29 +79,6 @@ private suspend fun fetchContributors(): List<Contributor> = withContext(Dispatc
         page++
     }
 
-    val prCounts = mutableMapOf<String, Int>()
-    page = 1
-    while (true) {
-        val json = runCatching {
-            URL("https://api.github.com/repos/NyanTV/NyanTV/pulls?state=closed&per_page=100&page=$page")
-                .openConnection().apply { setRequestProperty("Accept", "application/vnd.github.v3+json"); connectTimeout = 10_000; readTimeout = 10_000 }
-                .getInputStream().bufferedReader().readText()
-        }.getOrNull() ?: break
-        val arr = runCatching { JSONArray(json) }.getOrNull() ?: break
-        if (arr.length() == 0) break
-        for (i in 0 until arr.length()) {
-            val o = arr.getJSONObject(i)
-            if (o.isNull("merged_at")) continue
-            val user = o.optJSONObject("user") ?: continue
-            val login = user.optString("login").trim().ifEmpty { continue }
-            val id = user.optInt("id").toString()
-            if (isBot(login, id, user.optString("type"))) continue
-            val key = login.lowercase()
-            prCounts[key] = (prCounts[key] ?: 0) + 1
-        }
-        page++
-    }
-
     val result = (byLogin.keys + CURATED.keys).map { key ->
         val c = CURATED[key]; val a = byLogin[key]
         Contributor(
@@ -111,7 +89,6 @@ private suspend fun fetchContributors(): List<Contributor> = withContext(Dispatc
             url     = c?.url ?: a?.url ?: "https://github.com/$key",
             role    = c?.role ?: "Contributor",
             commits = a?.commits ?: 0,
-            prs     = prCounts[key] ?: 0,
             pinned  = c?.pinned ?: false,
         )
     }
@@ -230,7 +207,6 @@ fun AboutScreen(navController: NavController) {
                                     append(c.role)
                                     val stats = listOfNotNull(
                                         if (c.commits > 0) "${c.commits} commit${if (c.commits == 1) "" else "s"}" else null,
-                                        if (c.prs > 0) "${c.prs} PR${if (c.prs == 1) "" else "s"}" else null,
                                     )
                                     if (stats.isNotEmpty()) append(" · ${stats.joinToString(" · ")}")
                                 },
