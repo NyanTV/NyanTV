@@ -124,16 +124,15 @@ class SimklService(context: Context) : MediaService {
             _trendingShows.value  = shows.await()
             val combined = (_trendingMovies.value + _trendingShows.value)
                 .sortedByDescending { it.popularity }
-            _trending.value = combined.take(15)
-            _popular.value  = combined.drop(15).take(15)
+            _trending.value = combined.take(10)
+            _popular.value  = combined.drop(10).take(20)
         }
     }
 
     private suspend fun fetchTrending(type: String): List<Media> = withContext(Dispatchers.IO) {
         runCatching {
-            val simklType = if (type == "movies") "movies" else "tv"
             val req = Request.Builder()
-                .url("https://data.simkl.in/discover/trending/$simklType/today_100.json?client_id=${BuildConfig.SIMKL_CLIENT_ID}")
+                .url("$SIMKL_API/$type/trending?extended=overview&client_id=${BuildConfig.SIMKL_CLIENT_ID}")
                 .build()
             val resp = http.newCall(req).execute()
             if (!resp.isSuccessful) {
@@ -142,8 +141,19 @@ class SimklService(context: Context) : MediaService {
             }
             val body = resp.body.string()
             android.util.Log.d("SimklService", "fetchTrending $type sample: ${body.take(500)}")
-            json.parseToJsonElement(body).jsonArray
+            val items = json.parseToJsonElement(body).jsonArray
                 .mapNotNull { it.jsonObject.toSimklMedia(isMovie = type == "movies") }
+
+            coroutineScope {
+                items.take(5).map { media ->
+                    async {
+                        val simklId = media.id.substringBefore("*")
+                        val detail = getRaw("$SIMKL_API/$type/$simklId?extended=full&client_id=${BuildConfig.SIMKL_CLIENT_ID}")
+                        val tmdbId = detail?.get("ids")?.jsonObject?.get("tmdb")?.jsonPrimitive?.contentOrNull
+                        if (tmdbId != null) media.copy(tmdbId = tmdbId) else media
+                    }
+                }.awaitAll() + items.drop(5)
+            }
         }.getOrElse {
             android.util.Log.e("SimklService", "fetchTrending $type failed", it)
             emptyList()
