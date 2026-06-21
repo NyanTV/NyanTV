@@ -243,28 +243,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val _anilistShowPlanned  = MutableStateFlow(prefs.getBoolean("anilist_show_planned",  false))
     private val _malShowContinue     = MutableStateFlow(prefs.getBoolean("mal_show_continue",     true))
     private val _malShowPlanned      = MutableStateFlow(prefs.getBoolean("mal_show_planned",      false))
-    private val _simklShowContMovies = MutableStateFlow(prefs.getBoolean("simkl_cont_movies",     true))
-    private val _simklShowPlanMovies = MutableStateFlow(prefs.getBoolean("simkl_plan_movies",     false))
-    private val _simklShowContSeries = MutableStateFlow(prefs.getBoolean("simkl_cont_series",     true))
-    private val _simklShowPlanSeries = MutableStateFlow(prefs.getBoolean("simkl_plan_series",     false))
+    private val _simklShowContinue   = MutableStateFlow(prefs.getBoolean("simkl_show_continue", true))
+    private val _simklShowPlanned    = MutableStateFlow(prefs.getBoolean("simkl_show_planned",  false))
 
     val anilistShowContinue: StateFlow<Boolean> = _anilistShowContinue.asStateFlow()
     val anilistShowPlanned:  StateFlow<Boolean> = _anilistShowPlanned.asStateFlow()
     val malShowContinue:     StateFlow<Boolean> = _malShowContinue.asStateFlow()
     val malShowPlanned:      StateFlow<Boolean> = _malShowPlanned.asStateFlow()
-    val simklShowContMovies: StateFlow<Boolean> = _simklShowContMovies.asStateFlow()
-    val simklShowPlanMovies: StateFlow<Boolean> = _simklShowPlanMovies.asStateFlow()
-    val simklShowContSeries: StateFlow<Boolean> = _simklShowContSeries.asStateFlow()
-    val simklShowPlanSeries: StateFlow<Boolean> = _simklShowPlanSeries.asStateFlow()
+    val simklShowContinue:   StateFlow<Boolean> = _simklShowContinue.asStateFlow()
+    val simklShowPlanned:    StateFlow<Boolean> = _simklShowPlanned.asStateFlow()
 
     fun setAnilistShowContinue(v: Boolean) { _anilistShowContinue.value = v; prefs.edit { putBoolean("anilist_show_continue", v) } }
     fun setAnilistShowPlanned(v: Boolean)  { _anilistShowPlanned.value  = v; prefs.edit { putBoolean("anilist_show_planned",  v) } }
     fun setMalShowContinue(v: Boolean)     { _malShowContinue.value     = v; prefs.edit { putBoolean("mal_show_continue",     v) } }
     fun setMalShowPlanned(v: Boolean)      { _malShowPlanned.value      = v; prefs.edit { putBoolean("mal_show_planned",      v) } }
-    fun setSimklShowContMovies(v: Boolean) { _simklShowContMovies.value = v; prefs.edit { putBoolean("simkl_cont_movies",     v) } }
-    fun setSimklShowPlanMovies(v: Boolean) { _simklShowPlanMovies.value = v; prefs.edit { putBoolean("simkl_plan_movies",     v) } }
-    fun setSimklShowContSeries(v: Boolean) { _simklShowContSeries.value = v; prefs.edit { putBoolean("simkl_cont_series",     v) } }
-    fun setSimklShowPlanSeries(v: Boolean) { _simklShowPlanSeries.value = v; prefs.edit { putBoolean("simkl_plan_series",     v) } }
+    fun setSimklShowContinue(v: Boolean)   { _simklShowContinue.value   = v; prefs.edit { putBoolean("simkl_show_continue",   v) } }
+    fun setSimklShowPlanned(v: Boolean)    { _simklShowPlanned.value    = v; prefs.edit { putBoolean("simkl_show_planned",    v) } }
 
     // ── Actions ────────────────────────────────────────────────────────────────
 
