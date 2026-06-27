@@ -1,5 +1,7 @@
 package com.nyantv.ui.widgets
 
+import androidx.compose.animation.core.animateFloatAsState
+import coil.compose.AsyncImagePainter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -38,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -138,27 +141,7 @@ fun HomeHeroCarousel(
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (!logoUrl.isNullOrBlank()) {
-                        AsyncImage(
-                            model = logoUrl,
-                            contentDescription = media.title,
-                            contentScale = ContentScale.Fit,
-                            alignment = Alignment.CenterStart,
-                            modifier = Modifier
-                                .heightIn(max = 55.dp)
-                                .widthIn(max = 280.dp)
-                                .wrapContentWidth(Alignment.Start)
-                        )
-                    } else {
-                        Text(
-                            text = media.title,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                    TitleOrLogo(media = media, logoUrl = logoUrl)
                     CarouselStats(media = media)
                 }
             }
@@ -184,6 +167,44 @@ fun HomeHeroCarousel(
                         )
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun TitleOrLogo(media: Media, logoUrl: String?) {
+    var logoLoaded by remember(media.id, logoUrl) { mutableStateOf(false) }
+    val logoAlpha by animateFloatAsState(targetValue = if (logoLoaded) 1f else 0f, label = "logoAlpha")
+
+    Box(modifier = Modifier.heightIn(min = 32.dp, max = 55.dp)) {
+        Text(
+            text = media.title,
+            style = MaterialTheme.typography.titleLarge,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .graphicsLayer { alpha = 1f - logoAlpha }
+        )
+
+        if (!logoUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = logoUrl,
+                contentDescription = media.title,
+                contentScale = ContentScale.Fit,
+                alignment = Alignment.CenterStart,
+                onState = { state ->
+                    logoLoaded = state is AsyncImagePainter.State.Success
+                },
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .heightIn(max = 55.dp)
+                    .widthIn(max = 280.dp)
+                    .wrapContentWidth(Alignment.Start)
+                    .graphicsLayer { alpha = logoAlpha }
+            )
         }
     }
 }

@@ -275,18 +275,7 @@ class PlayerTabViewModel(
     fun loadSkipTimes(episodeNumber: Float) {
         viewModelScope.launch {
             _state.update { it.copy(skipTimes = null) }
-            val result: EpisodeSkipTimes? = when {
-                serviceKey == "simkl" -> {
-                    val iid = imdbId ?: return@launch
-                    IntroDbService.getSkipTimes(iid, season = "1", episode = episodeNumber.toInt().toString())
-                }
-                _malId != null -> AniskipService.getSkipTimes(
-                    malId         = _malId!!,
-                    episodeNumber = episodeNumber.toInt().toString(),
-                )
-                else -> null
-            }
-            _state.update { it.copy(skipTimes = result) }
+            _state.update { it.copy(skipTimes = fetchSkipTimesFor(episodeNumber)) }
         }
     }
 
@@ -297,6 +286,21 @@ class PlayerTabViewModel(
             _state.update { it.copy(skipTimes = result) }
         }
     }
+    suspend fun fetchSkipTimesFor(episodeNumber: Float): EpisodeSkipTimes? = when {
+        serviceKey == "simkl" -> {
+            val iid = imdbId ?: return null
+            IntroDbService.getSkipTimes(iid, season = "1", episode = episodeNumber.toInt().toString())
+        }
+        _malId != null -> AniskipService.getSkipTimes(
+            malId         = _malId!!,
+            episodeNumber = episodeNumber.toInt().toString(),
+        )
+        else -> null
+    }
+
+    /** Overload accepting an [SEpisode] directly, for convenience at call sites. */
+    suspend fun fetchSkipTimesFor(episode: SEpisode): EpisodeSkipTimes? =
+        fetchSkipTimesFor(episode.episode_number)
 
     fun selectSource(source: SearchableSource) {
         if (source.id == _state.value.selectedSource?.id) return
@@ -320,8 +324,9 @@ class PlayerTabViewModel(
                 }
                 _state.update { it.copy(selectedAnime = anime) }
                 loadEpisodes(source, anime)
+            } else {
+                autoSearch(source, _state.value.searchQuery)
             }
-            autoSearch(source, _state.value.searchQuery)
         }
     }
 
@@ -354,19 +359,26 @@ class PlayerTabViewModel(
 
     private suspend fun doSearch(source: SearchableSource, query: String) {
         searchJob?.cancel()
-        _state.update { it.copy(searchState = SearchState.Loading) }
-        searchJob = viewModelScope.launch {
+        val job = viewModelScope.launch {
+            _state.update { it.copy(searchState = SearchState.Loading) }
             runCatching { withContext(Dispatchers.IO) { source.search(query) } }
                 .onSuccess { page ->
+                    if (page.animes.isEmpty()) {
+                        _state.update { it.copy(searchState = SearchState.Error("No results found")) }
+                        return@onSuccess
+                    }
                     _state.update { it.copy(searchState = SearchState.Results(page.animes)) }
-                    if (_state.value.selectedAnime == null && page.animes.isNotEmpty()) {
+                    if (_state.value.selectedAnime == null) {
                         selectAnimeResult(page.animes.first(), autoSelected = true)
                     }
                 }
                 .onFailure { e ->
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     _state.update { it.copy(searchState = SearchState.Error(e.message ?: "Search failed")) }
                 }
         }
+        searchJob = job
+        job.join()
     }
 
     fun selectAnimeResult(anime: SAnime, autoSelected: Boolean = false) {

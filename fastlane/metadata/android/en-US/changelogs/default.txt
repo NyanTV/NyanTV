@@ -1,14 +1,23 @@
-### 🔧 Bug Fixes & Improvements
--   resolve detail screen scroll jank and login race condition
--   correct continue watching order after updating entry
--   fix: reuse playerviewmodel across player sessions to prevent oom
--   duplicate subtitles  restricted subtitles
--   cramped up stream and subs picker
--   focus loss in player screen when skipping oped
--   extension settings causing app crash
+### 🌟 Features
+-   remember preferred subtitle language across sessions
+-   finalize subtitle improvements and player settings
+-   implement optional path-based subtitle grouping
 
-### 🚀 Performance Improvements
--   parallelize carousel asset preloading and deduplicate logo resolution
--   parallelize auth initialization and remove redundant mal network calls
+### 🔧 Bug Fixes & Improvements
+-   aniskip timestamps not refreshing when switching episodes
+-   prevent blank playertab screen on extensions with noempty search results
+-   send status update independently of episode progress in simkl sync
+-   eliminate blocking mpv jni calls from aidl getters
+-   playerscreen switching to screensaver when not interacting with the remote while watching stuff
+-   showing subtitles from previous streams and mpv player clashing with exoplayer
+
+### 🎨 Style Changes
+-   keep title visible while logo loads carousel
+
+### 🧹 Chores & Documentation
+-   bump tachiyomi
+-   support hoster-based video list flow in animehttpsource and bump anime lib version max to 16
+-   add cloudflare and webview interceptor
+-   add network security config
 
  

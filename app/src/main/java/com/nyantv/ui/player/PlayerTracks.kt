@@ -78,6 +78,7 @@ object PlayerArgs {
     var episodes: List<SEpisode> = emptyList()
     var currentEpisodeIndex: Int = -1
     var onLoadEpisodeVideos: (suspend (SEpisode) -> List<Video>)? = null
+    var onLoadSkipTimes:     (suspend (SEpisode) -> EpisodeSkipTimes?)? = null
     var fillerEpisodes: Set<Int> = emptySet()
     var skipTimes:           EpisodeSkipTimes?   = null
     var episodeMeta: Map<String, AniZipEpisodeMeta> = emptyMap()
@@ -87,9 +88,26 @@ object PlayerArgs {
 
     fun consume(): Snapshot {
         val snapshot = Snapshot(
-            streams, subtitleTracks, initialStreamIndex, title, seriesTitle,
-            mediaId, resumePositionMs, serviceKey, anilistId, malId,
-            episodes, currentEpisodeIndex, onLoadEpisodeVideos, fillerEpisodes, skipTimes, episodeMeta, mediaCoverUrl, mediaBannerUrl, mediaPosterUrl
+            streams = streams,
+            subtitleTracks = subtitleTracks,
+            initialStreamIndex = initialStreamIndex,
+            title = title,
+            seriesTitle = seriesTitle,
+            mediaId = mediaId,
+            resumePositionMs = resumePositionMs,
+            serviceKey = serviceKey,
+            anilistId = anilistId,
+            malId = malId,
+            episodes = episodes,
+            currentEpisodeIndex = currentEpisodeIndex,
+            onLoadEpisodeVideos = onLoadEpisodeVideos,
+            onLoadSkipTimes = onLoadSkipTimes,
+            fillerEpisodes = fillerEpisodes,
+            skipTimes = skipTimes,
+            episodeMeta = episodeMeta,
+            mediaCoverUrl = mediaCoverUrl,
+            mediaBannerUrl = mediaBannerUrl,
+            mediaPosterUrl = mediaPosterUrl,
         )
         clear()
         return snapshot
@@ -109,6 +127,7 @@ object PlayerArgs {
         episodes            = emptyList()
         currentEpisodeIndex = -1
         onLoadEpisodeVideos = null
+        onLoadSkipTimes     = null
         fillerEpisodes      = emptySet()
         skipTimes           = null
         episodeMeta         = emptyMap()
@@ -131,6 +150,7 @@ object PlayerArgs {
         val episodes:            List<SEpisode>                       = emptyList(),
         val currentEpisodeIndex: Int                                  = -1,
         val onLoadEpisodeVideos: (suspend (SEpisode) -> List<Video>)? = null,
+        val onLoadSkipTimes:     (suspend (SEpisode) -> EpisodeSkipTimes?)? = null,
         val fillerEpisodes:      Set<Int>                             = emptySet(),
         val skipTimes:           EpisodeSkipTimes?                    = null,
         val episodeMeta:         Map<String, AniZipEpisodeMeta>       = emptyMap(),

@@ -346,9 +346,11 @@ class SimklService(context: Context) : MediaService {
             val isMovie = id.substringAfter("*") == "MOVIE"
             val simklId = id.substringBefore("*")
             val newStatus = alStatusToSimkl(status ?: "CURRENT")
-            val alreadyExists = _animeList.value.any { it.id == id }
-            val currentProgress = _animeList.value.firstOrNull { it.id == id }?.episodeCount ?: 0
+            val existingEntry = _animeList.value.firstOrNull { it.id == id }
+            val alreadyExists = existingEntry != null
+            val currentProgress = existingEntry?.episodeCount ?: 0
             val isDecreasing = progress != null && progress < currentProgress
+            val statusChanged = alreadyExists && existingEntry.watchingStatus != (status ?: existingEntry.watchingStatus)
 
             if (isMovie) {
                 val body = buildJsonObject {
@@ -362,6 +364,18 @@ class SimklService(context: Context) : MediaService {
                 val url = if (alreadyExists) "$SIMKL_API/sync/history" else "$SIMKL_API/sync/add-to-list"
                 postJsonAuthed(url, body)
             } else {
+                if (!alreadyExists || statusChanged) {
+                    val statusBody = buildJsonObject {
+                        put("shows", buildJsonArray {
+                            add(buildJsonObject {
+                                put("to", newStatus)
+                                put("ids", buildJsonObject { put("simkl", simklId) })
+                            })
+                        })
+                    }
+                    postJsonAuthed("$SIMKL_API/sync/add-to-list", statusBody)
+                }
+
                 if (isDecreasing) {
                     val removeBody = buildJsonObject {
                         put("shows", buildJsonArray {
@@ -397,16 +411,6 @@ class SimklService(context: Context) : MediaService {
                         })
                     }
                     postJsonAuthed("$SIMKL_API/sync/history", addBody)
-                } else if (!alreadyExists) {
-                    val addBody = buildJsonObject {
-                        put("shows", buildJsonArray {
-                            add(buildJsonObject {
-                                put("to", newStatus)
-                                put("ids", buildJsonObject { put("simkl", simklId) })
-                            })
-                        })
-                    }
-                    postJsonAuthed("$SIMKL_API/sync/add-to-list", addBody)
                 }
             }
 

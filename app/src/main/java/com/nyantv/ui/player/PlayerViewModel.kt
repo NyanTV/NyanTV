@@ -86,6 +86,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     companion object {
         private const val TAG          = "NyanTV:PlayerVM"
         private const val PREF_QUALITY = "preferred_quality_name"
+        private const val PREF_SUBTITLE  = "preferred_subtitle_name"
     }
 
     private val prefs = app.getSharedPreferences("nyantv_player_prefs", Context.MODE_PRIVATE)
@@ -240,6 +241,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var episodeMeta: Map<String, AniZipEpisodeMeta> = emptyMap()
     private var currentEpisodeIndex: Int = -1
     private var onLoadEpisodeVideos: (suspend (SEpisode) -> List<Video>)? = null
+    private var onLoadSkipTimes: (suspend (SEpisode) -> EpisodeSkipTimes?)? = null
     fun loadTracks(snapshot: PlayerArgs.Snapshot) {
         _state.update { it.copy(error = null) }
 
@@ -251,7 +253,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             ?.let { name -> streams.indexOfFirst { it.name == name }.takeIf { it >= 0 } }
             ?: snapshot.initialStreamIndex.coerceIn(0, (streams.size - 1).coerceAtLeast(0))
 
-        val initialSubIdx = if (subtitles.isNotEmpty()) 0 else null
+        val savedSubtitle = prefs.getString(PREF_SUBTITLE, null)
+        val initialSubIdx = when {
+            subtitles.isEmpty() -> null
+            savedSubtitle != null -> subtitles.indexOfFirst { it.name == savedSubtitle }
+                .takeIf { it >= 0 } ?: 0
+            else -> 0
+        }
 
         _state.update {
             it.copy(
@@ -278,6 +286,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         episodes                 = snapshot.episodes
         currentEpisodeIndex      = snapshot.currentEpisodeIndex
         onLoadEpisodeVideos      = snapshot.onLoadEpisodeVideos
+        onLoadSkipTimes          = snapshot.onLoadSkipTimes
         fillerEpisodes           = snapshot.fillerEpisodes
         mediaId                  = snapshot.mediaId
         seriesTitle              = snapshot.seriesTitle
@@ -459,6 +468,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var _pendingDelta = 0
 
     private var fillerEpisodes: Set<Int> = emptySet()
+    private var skipTimesFetchToken = 0
 
     private fun loadEpisodeVideos(
         videos:      List<Video>,
@@ -500,7 +510,14 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         hasResumed               = false
         lastSavedPositionMs      = -1L
 
-        val initialSubIdx = if (subs.isNotEmpty()) 0 else null
+        val savedSubtitle = prefs.getString(PREF_SUBTITLE, null)
+        val initialSubIdx = when {
+            subs.isEmpty() -> null
+            savedSubtitle != null -> subs.indexOfFirst { it.name == savedSubtitle }
+                .takeIf { it >= 0 } ?: 0
+            else -> 0
+        }
+        val skipFetchToken = ++skipTimesFetchToken
 
         _state.update {
             it.copy(
@@ -513,6 +530,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 hasNextEpisode        = newIndex in 0 until episodes.size - 1,
                 hasPrevEpisode        = newIndex > 0,
                 pendingEpisodeVideos  = emptyList(),
+                skipTimes             = null,
+                activeSkip            = null,
             )
         }
 
@@ -520,6 +539,18 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         initialSubIdx?.let { loadSubtitleByIndex(it) } ?: run {
             subtitleEngine.clear()
             _currentCue.value = null
+        }
+
+        val loader = onLoadSkipTimes
+        if (loader != null) {
+            viewModelScope.launch {
+                val result = runCatching { loader(episode) }.getOrNull()
+                if (skipFetchToken == skipTimesFetchToken) {
+                    _state.update { it.copy(skipTimes = result) }
+                    val currentSec = (_state.value.positionMs / 1000L).toInt()
+                    _state.update { it.copy(activeSkip = computeActiveSkip(currentSec)) }
+                }
+            }
         }
     }
 
@@ -546,7 +577,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         if (index == null) {
             subtitleEngine.clear()
             _currentCue.value = null
+            prefs.edit { putString(PREF_SUBTITLE, null) }
         } else {
+            val track = _state.value.subtitleTracks.getOrNull(index)
+            prefs.edit { putString(PREF_SUBTITLE, track?.name) }
             loadSubtitleByIndex(index)
         }
     }
