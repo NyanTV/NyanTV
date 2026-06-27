@@ -86,6 +86,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     companion object {
         private const val TAG          = "NyanTV:PlayerVM"
         private const val PREF_QUALITY = "preferred_quality_name"
+        private const val PREF_SUBTITLE  = "preferred_subtitle_name"
     }
 
     private val prefs = app.getSharedPreferences("nyantv_player_prefs", Context.MODE_PRIVATE)
@@ -252,7 +253,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             ?.let { name -> streams.indexOfFirst { it.name == name }.takeIf { it >= 0 } }
             ?: snapshot.initialStreamIndex.coerceIn(0, (streams.size - 1).coerceAtLeast(0))
 
-        val initialSubIdx = if (subtitles.isNotEmpty()) 0 else null
+        val savedSubtitle = prefs.getString(PREF_SUBTITLE, null)
+        val initialSubIdx = when {
+            subtitles.isEmpty() -> null
+            savedSubtitle != null -> subtitles.indexOfFirst { it.name == savedSubtitle }
+                .takeIf { it >= 0 } ?: 0
+            else -> 0
+        }
 
         _state.update {
             it.copy(
@@ -503,7 +510,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         hasResumed               = false
         lastSavedPositionMs      = -1L
 
-        val initialSubIdx = if (subs.isNotEmpty()) 0 else null
+        val savedSubtitle = prefs.getString(PREF_SUBTITLE, null)
+        val initialSubIdx = when {
+            subs.isEmpty() -> null
+            savedSubtitle != null -> subs.indexOfFirst { it.name == savedSubtitle }
+                .takeIf { it >= 0 } ?: 0
+            else -> 0
+        }
         val skipFetchToken = ++skipTimesFetchToken
 
         _state.update {
@@ -564,7 +577,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         if (index == null) {
             subtitleEngine.clear()
             _currentCue.value = null
+            prefs.edit { putString(PREF_SUBTITLE, null) }
         } else {
+            val track = _state.value.subtitleTracks.getOrNull(index)
+            prefs.edit { putString(PREF_SUBTITLE, track?.name) }
             loadSubtitleByIndex(index)
         }
     }
