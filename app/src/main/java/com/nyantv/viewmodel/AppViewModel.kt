@@ -117,6 +117,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val _trendingMovies = MutableStateFlow<List<Media>>(emptyList())
     private val _trendingShows  = MutableStateFlow<List<Media>>(emptyList())
 
+    // Simkl Discover – per-country lists
+    private val _korean   = MutableStateFlow<List<Media>>(emptyList())
+    private val _japanese = MutableStateFlow<List<Media>>(emptyList())
+    private val _us       = MutableStateFlow<List<Media>>(emptyList())
+    private val _uk       = MutableStateFlow<List<Media>>(emptyList())
+    private val _canada   = MutableStateFlow<List<Media>>(emptyList())
+
     private val _carouselLogos     = MutableStateFlow<Map<String, String?>>(emptyMap())
     private val _carouselBackdrops = MutableStateFlow<Map<String, String?>>(emptyMap())
     val carouselLogos:     StateFlow<Map<String, String?>> = _carouselLogos.asStateFlow()
@@ -132,8 +139,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val recentlyUpdated: StateFlow<List<Media>>        = _recentlyUpdated.asStateFlow()
     val searchResults:   StateFlow<List<Media>>        = _searchResults.asStateFlow()
     val networkState:    StateFlow<NetworkState>       = _networkState.asStateFlow()
-    val trendingMovies: StateFlow<List<Media>> = _trendingMovies.asStateFlow()
-    val trendingShows:  StateFlow<List<Media>> = _trendingShows.asStateFlow()
+    val trendingMovies:  StateFlow<List<Media>>        = _trendingMovies.asStateFlow()
+    val trendingShows:   StateFlow<List<Media>>        = _trendingShows.asStateFlow()
+    val korean:          StateFlow<List<Media>>        = _korean.asStateFlow()
+    val japanese:        StateFlow<List<Media>>        = _japanese.asStateFlow()
+    val us:              StateFlow<List<Media>>        = _us.asStateFlow()
+    val uk:              StateFlow<List<Media>>        = _uk.asStateFlow()
+    val canada:          StateFlow<List<Media>>        = _canada.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -170,6 +182,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _recentlyUpdated.value   = emptyList()
         _trendingMovies.value    = emptyList()
         _trendingShows.value     = emptyList()
+        _korean.value            = emptyList()
+        _japanese.value          = emptyList()
+        _us.value                = emptyList()
+        _uk.value                = emptyList()
+        _canada.value            = emptyList()
 
         _service     = buildService(type, getApplication())
         sideService  = buildSideService(type, getApplication())
@@ -206,13 +223,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         serviceJobs += viewModelScope.launch { _service.popular.collect         { _popular.value = it } }
         serviceJobs += viewModelScope.launch { _service.upcoming.collect        { _upcoming.value = it } }
         serviceJobs += viewModelScope.launch { _service.recentlyUpdated.collect { _recentlyUpdated.value = it } }
+
         val simkl = _service as? SimklService
         if (simkl != null) {
             serviceJobs += viewModelScope.launch { simkl.trendingMovies.collect { _trendingMovies.value = it } }
             serviceJobs += viewModelScope.launch { simkl.trendingShows.collect  { _trendingShows.value = it } }
+            serviceJobs += viewModelScope.launch { simkl.korean.collect         { _korean.value         = it } }
+            serviceJobs += viewModelScope.launch { simkl.japanese.collect       { _japanese.value       = it } }
+            serviceJobs += viewModelScope.launch { simkl.us.collect             { _us.value             = it } }
+            serviceJobs += viewModelScope.launch { simkl.uk.collect             { _uk.value             = it } }
+            serviceJobs += viewModelScope.launch { simkl.canada.collect         { _canada.value         = it } }
         } else {
             _trendingMovies.value = emptyList()
             _trendingShows.value  = emptyList()
+            _korean.value         = emptyList()
+            _japanese.value       = emptyList()
+            _us.value             = emptyList()
+            _uk.value             = emptyList()
+            _canada.value         = emptyList()
         }
     }
 
@@ -243,8 +271,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val _anilistShowPlanned  = MutableStateFlow(prefs.getBoolean("anilist_show_planned",  false))
     private val _malShowContinue     = MutableStateFlow(prefs.getBoolean("mal_show_continue",     true))
     private val _malShowPlanned      = MutableStateFlow(prefs.getBoolean("mal_show_planned",      false))
-    private val _simklShowContinue   = MutableStateFlow(prefs.getBoolean("simkl_show_continue", true))
-    private val _simklShowPlanned    = MutableStateFlow(prefs.getBoolean("simkl_show_planned",  false))
+    private val _simklShowContinue   = MutableStateFlow(prefs.getBoolean("simkl_show_continue",   true))
+    private val _simklShowPlanned    = MutableStateFlow(prefs.getBoolean("simkl_show_planned",    false))
 
     val anilistShowContinue: StateFlow<Boolean> = _anilistShowContinue.asStateFlow()
     val anilistShowPlanned:  StateFlow<Boolean> = _anilistShowPlanned.asStateFlow()
@@ -266,7 +294,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _networkState.value = NetworkState.LOADING
 
         repeat(3) { attempt ->
-            val result = runCatching { _service.fetchHomePage() }
+            val result = runCatching {
+                val simkl = _service as? SimklService
+                if (simkl != null) {
+                    coroutineScope {
+                        val home     = async { simkl.fetchHomePage() }
+                        val discover = async { simkl.fetchDiscoverPage() }
+                        home.await()
+                        discover.await()
+                    }
+                } else {
+                    _service.fetchHomePage()
+                }
+            }
             if (result.isSuccess) {
                 _networkState.value = NetworkState.SUCCESS
                 return@launch
@@ -283,7 +323,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             .onFailure { android.util.Log.e("AppViewModel", "autoLogin failed on retry", it) }
 
         runCatching { sideService?.autoLogin() }
-            .onFailure {  android.util.Log.e("AppViewModel", "sideService autoLogin failed on retry", it) }
+            .onFailure { android.util.Log.e("AppViewModel", "sideService autoLogin failed on retry", it) }
 
         loadHome()
     }
@@ -348,11 +388,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             is SimklService   -> target.handleAuthCallback(code)
         }
     }
-
-    // Filtered list helpers
-    //fun listByStatus(status: String) = animeList.value.filter {
-    //    it.watchingStatus?.equals(status, ignoreCase = true) == true
-    //}
 
     private fun buildSideService(active: ServiceType, app: Application): MediaService? =
         when (active) {
