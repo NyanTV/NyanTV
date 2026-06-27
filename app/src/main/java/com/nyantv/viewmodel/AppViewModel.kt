@@ -389,6 +389,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // Filtered list helpers
+    //fun listByStatus(status: String) = animeList.value.filter {
+    //    it.watchingStatus?.equals(status, ignoreCase = true) == true
+    //}
+
     private fun buildSideService(active: ServiceType, app: Application): MediaService? =
         when (active) {
             ServiceType.ANILIST -> buildService(ServiceType.MAL,     app)
