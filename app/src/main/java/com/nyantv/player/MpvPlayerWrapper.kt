@@ -7,7 +7,10 @@ import dev.jdtech.mpv.MPVLib
 
 class MpvPlayerWrapper(private val context: Context) {
 
-    companion object { private const val TAG = "NyanTV:MpvWrapper" }
+    companion object {
+        private const val TAG = "NyanTV:MpvWrapper"
+        private const val POSITION_UPDATE_THROTTLE_MS = 500L
+    }
 
     interface Listener {
         fun onStateChanged(state: Int)
@@ -22,14 +25,22 @@ class MpvPlayerWrapper(private val context: Context) {
     private var durationMs: Long = 0L
     private var lib: MPVLib? = null
 
+    @Volatile private var lastPositionEmitMs: Long = 0L
+
     private val observer = object : MPVLib.EventObserver {
 
         override fun eventProperty(property: String) {}
 
         override fun eventProperty(property: String, value: Long) {
             when (property) {
-                "time-pos"                    -> listener?.onPositionChanged(value * 1000L, durationMs)
-                "duration"                    -> durationMs = value * 1000L
+                "time-pos" -> {
+                    val now = System.currentTimeMillis()
+                    if (now - lastPositionEmitMs >= POSITION_UPDATE_THROTTLE_MS) {
+                        lastPositionEmitMs = now
+                        listener?.onPositionChanged(value * 1000L, durationMs)
+                    }
+                }
+                "duration" -> durationMs = value * 1000L
                 "demuxer-cache-time" -> {
                     val pos = lib?.getPropertyDouble("time-pos") ?: 0.0
                     listener?.onBufferedChanged(
@@ -43,8 +54,14 @@ class MpvPlayerWrapper(private val context: Context) {
 
         override fun eventProperty(property: String, value: Double) {
             when (property) {
-                "time-pos"                    -> listener?.onPositionChanged((value * 1000).toLong(), durationMs)
-                "duration"                    -> durationMs = (value * 1000).toLong()
+                "time-pos" -> {
+                    val now = System.currentTimeMillis()
+                    if (now - lastPositionEmitMs >= POSITION_UPDATE_THROTTLE_MS) {
+                        lastPositionEmitMs = now
+                        listener?.onPositionChanged((value * 1000).toLong(), durationMs)
+                    }
+                }
+                "duration" -> durationMs = (value * 1000).toLong()
                 "demuxer-cache-time" -> {
                     val pos = lib?.getPropertyDouble("time-pos") ?: 0.0
                     listener?.onBufferedChanged(
@@ -72,7 +89,11 @@ class MpvPlayerWrapper(private val context: Context) {
                 MPVLib.MpvEvent.MPV_EVENT_VIDEO_RECONFIG   -> {
                     val w = lib?.getPropertyInt("width")  ?: 0
                     val h = lib?.getPropertyInt("height") ?: 0
-                    if (w > 0 && h > 0) listener?.onVideoSizeChanged(w, h)
+                    if (w > 0 && h > 0) {
+                        listener?.onVideoSizeChanged(w, h)
+                    } else {
+                        listener?.onError("video_reconfig_failed")
+                    }
                 }
             }
         }
@@ -102,13 +123,20 @@ class MpvPlayerWrapper(private val context: Context) {
         }
     }
 
+    private var attachedSurface: Surface? = null
+
     fun attachSurface(surface: Surface) {
+        lib?.detachSurface()
         lib?.attachSurface(surface)
         lib?.setOptionString("force-window", "yes")
         lib?.setOptionString("vo", "gpu")
+        attachedSurface = surface
     }
 
-    fun detachSurface() = lib?.detachSurface() ?: Unit
+    fun detachSurface() {
+        lib?.detachSurface()
+        attachedSurface = null
+    }
 
     fun load(uri: String, headers: Map<String, String> = emptyMap(), startPositionMs: Long = 0L) {
         val l = lib ?: return
