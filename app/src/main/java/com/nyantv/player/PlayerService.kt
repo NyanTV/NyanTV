@@ -62,6 +62,7 @@ class PlayerService : Service() {
     @Volatile private var lastKnownDurationMs: Long = 0L
     @Volatile private var lastKnownBufferedMs: Long = 0L
     @Volatile private var lastKnownIsPlaying: Boolean = false
+    @Volatile private var lastKnownPlaybackState: Int = Player.STATE_IDLE
 
     private fun ensureMpv() {
         if (mpv != null) return
@@ -239,11 +240,11 @@ class PlayerService : Service() {
             }.getOrThrow()
         }
 
-        override fun getPosition()         = if (usingMpv) lastKnownPositionMs else runOnPlayerThread { player.currentPosition }
-        override fun getDuration()         = if (usingMpv) lastKnownDurationMs else runOnPlayerThread { player.duration }
-        override fun getBufferedPosition() = if (usingMpv) lastKnownBufferedMs else runOnPlayerThread { player.bufferedPosition }
-        override fun getState()            = runOnPlayerThread { if (usingMpv) 3                               else player.playbackState }
-        override fun getPlayWhenReady()    = if (usingMpv) lastKnownIsPlaying else runOnPlayerThread { player.playWhenReady }
+        override fun getPosition()         = lastKnownPositionMs
+        override fun getDuration()         = lastKnownDurationMs
+        override fun getBufferedPosition() = lastKnownBufferedMs
+        override fun getState()            = if (usingMpv) 3 else lastKnownPlaybackState
+        override fun getPlayWhenReady()    = lastKnownIsPlaying
     }
 
     // ── Lifecycle ──────────────────────────────────────────────────────────────
@@ -300,12 +301,14 @@ class PlayerService : Service() {
 
         override fun onPlaybackStateChanged(state: Int) {
             if (usingMpv) return
+            lastKnownPlaybackState = state
             Log.d(TAG, "onPlaybackStateChanged: $state")
             broadcast { it.onStateChanged(state) }
         }
 
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
             if (usingMpv) return
+            lastKnownIsPlaying = playWhenReady
             Log.d(TAG, "onPlayWhenReadyChanged: $playWhenReady")
             broadcast { it.onPlayWhenReadyChanged(playWhenReady) }
         }
@@ -332,6 +335,9 @@ class PlayerService : Service() {
                 val pos = player.currentPosition
                 val dur = player.duration
                 val buf = player.bufferedPosition
+                lastKnownPositionMs = pos
+                lastKnownDurationMs = dur
+                lastKnownBufferedMs = buf
                 Log.d(TAG, "seek discontinuity → pos=$pos")
                 broadcast { cb ->
                     cb.onPositionChanged(pos, dur)
@@ -352,6 +358,9 @@ class PlayerService : Service() {
                         val pos = player.currentPosition
                         val dur = player.duration
                         val buf = player.bufferedPosition
+                        lastKnownPositionMs = pos
+                        lastKnownDurationMs = dur
+                        lastKnownBufferedMs = buf
                         broadcast {
                             it.onPositionChanged(pos, dur)
                             it.onBufferedChanged(buf)
