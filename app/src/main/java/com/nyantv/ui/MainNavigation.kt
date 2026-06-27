@@ -80,8 +80,8 @@ private val navItems = listOf(Screen.Home, Screen.Anime, Screen.Library, Screen.
 fun MainNavigation(
     vm:                AppViewModel = viewModel(),
     deepLink:          Triple<String, String, String>? = null,
-   onDeepLinkConsumed: () -> Unit = {},
-    ) {
+    onDeepLinkConsumed: () -> Unit = {},
+) {
     val navController = rememberNavController()
     val backEntry     by navController.currentBackStackEntryAsState()
     val currentRoute   = backEntry?.destination?.route
@@ -93,6 +93,7 @@ fun MainNavigation(
     val scope           = rememberCoroutineScope()
 
     var showPlayer by remember { mutableStateOf(false) }
+    var playerSessionKey by remember { mutableIntStateOf(0) }
 
     val returnFocusReq = remember { FocusRequester() }
 
@@ -125,8 +126,6 @@ fun MainNavigation(
         focusManager.clearFocus(force = true)
         detailHistory.add(id)
     }
-
-    val playerVm: PlayerViewModel = viewModel()
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -221,18 +220,20 @@ fun MainNavigation(
 
         // ── PlayerScreen Overlay ───────────────────────────────────────────
         if (showPlayer) {
-            PlayerScreen(
-                vm     = playerVm,
-                appVm  = vm,
-                onBack = {
-                    showPlayer = false
-                    playerReturnCount++
-                    scope.launch {
-                        delay(100)
-                        runCatching { returnFocusReq.requestFocus() }
+            key(playerSessionKey) {
+                PlayerScreen(
+                    appVm  = vm,
+                    onBack = {
+                        showPlayer = false
+                        playerSessionKey++
+                        playerReturnCount++
+                        scope.launch {
+                            delay(100)
+                            runCatching { returnFocusReq.requestFocus() }
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     }
 }
