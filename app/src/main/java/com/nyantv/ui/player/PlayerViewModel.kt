@@ -240,6 +240,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var episodeMeta: Map<String, AniZipEpisodeMeta> = emptyMap()
     private var currentEpisodeIndex: Int = -1
     private var onLoadEpisodeVideos: (suspend (SEpisode) -> List<Video>)? = null
+    private var onLoadSkipTimes: (suspend (SEpisode) -> EpisodeSkipTimes?)? = null
     fun loadTracks(snapshot: PlayerArgs.Snapshot) {
         _state.update { it.copy(error = null) }
 
@@ -278,6 +279,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         episodes                 = snapshot.episodes
         currentEpisodeIndex      = snapshot.currentEpisodeIndex
         onLoadEpisodeVideos      = snapshot.onLoadEpisodeVideos
+        onLoadSkipTimes          = snapshot.onLoadSkipTimes
         fillerEpisodes           = snapshot.fillerEpisodes
         mediaId                  = snapshot.mediaId
         seriesTitle              = snapshot.seriesTitle
@@ -459,6 +461,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var _pendingDelta = 0
 
     private var fillerEpisodes: Set<Int> = emptySet()
+    private var skipTimesFetchToken = 0
 
     private fun loadEpisodeVideos(
         videos:      List<Video>,
@@ -501,6 +504,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         lastSavedPositionMs      = -1L
 
         val initialSubIdx = if (subs.isNotEmpty()) 0 else null
+        val skipFetchToken = ++skipTimesFetchToken
 
         _state.update {
             it.copy(
@@ -513,6 +517,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 hasNextEpisode        = newIndex in 0 until episodes.size - 1,
                 hasPrevEpisode        = newIndex > 0,
                 pendingEpisodeVideos  = emptyList(),
+                skipTimes             = null,
+                activeSkip            = null,
             )
         }
 
@@ -520,6 +526,18 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         initialSubIdx?.let { loadSubtitleByIndex(it) } ?: run {
             subtitleEngine.clear()
             _currentCue.value = null
+        }
+
+        val loader = onLoadSkipTimes
+        if (loader != null) {
+            viewModelScope.launch {
+                val result = runCatching { loader(episode) }.getOrNull()
+                if (skipFetchToken == skipTimesFetchToken) {
+                    _state.update { it.copy(skipTimes = result) }
+                    val currentSec = (_state.value.positionMs / 1000L).toInt()
+                    _state.update { it.copy(activeSkip = computeActiveSkip(currentSec)) }
+                }
+            }
         }
     }
 

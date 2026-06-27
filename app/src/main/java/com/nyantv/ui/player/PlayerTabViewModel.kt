@@ -275,18 +275,7 @@ class PlayerTabViewModel(
     fun loadSkipTimes(episodeNumber: Float) {
         viewModelScope.launch {
             _state.update { it.copy(skipTimes = null) }
-            val result: EpisodeSkipTimes? = when {
-                serviceKey == "simkl" -> {
-                    val iid = imdbId ?: return@launch
-                    IntroDbService.getSkipTimes(iid, season = "1", episode = episodeNumber.toInt().toString())
-                }
-                _malId != null -> AniskipService.getSkipTimes(
-                    malId         = _malId!!,
-                    episodeNumber = episodeNumber.toInt().toString(),
-                )
-                else -> null
-            }
-            _state.update { it.copy(skipTimes = result) }
+            _state.update { it.copy(skipTimes = fetchSkipTimesFor(episodeNumber)) }
         }
     }
 
@@ -297,6 +286,21 @@ class PlayerTabViewModel(
             _state.update { it.copy(skipTimes = result) }
         }
     }
+    suspend fun fetchSkipTimesFor(episodeNumber: Float): EpisodeSkipTimes? = when {
+        serviceKey == "simkl" -> {
+            val iid = imdbId ?: return null
+            IntroDbService.getSkipTimes(iid, season = "1", episode = episodeNumber.toInt().toString())
+        }
+        _malId != null -> AniskipService.getSkipTimes(
+            malId         = _malId!!,
+            episodeNumber = episodeNumber.toInt().toString(),
+        )
+        else -> null
+    }
+
+    /** Overload accepting an [SEpisode] directly, for convenience at call sites. */
+    suspend fun fetchSkipTimesFor(episode: SEpisode): EpisodeSkipTimes? =
+        fetchSkipTimesFor(episode.episode_number)
 
     fun selectSource(source: SearchableSource) {
         if (source.id == _state.value.selectedSource?.id) return

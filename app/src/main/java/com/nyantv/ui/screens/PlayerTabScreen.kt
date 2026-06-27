@@ -410,6 +410,7 @@ fun PlayerTabScreen(
                                     PlayerArgs.episodes            = allEpisodes
                                     PlayerArgs.currentEpisodeIndex = allEpisodes.indexOfFirst { it == state.selectedEpisode }
                                     PlayerArgs.onLoadEpisodeVideos = { episode -> vm.getVideosForEpisode(episode) }
+                                    PlayerArgs.onLoadSkipTimes     = { episode -> vm.fetchSkipTimesFor(episode) }
                                     PlayerArgs.fillerEpisodes      = fillerEpisodes
                                     PlayerArgs.mediaId             = vm.mediaId
                                     PlayerArgs.serviceKey          = vm.serviceKey
