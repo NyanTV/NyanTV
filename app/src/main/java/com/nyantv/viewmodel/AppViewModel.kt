@@ -223,7 +223,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         serviceJobs += viewModelScope.launch { _service.popular.collect         { _popular.value = it } }
         serviceJobs += viewModelScope.launch { _service.upcoming.collect        { _upcoming.value = it } }
         serviceJobs += viewModelScope.launch { _service.recentlyUpdated.collect { _recentlyUpdated.value = it } }
-
         val simkl = _service as? SimklService
         if (simkl != null) {
             serviceJobs += viewModelScope.launch { simkl.trendingMovies.collect { _trendingMovies.value = it } }
@@ -323,7 +322,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             .onFailure { android.util.Log.e("AppViewModel", "autoLogin failed on retry", it) }
 
         runCatching { sideService?.autoLogin() }
-            .onFailure { android.util.Log.e("AppViewModel", "sideService autoLogin failed on retry", it) }
+            .onFailure {  android.util.Log.e("AppViewModel", "sideService autoLogin failed on retry", it) }
 
         loadHome()
     }
@@ -376,7 +375,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun handleAuthCallback(code: String) = viewModelScope.launch {
         val target: MediaService? = when {
             _service    is AnilistService -> _service
-            _service    is MalService     -> _service
+            _service    is MalService     = _service
             _service    is SimklService   -> _service
             sideService is AnilistService -> sideService
             sideService is MalService     -> sideService
