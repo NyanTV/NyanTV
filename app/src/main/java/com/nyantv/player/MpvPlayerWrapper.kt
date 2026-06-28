@@ -26,6 +26,8 @@ class MpvPlayerWrapper(private val context: Context) {
     private var lib: MPVLib? = null
 
     @Volatile private var lastPositionEmitMs: Long = 0L
+    @Volatile private var isLoading = false
+    @Volatile private var hasShownFirstFrame = false
 
     private val observer = object : MPVLib.EventObserver {
 
@@ -83,20 +85,38 @@ class MpvPlayerWrapper(private val context: Context) {
 
         override fun event(eventId: Int) {
             when (eventId) {
-                MPVLib.MpvEvent.MPV_EVENT_START_FILE       -> listener?.onStateChanged(2)
-                MPVLib.MpvEvent.MPV_EVENT_PLAYBACK_RESTART -> listener?.onStateChanged(3)
-                MPVLib.MpvEvent.MPV_EVENT_END_FILE         -> listener?.onStateChanged(4)
-                MPVLib.MpvEvent.MPV_EVENT_VIDEO_RECONFIG   -> {
+                MPVLib.MpvEvent.MPV_EVENT_START_FILE -> {
+                    isLoading = true
+                    hasShownFirstFrame = false
+                    listener?.onStateChanged(2)
+                }
+                MPVLib.MpvEvent.MPV_EVENT_PLAYBACK_RESTART -> {
+                    isLoading = false
+                    listener?.onStateChanged(3)
+                }
+                MPVLib.MpvEvent.MPV_EVENT_END_FILE -> listener?.onStateChanged(4)
+                MPVLib.MpvEvent.MPV_EVENT_VIDEO_RECONFIG -> {
                     val w = lib?.getPropertyInt("width")  ?: 0
                     val h = lib?.getPropertyInt("height") ?: 0
                     if (w > 0 && h > 0) {
+                        hasShownFirstFrame = true
                         listener?.onVideoSizeChanged(w, h)
-                    } else {
-                        listener?.onError("video_reconfig_failed")
+                    } else if (!isLoading && hasShownFirstFrame) {
+                        Log.w(TAG, "Unexpected empty video size outside of load, VO likely lost")
+                        attemptSurfaceRecovery()
                     }
+                    // w/h=0 while isLoading is the normal startup transient
                 }
             }
         }
+    }
+
+    private fun attemptSurfaceRecovery() {
+        val surface = attachedSurface ?: return
+        lib?.detachSurface()
+        lib?.attachSurface(surface)
+        lib?.setOptionString("force-window", "yes")
+        lib?.setOptionString("vo", "gpu")
     }
 
     fun initialize() {
