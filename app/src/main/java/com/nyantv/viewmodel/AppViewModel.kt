@@ -375,7 +375,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun handleAuthCallback(code: String) = viewModelScope.launch {
         val target: MediaService? = when {
             _service    is AnilistService -> _service
-            _service    is MalService     = _service
+            _service    is MalService     -> _service
             _service    is SimklService   -> _service
             sideService is AnilistService -> sideService
             sideService is MalService     -> sideService
