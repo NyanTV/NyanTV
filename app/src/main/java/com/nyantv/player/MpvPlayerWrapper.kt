@@ -121,25 +121,46 @@ class MpvPlayerWrapper(private val context: Context) {
 
     fun initialize() {
         lib = MPVLib.create(context) ?: return Unit.also { Log.e(TAG, "MPVLib.create() returned null") }
+
         lib!!.apply {
-            setOptionString("network-timeout",        "15")
-            setOptionString("cache",                  "yes")
-            setOptionString("cache-secs",             "120")
-            setOptionString("demuxer-max-bytes",      "100MiB")
+            setOptionString("hwdec", "mediacodec")
+            setOptionString("vo", "gpu")
+            setOptionString("gpu-api", "opengl")             // OpenGL usually more stable than Vulkan on old ARM
+
+            setOptionString("profile", "fast")
+
+            // Disable expensive features
+            setOptionString("deband", "no")
+            setOptionString("interpolation", "no")
+            setOptionString("scale", "bilinear")
+            setOptionString("cscale", "bilinear")
+            setOptionString("dscale", "bilinear")
+
+            // Sync & performance
+            setOptionString("video-sync", "display-resample")
+            setOptionString("vd-lavc-dr", "yes")
+
+            // Cache
+            setOptionString("cache", "yes")
+            setOptionString("cache-secs", "90")
+            setOptionString("demuxer-max-bytes", "100MiB")
             setOptionString("demuxer-max-back-bytes", "20MiB")
-            setOptionString("demuxer-readahead-secs", "120")
-            setOptionString("hwdec",                  "auto-safe")
-            setOptionString("vo",                     "gpu")
-            setOptionString("ao",                     "audiotrack")
-            setOptionString("keep-open",              "yes")
+            setOptionString("demuxer-readahead-secs", "90")
+
+            setOptionString("ao", "audiotrack")
+            setOptionString("keep-open", "yes")
+            setOptionString("force-window", "yes")
+            setOptionString("network-timeout", "15")
+
             init()
 
+            // Observers
             addObserver(observer)
-            observeProperty("time-pos",                   MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
-            observeProperty("duration",                   MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
-            observeProperty("demuxer-cache-time",         MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
-            observeProperty("pause",                      MPVLib.MpvFormat.MPV_FORMAT_FLAG)
-            observeProperty("paused-for-cache",           MPVLib.MpvFormat.MPV_FORMAT_FLAG)
+            observeProperty("time-pos", MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
+            observeProperty("duration", MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
+            observeProperty("demuxer-cache-time", MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
+            observeProperty("pause", MPVLib.MpvFormat.MPV_FORMAT_FLAG)
+            observeProperty("paused-for-cache", MPVLib.MpvFormat.MPV_FORMAT_FLAG)
         }
     }
 
