@@ -7,7 +7,10 @@ import dev.jdtech.mpv.MPVLib
 
 class MpvPlayerWrapper(private val context: Context) {
 
-    companion object { private const val TAG = "NyanTV:MpvWrapper" }
+    companion object {
+        private const val TAG = "NyanTV:MpvWrapper"
+        private const val POSITION_UPDATE_THROTTLE_MS = 500L
+    }
 
     interface Listener {
         fun onStateChanged(state: Int)
@@ -22,14 +25,24 @@ class MpvPlayerWrapper(private val context: Context) {
     private var durationMs: Long = 0L
     private var lib: MPVLib? = null
 
+    @Volatile private var lastPositionEmitMs: Long = 0L
+    @Volatile private var isLoading = false
+    @Volatile private var hasShownFirstFrame = false
+
     private val observer = object : MPVLib.EventObserver {
 
         override fun eventProperty(property: String) {}
 
         override fun eventProperty(property: String, value: Long) {
             when (property) {
-                "time-pos"                    -> listener?.onPositionChanged(value * 1000L, durationMs)
-                "duration"                    -> durationMs = value * 1000L
+                "time-pos" -> {
+                    val now = System.currentTimeMillis()
+                    if (now - lastPositionEmitMs >= POSITION_UPDATE_THROTTLE_MS) {
+                        lastPositionEmitMs = now
+                        listener?.onPositionChanged(value * 1000L, durationMs)
+                    }
+                }
+                "duration" -> durationMs = value * 1000L
                 "demuxer-cache-time" -> {
                     val pos = lib?.getPropertyDouble("time-pos") ?: 0.0
                     listener?.onBufferedChanged(
@@ -43,8 +56,14 @@ class MpvPlayerWrapper(private val context: Context) {
 
         override fun eventProperty(property: String, value: Double) {
             when (property) {
-                "time-pos"                    -> listener?.onPositionChanged((value * 1000).toLong(), durationMs)
-                "duration"                    -> durationMs = (value * 1000).toLong()
+                "time-pos" -> {
+                    val now = System.currentTimeMillis()
+                    if (now - lastPositionEmitMs >= POSITION_UPDATE_THROTTLE_MS) {
+                        lastPositionEmitMs = now
+                        listener?.onPositionChanged((value * 1000).toLong(), durationMs)
+                    }
+                }
+                "duration" -> durationMs = (value * 1000).toLong()
                 "demuxer-cache-time" -> {
                     val pos = lib?.getPropertyDouble("time-pos") ?: 0.0
                     listener?.onBufferedChanged(
@@ -66,49 +85,99 @@ class MpvPlayerWrapper(private val context: Context) {
 
         override fun event(eventId: Int) {
             when (eventId) {
-                MPVLib.MpvEvent.MPV_EVENT_START_FILE       -> listener?.onStateChanged(2)
-                MPVLib.MpvEvent.MPV_EVENT_PLAYBACK_RESTART -> listener?.onStateChanged(3)
-                MPVLib.MpvEvent.MPV_EVENT_END_FILE         -> listener?.onStateChanged(4)
-                MPVLib.MpvEvent.MPV_EVENT_VIDEO_RECONFIG   -> {
+                MPVLib.MpvEvent.MPV_EVENT_START_FILE -> {
+                    isLoading = true
+                    hasShownFirstFrame = false
+                    listener?.onStateChanged(2)
+                }
+                MPVLib.MpvEvent.MPV_EVENT_PLAYBACK_RESTART -> {
+                    isLoading = false
+                    listener?.onStateChanged(3)
+                }
+                MPVLib.MpvEvent.MPV_EVENT_END_FILE -> listener?.onStateChanged(4)
+                MPVLib.MpvEvent.MPV_EVENT_VIDEO_RECONFIG -> {
                     val w = lib?.getPropertyInt("width")  ?: 0
                     val h = lib?.getPropertyInt("height") ?: 0
-                    if (w > 0 && h > 0) listener?.onVideoSizeChanged(w, h)
+                    if (w > 0 && h > 0) {
+                        hasShownFirstFrame = true
+                        listener?.onVideoSizeChanged(w, h)
+                    } else if (!isLoading && hasShownFirstFrame) {
+                        Log.w(TAG, "Unexpected empty video size outside of load, VO likely lost")
+                        attemptSurfaceRecovery()
+                    }
+                    // w/h=0 while isLoading is the normal startup transient
                 }
             }
         }
     }
 
-    fun initialize() {
-        lib = MPVLib.create(context) ?: return Unit.also { Log.e(TAG, "MPVLib.create() returned null") }
-        lib!!.apply {
-            setOptionString("network-timeout",        "15")
-            setOptionString("cache",                  "yes")
-            setOptionString("cache-secs",             "120")
-            setOptionString("demuxer-max-bytes",      "100MiB")
-            setOptionString("demuxer-max-back-bytes", "20MiB")
-            setOptionString("demuxer-readahead-secs", "120")
-            setOptionString("hwdec",                  "auto-safe")
-            setOptionString("vo",                     "gpu")
-            setOptionString("ao",                     "audiotrack")
-            setOptionString("keep-open",              "yes")
-            init()
-
-            addObserver(observer)
-            observeProperty("time-pos",                   MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
-            observeProperty("duration",                   MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
-            observeProperty("demuxer-cache-time",         MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
-            observeProperty("pause",                      MPVLib.MpvFormat.MPV_FORMAT_FLAG)
-            observeProperty("paused-for-cache",           MPVLib.MpvFormat.MPV_FORMAT_FLAG)
-        }
-    }
-
-    fun attachSurface(surface: Surface) {
+    private fun attemptSurfaceRecovery() {
+        val surface = attachedSurface ?: return
+        lib?.detachSurface()
         lib?.attachSurface(surface)
         lib?.setOptionString("force-window", "yes")
         lib?.setOptionString("vo", "gpu")
     }
 
-    fun detachSurface() = lib?.detachSurface() ?: Unit
+    fun initialize() {
+        lib = MPVLib.create(context) ?: return Unit.also { Log.e(TAG, "MPVLib.create() returned null") }
+
+        lib!!.apply {
+            setOptionString("hwdec", "mediacodec")
+            setOptionString("vo", "gpu")
+            setOptionString("gpu-api", "opengl")             // OpenGL usually more stable than Vulkan on old ARM
+
+            setOptionString("profile", "fast")
+
+            // Disable expensive features
+            setOptionString("deband", "no")
+            setOptionString("interpolation", "no")
+            setOptionString("scale", "bilinear")
+            setOptionString("cscale", "bilinear")
+            setOptionString("dscale", "bilinear")
+
+            // Sync & performance
+            setOptionString("video-sync", "display-resample")
+            setOptionString("vd-lavc-dr", "yes")
+
+            // Cache
+            setOptionString("cache", "yes")
+            setOptionString("cache-secs", "90")
+            setOptionString("demuxer-max-bytes", "100MiB")
+            setOptionString("demuxer-max-back-bytes", "20MiB")
+            setOptionString("demuxer-readahead-secs", "90")
+
+            setOptionString("ao", "audiotrack")
+            setOptionString("keep-open", "yes")
+            setOptionString("force-window", "yes")
+            setOptionString("network-timeout", "15")
+
+            init()
+
+            // Observers
+            addObserver(observer)
+            observeProperty("time-pos", MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
+            observeProperty("duration", MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
+            observeProperty("demuxer-cache-time", MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
+            observeProperty("pause", MPVLib.MpvFormat.MPV_FORMAT_FLAG)
+            observeProperty("paused-for-cache", MPVLib.MpvFormat.MPV_FORMAT_FLAG)
+        }
+    }
+
+    private var attachedSurface: Surface? = null
+
+    fun attachSurface(surface: Surface) {
+        lib?.detachSurface()
+        lib?.attachSurface(surface)
+        lib?.setOptionString("force-window", "yes")
+        lib?.setOptionString("vo", "gpu")
+        attachedSurface = surface
+    }
+
+    fun detachSurface() {
+        lib?.detachSurface()
+        attachedSurface = null
+    }
 
     fun load(uri: String, headers: Map<String, String> = emptyMap(), startPositionMs: Long = 0L) {
         val l = lib ?: return
