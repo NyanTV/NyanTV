@@ -43,6 +43,17 @@ class SimklService(context: Context) : MediaService {
     private val _upcoming        = MutableStateFlow<List<Media>>(emptyList())
     private val _recentlyUpdated = MutableStateFlow<List<Media>>(emptyList())
 
+    // Home page – continue watching / planned, movies + shows merged together
+    private val _continueWatching = MutableStateFlow<List<TrackedMedia>>(emptyList())
+    private val _planned          = MutableStateFlow<List<TrackedMedia>>(emptyList())
+
+    // Discover page – per-country, movies + shows merged together
+    private val _korean   = MutableStateFlow<List<Media>>(emptyList())
+    private val _japanese = MutableStateFlow<List<Media>>(emptyList())
+    private val _us       = MutableStateFlow<List<Media>>(emptyList())
+    private val _uk       = MutableStateFlow<List<Media>>(emptyList())
+    private val _canada   = MutableStateFlow<List<Media>>(emptyList())
+
     override val isLoggedIn:      StateFlow<Boolean>            = _isLoggedIn.asStateFlow()
     override val profile:         StateFlow<Profile?>           = _profile.asStateFlow()
     override val animeList:       StateFlow<List<TrackedMedia>> = _animeList.asStateFlow()
@@ -53,6 +64,15 @@ class SimklService(context: Context) : MediaService {
     override val popular:         StateFlow<List<Media>>        = _popular.asStateFlow()
     override val upcoming:        StateFlow<List<Media>>        = _upcoming.asStateFlow()
     override val recentlyUpdated: StateFlow<List<Media>>        = _recentlyUpdated.asStateFlow()
+
+    val continueWatching: StateFlow<List<TrackedMedia>> = _continueWatching.asStateFlow()
+    val planned:          StateFlow<List<TrackedMedia>> = _planned.asStateFlow()
+
+    val korean:   StateFlow<List<Media>> = _korean.asStateFlow()
+    val japanese: StateFlow<List<Media>> = _japanese.asStateFlow()
+    val us:       StateFlow<List<Media>> = _us.asStateFlow()
+    val uk:       StateFlow<List<Media>> = _uk.asStateFlow()
+    val canada:   StateFlow<List<Media>> = _canada.asStateFlow()
 
     // ── Auth ───────────────────────────────────────────────────────────────────
 
@@ -153,6 +173,42 @@ class SimklService(context: Context) : MediaService {
         }
     }
 
+    // ── Discover page – per-country, movies + shows merged into one list ───────
+
+    suspend fun fetchDiscoverPage() = withContext(Dispatchers.IO) {
+        coroutineScope {
+            val korean   = async { fetchCountryContent("kr") }
+            val japanese = async { fetchCountryContent("jp") }
+            val us       = async { fetchCountryContent("us") }
+            val uk       = async { fetchCountryContent("gb") }
+            val canada   = async { fetchCountryContent("ca") }
+            _korean.value   = korean.await()
+            _japanese.value = japanese.await()
+            _us.value       = us.await()
+            _uk.value       = uk.await()
+            _canada.value   = canada.await()
+        }
+    }
+
+    private suspend fun fetchCountryContent(country: String): List<Media> = coroutineScope {
+        val movies = async { fetchCountryGenre("movies", country) }
+        val shows  = async { fetchCountryGenre("tv", country) }
+        (movies.await() + shows.await()).sortedByDescending { it.popularity ?: 0 }
+    }
+
+    private suspend fun fetchCountryGenre(type: String, country: String): List<Media> = withContext(Dispatchers.IO) {
+        runCatching {
+            val url = if (type == "movies")
+                "$SIMKL_API/movies/genres/all/all-types/$country/all-years/rank?extended=overview&client_id=${BuildConfig.SIMKL_CLIENT_ID}&limit=20"
+            else
+                "$SIMKL_API/tv/genres/all/all-types/$country/all-networks/all-years/rank?extended=overview&client_id=${BuildConfig.SIMKL_CLIENT_ID}&limit=20"
+            getRawArray(url)?.mapNotNull { it.jsonObject.toSimklMedia(isMovie = type == "movies") } ?: emptyList()
+        }.getOrElse {
+            android.util.Log.e("SimklService", "fetchCountryGenre $type/$country failed", it)
+            emptyList()
+        }
+    }
+
     // ── Details ────────────────────────────────────────────────────────────────
 
     override suspend fun fetchDetails(id: String): Media = withContext(Dispatchers.IO) {
@@ -188,7 +244,10 @@ class SimklService(context: Context) : MediaService {
         coroutineScope {
             val movies = async { fetchUserMovies() }
             val shows  = async { fetchUserShows() }
-            _animeList.value = movies.await() + shows.await()
+            val all = movies.await() + shows.await()
+            _animeList.value = all
+            _continueWatching.value = all.filter { it.watchingStatus == "CURRENT" }
+            _planned.value          = all.filter { it.watchingStatus == "PLANNING" }
         }
     }
 

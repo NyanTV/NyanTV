@@ -19,14 +19,12 @@ fun HomeSections(vm: AppViewModel, navController: NavController, onDetailClick: 
     val trendingMovies  by vm.trendingMovies.collectAsStateWithLifecycle()
     val trendingShows   by vm.trendingShows.collectAsStateWithLifecycle()
 
-    val anilistContinue by vm.anilistShowContinue.collectAsStateWithLifecycle()
-    val anilistPlanned  by vm.anilistShowPlanned.collectAsStateWithLifecycle()
-    val malContinue     by vm.malShowContinue.collectAsStateWithLifecycle()
-    val malPlanned      by vm.malShowPlanned.collectAsStateWithLifecycle()
-    val simklContMovies by vm.simklShowContMovies.collectAsStateWithLifecycle()
-    val simklPlanMovies by vm.simklShowPlanMovies.collectAsStateWithLifecycle()
-    val simklContSeries by vm.simklShowContSeries.collectAsStateWithLifecycle()
-    val simklPlanSeries by vm.simklShowPlanSeries.collectAsStateWithLifecycle()
+    val anilistContinue  by vm.anilistShowContinue.collectAsStateWithLifecycle()
+    val anilistPlanned   by vm.anilistShowPlanned.collectAsStateWithLifecycle()
+    val malContinue      by vm.malShowContinue.collectAsStateWithLifecycle()
+    val malPlanned       by vm.malShowPlanned.collectAsStateWithLifecycle()
+    val simklContinue    by vm.simklShowContinue.collectAsStateWithLifecycle()
+    val simklPlanned     by vm.simklShowPlanned.collectAsStateWithLifecycle()
 
     val trackedMap = animeList.associateBy { it.id }
 
@@ -70,22 +68,14 @@ fun HomeSections(vm: AppViewModel, navController: NavController, onDetailClick: 
         }
 
         ServiceType.SIMKL -> {
-            val contMovies = animeList.filter { it.watchingStatus == "CURRENT"  && it.isMovie == true }
-            val planMovies = animeList.filter { it.watchingStatus == "PLANNING" && it.isMovie == true }
-            val contSeries = animeList.filter { it.watchingStatus == "CURRENT"  && it.isMovie != true }
-            val planSeries = animeList.filter { it.watchingStatus == "PLANNING" && it.isMovie != true }
+            val continueWatching = animeList.filter { it.watchingStatus == "CURRENT" }
+            val planned          = animeList.filter { it.watchingStatus == "PLANNING" }
 
-            if (simklContMovies && contMovies.isNotEmpty()) {
-                SectionRow(title = "Continue Watching (Movies)", items = contMovies.toMedia(), onItemClick = { navigate(it.id) }, trackedMap = trackedMap)
+            if (simklContinue && continueWatching.isNotEmpty()) {
+                SectionRow(title = "Continue Watching", items = continueWatching.toMedia(), onItemClick = { navigate(it.id) }, trackedMap = trackedMap)
             }
-            if (simklPlanMovies && planMovies.isNotEmpty()) {
-                SectionRow(title = "Planned Movies", items = planMovies.toMedia(), onItemClick = { navigate(it.id) }, trackedMap = trackedMap)
-            }
-            if (simklContSeries && contSeries.isNotEmpty()) {
-                SectionRow(title = "Continue Watching (Series)", items = contSeries.toMedia(), onItemClick = { navigate(it.id) }, trackedMap = trackedMap)
-            }
-            if (simklPlanSeries && planSeries.isNotEmpty()) {
-                SectionRow(title = "Planned Series", items = planSeries.toMedia(), onItemClick = { navigate(it.id) }, trackedMap = trackedMap)
+            if (simklPlanned && planned.isNotEmpty()) {
+                SectionRow(title = "Planned", items = planned.toMedia(), onItemClick = { navigate(it.id) }, trackedMap = trackedMap)
             }
             if (trendingMovies.isNotEmpty()) {
                 SectionRow(title = "Trending Movies", items = trendingMovies, onItemClick = { navigate(it.id) })

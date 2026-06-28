@@ -160,10 +160,8 @@ fun AccountsScreen(vm: AppViewModel, navController: NavController) {
         val anilistPlanned   by vm.anilistShowPlanned.collectAsStateWithLifecycle()
         val malContinue      by vm.malShowContinue.collectAsStateWithLifecycle()
         val malPlanned       by vm.malShowPlanned.collectAsStateWithLifecycle()
-        val simklContMovies  by vm.simklShowContMovies.collectAsStateWithLifecycle()
-        val simklPlanMovies  by vm.simklShowPlanMovies.collectAsStateWithLifecycle()
-        val simklContSeries  by vm.simklShowContSeries.collectAsStateWithLifecycle()
-        val simklPlanSeries  by vm.simklShowPlanSeries.collectAsStateWithLifecycle()
+        val simklContinue    by vm.simklShowContinue.collectAsStateWithLifecycle()
+        val simklPlanned     by vm.simklShowPlanned.collectAsStateWithLifecycle()
 
         SectionCard(
             title = "Manage AniList Homescreen",
@@ -186,13 +184,9 @@ fun AccountsScreen(vm: AppViewModel, navController: NavController) {
         SectionCard(
             title = "Manage Simkl Homescreen",
             dialogContent = {
-                HomescreenToggleRow("Continue Watching (Movies)", simklContMovies) { vm.setSimklShowContMovies(it) }
+                HomescreenToggleRow("Continue Watching", simklContinue) { vm.setSimklShowContinue(it) }
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-                HomescreenToggleRow("Planned (Movies)", simklPlanMovies) { vm.setSimklShowPlanMovies(it) }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-                HomescreenToggleRow("Continue Watching (Series)", simklContSeries) { vm.setSimklShowContSeries(it) }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-                HomescreenToggleRow("Planned (Series)", simklPlanSeries) { vm.setSimklShowPlanSeries(it) }
+                HomescreenToggleRow("Planned", simklPlanned) { vm.setSimklShowPlanned(it) }
             }
         ) {}
     }
