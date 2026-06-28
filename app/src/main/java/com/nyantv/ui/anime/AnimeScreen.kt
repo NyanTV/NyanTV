@@ -30,6 +30,12 @@ fun AnimeScreen(vm: AppViewModel, navController: NavController, onDetailClick: (
     val networkState    by vm.networkState.collectAsStateWithLifecycle()
     val serviceType     by vm.serviceType.collectAsStateWithLifecycle()
 
+    val korean          by vm.korean.collectAsStateWithLifecycle()
+    val japanese        by vm.japanese.collectAsStateWithLifecycle()
+    val us              by vm.us.collectAsStateWithLifecycle()
+    val uk              by vm.uk.collectAsStateWithLifecycle()
+    val canada          by vm.canada.collectAsStateWithLifecycle()
+
     NetworkStatusContent(
         state       = networkState,
         serviceName = serviceType.name.lowercase().replaceFirstChar { it.uppercase() },
@@ -62,10 +68,21 @@ fun AnimeScreen(vm: AppViewModel, navController: NavController, onDetailClick: (
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
-            SectionRow(title = "Recently Updated", items = recentlyUpdated, onItemClick = { onDetailClick(it.id) })
-            SectionRow(title = "Trending",          items = trending,        onItemClick = { onDetailClick(it.id) })
-            SectionRow(title = "Popular",           items = popular,         onItemClick = { onDetailClick(it.id) })
-            SectionRow(title = "Upcoming",          items = upcoming,        onItemClick = { onDetailClick(it.id) })
+
+            if (serviceType == ServiceType.SIMKL) {
+                SectionRow(title = "Trending Today", items = trending, onItemClick = { onDetailClick(it.id) })
+                SectionRow(title = "Popular Hits", items = popular, onItemClick = { onDetailClick(it.id) })
+                if (korean.isNotEmpty()) SectionRow(title = "Korean Discoveries", items = korean, onItemClick = { onDetailClick(it.id) })
+                if (japanese.isNotEmpty()) SectionRow(title = "Japanese Discoveries", items = japanese, onItemClick = { onDetailClick(it.id) })
+                if (us.isNotEmpty()) SectionRow(title = "US Discoveries", items = us, onItemClick = { onDetailClick(it.id) })
+                if (uk.isNotEmpty()) SectionRow(title = "UK Discoveries", items = uk, onItemClick = { onDetailClick(it.id) })
+                if (canada.isNotEmpty()) SectionRow(title = "Canada Discoveries", items = canada, onItemClick = { onDetailClick(it.id) })
+            } else {
+                SectionRow(title = "Recently Updated", items = recentlyUpdated, onItemClick = { onDetailClick(it.id) })
+                SectionRow(title = "Trending",          items = trending,        onItemClick = { onDetailClick(it.id) })
+                SectionRow(title = "Popular",           items = popular,         onItemClick = { onDetailClick(it.id) })
+                SectionRow(title = "Upcoming",          items = upcoming,        onItemClick = { onDetailClick(it.id) })
+            }
         }
     }
 }
